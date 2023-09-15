@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <title>Создать задание</title>
+</head>
+<body>
+<div class="container mt-5">
+    <h1 class="text-center">{% if request.method == 'POST' %}Редактирование задания{% else %}Создать новое задание{% endif %}</h1>
+
+    <form method="post">
+        {% csrf_token %}
+
+        {% if request.method == 'POST' %}
+            {{ serializer.errors }}
+        {% endif %}
+
+        <div class="form-group">
+            <label for="title">Название:</label>
+            <input type="text" class="form-control" id="title" name="title" placeholder="Введите название задачи" required>
+        </div>
+        <div class="form-group">
+            <label for="description">Описание:</label>
+            <textarea class="form-control" id="description" name="description" placeholder="Введите описание задачи" required></textarea>
+        </div>
+        <div class="form-group">
+            <label for="priority">Приоритет:</label>
+            <select class="form-control" id="priority" name="priority" required>
+                <option value="Низкий">Низкий</option>
+                <option value="Средний">Средний</option>
+                <option value="Высокий">Высокий</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="status">Статус:</label>
+            <select class="form-control" id="status" name="status" required>
+                <option value="Ожидает выполнения">Ожидает выполнения</option>
+                <option value="В процессе выполнения">В процессе выполнения</option>
+                <option value="Выполнено">Выполнено</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="deadline">Дедлайн:</label>
+            <input type="datetime-local" class="form-control" id="deadline" name="deadline" required>
+        </div>
+        <button type="submit" class="btn btn-primary">Создать</button>
+    </form>
+</div>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</body>
+</html>

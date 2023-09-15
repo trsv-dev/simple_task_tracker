@@ -1,0 +1,58 @@
+{% extends "tasks/undone.html" %}
+
+{% block content %}
+
+  <form method="post" action="{% url 'edit' pk=pk %}">
+    {% csrf_token %}
+
+    <div class="form-group">
+      <label for="id_title">Название:</label>
+      <input type="text" class="form-control" id="id_title" name="title" value="{{ serializer.instance.title }}" required>
+    </div>
+
+    <div class="form-group">
+      <label for="id_description">Описание:</label>
+      <textarea class="form-control" id="id_description" name="description" required>{{ serializer.instance.description }}</textarea>
+    </div>
+
+    <div class="form-group">
+      <label for="id_priority">Приоритет:</label>
+      <select class="form-control" id="id_priority" name="priority" required>
+        {% for choice in serializer.fields.priority.choices %}
+          <option value="{{ choice.0 }}" {% if choice.0 == serializer.instance.priority %}selected{% endif %}>{{ choice.1 }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label for="id_status">Статус:</label>
+      <select class="form-control" id="id_status" name="status" required>
+        {% for choice in serializer.fields.status.choices %}
+          <option value="{{ choice.0 }}" {% if choice.0 == serializer.instance.status %}selected{% endif %}>{{ choice.1 }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label for="id_deadline">Дедлайн:</label>
+      <input type="datetime-local" class="form-control" id="id_deadline" name="deadline" value="{{ serializer.instance.deadline|date:'Y-m-d\TH:i' }}" required>
+    </div>
+
+    <button type="submit" class="btn btn-primary">Сохранить</button>
+  </form>
+
+  <a href="{% url 'undone' %}" class="btn btn-secondary">Отменить</a>
+
+  {% if serializer.errors %}
+    <div class="alert alert-danger">
+      {% for field, errors in serializer.errors.items %}
+        <strong>{{ field }}:</strong>
+        {% for error in errors %}
+          {{ error }}
+        {% endfor %}
+        <br>
+      {% endfor %}
+    </div>
+  {% endif %}
+
+{% endblock %}

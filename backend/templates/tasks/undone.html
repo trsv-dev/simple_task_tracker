@@ -1,0 +1,25 @@
+{% block content %}
+  {% if tasks %}
+    <ul class="list-group">
+      {% for task in tasks %}
+        <li class="list-group-item">
+          <h2 style="color: {{ task.get_priority_color }}">{{ task.title }} #{{ task.id }}</h2>
+          <p><b>Описание:</b> {{ task.description }}</p>
+          <p><b>Приоритет:</b> {{ task.priority }}</p>
+          <p><b>Статус:</b> {{ task.status }}</p>
+          <p><b>Время создания:</b> {{ task.created }}</p>
+          <p><b>Дедлайн:</b> {{ task.deadline }}</p>
+          {# <a href="{% url 'edit' pk=task.id %}" class="btn btn-primary">Редактировать</a> #}
+          {# <form method="post" action="{% url 'edit' pk=task.id %}"> #}
+          {% csrf_token %}
+          <input type="hidden" name="_method" value="patch">
+          {# <button type="submit" class="btn btn-primary">Сохранить</button> #}
+          </form>
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p>Список заданий пуст</p>
+  {% endif %}
+{% endblock %}
+

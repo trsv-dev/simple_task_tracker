@@ -3,5 +3,6 @@ from django.urls import path
 from tracker import views
 
 urlpatterns = [
-    path('', views.test, name='test'),
+    path('', views.index, name='index'),
+    path('create/', views.create_task, name='create'),
 ]
