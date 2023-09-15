@@ -9,6 +9,6 @@ admin.site.index_title = "Добро пожаловать в трекер зад
 
 @admin.register(Task)
 class TaskAdmin(admin.ModelAdmin):
-    list_display = ('title', 'description', 'priority',
+    list_display = ('author', 'title', 'description', 'priority',
                     'status', 'created', 'deadline')
     ordering = ('created',)

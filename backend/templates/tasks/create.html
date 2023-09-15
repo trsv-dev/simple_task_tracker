@@ -4,11 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
-    <title>Создать задание</title>
+    <title>Создать задачу</title>
 </head>
 <body>
 <div class="container mt-5">
-    <h1 class="text-center">{% if request.method == 'POST' %}Редактирование задания{% else %}Создать новое задание{% endif %}</h1>
+    <h1 class="text-center">Создать новую задачу</h1>
 
     <form method="post">
         {% csrf_token %}

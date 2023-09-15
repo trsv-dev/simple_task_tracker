@@ -1,8 +1,8 @@
-from django.http import HttpResponse
-from django.shortcuts import render, redirect
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import render, redirect, get_object_or_404
 
-from tracker.models import Task
 from tracker.forms import TaskCreateForm
+from tracker.models import Task
 
 
 def index(request):
@@ -11,12 +11,38 @@ def index(request):
     return render(request, 'base.html', context)
 
 
+@login_required
 def create_task(request):
+    username = request.user
     form = TaskCreateForm(request.POST or None)
     if form.is_valid():
         task = form.save(commit=False)
+        task.author = username
         task.save()
         return redirect('index')
     else:
         form = TaskCreateForm()
     return render(request, 'tasks/create.html', {'form': form})
+
+
+@login_required
+def edit_task(request, pk):
+    username = request.user
+    task = get_object_or_404(Task, pk=pk)
+    if task.author != username:
+        return redirect('index', username=username)
+    form = TaskCreateForm(request.POST or None, instance=task)
+    if form.is_valid():
+        form.save()
+        return redirect('index')
+    context = {'task': task}
+    return render(request, 'tasks/edit.html', context)
+
+
+@login_required
+def delete_task(request, pk):
+    username = request.user
+    task = get_object_or_404(Task, pk=pk)
+    if task.author == username:
+        task.delete()
+        return redirect('index')

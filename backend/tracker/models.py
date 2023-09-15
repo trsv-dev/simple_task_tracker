@@ -1,5 +1,8 @@
-from django.utils import timezone
+from django.contrib.auth import get_user_model
 from django.db import models
+from django.utils import timezone
+
+User = get_user_model()
 
 PENDING = 'Ожидает выполнения'
 IN_PROGRESS = 'В процессе выполнения'
@@ -21,6 +24,13 @@ PRIORITY = [(HIGH, 'Высокий'),
 class Task(models.Model):
     """Класс заданий."""
 
+    author = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='tasks',
+        verbose_name='Автор',
+        help_text='Выберите автора'
+    )
     title = models.CharField(
         max_length=120,
         verbose_name='Название',
