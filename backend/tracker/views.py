@@ -14,15 +14,14 @@ def index(request):
 @login_required
 def create_task(request):
     username = request.user
-    form = TaskCreateForm(request.POST or None)
+    form = TaskCreateForm(request.POST)
+    context = {'form': form}
     if form.is_valid():
         task = form.save(commit=False)
         task.author = username
-        task.save()
+        form.save()
         return redirect('index')
-    else:
-        form = TaskCreateForm()
-    return render(request, 'tasks/create.html', {'form': form})
+    return render(request, 'tasks/create.html', context)
 
 
 @login_required
@@ -30,8 +29,8 @@ def edit_task(request, pk):
     username = request.user
     task = get_object_or_404(Task, pk=pk)
     if task.author != username:
-        return redirect('index', username=username)
-    form = TaskCreateForm(request.POST or None, instance=task)
+        return redirect('index')
+    form = TaskCreateForm(request.POST, instance=task)
     if form.is_valid():
         form.save()
         return redirect('index')
@@ -43,6 +42,7 @@ def edit_task(request, pk):
 def delete_task(request, pk):
     username = request.user
     task = get_object_or_404(Task, pk=pk)
-    if task.author == username:
-        task.delete()
+    if task.author != username:
         return redirect('index')
+    task.delete()
+    return redirect('index')

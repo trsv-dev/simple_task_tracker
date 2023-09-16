@@ -17,12 +17,10 @@
             <label for="id_title">Название:</label>
             <input type="text" class="form-control" id="id_title" name="title" value="{{ task.title }}" required>
         </div>
-
         <div class="form-group">
             <label for="id_description">Описание:</label>
-            <textarea class="form-control" id="id_description" name="description" required>{{ task.description }}</textarea>
+            <textarea class="form-control" id="id_description" name="description" rows="4" required>{{ task.description }}</textarea>
         </div>
-
         <div class="form-group">
             <label for="priority">Приоритет:</label>
             <select class="form-control" id="priority" name="priority" required>
@@ -38,14 +36,16 @@
                 <option value="В процессе выполнения" {% if task.status == 'В процессе выполнения' %}selected{% endif %}>В процессе выполнения</option>
                 <option value="Выполнено" {% if task.status == 'Выполнено' %}selected{% endif %}>Выполнено</option>
             </select>
-
+        </div>
 
         <div class="form-group">
             <label for="id_deadline">Дедлайн:</label>
             <input type="datetime-local" class="form-control" id="id_deadline" name="deadline" value="{{ task.deadline|date:'Y-m-d\TH:i' }}" required>
         </div>
-
-        <button type="submit" class="btn btn-primary">Сохранить</button>
+        <div class="btn-group-toggle">
+            <button type="submit" class="btn btn-success">Сохранить</button>
+            <a href="{% url 'index' %}" class="btn btn-secondary">Отмена</a>
+        </div>
     </form>
 
     {% if serializer.errors %}

@@ -10,14 +10,9 @@
         <p><b>Дедлайн:</b> {{ task.deadline }}</p>
 
         <!-- Кнопки "Редактировать" и "Удалить" с пробелом между ними -->
-        <div class="btn-group">
+        <div class="btn-group-toggle" style="display: flex; align-items: center;">
           <a href="{% url 'edit' pk=task.id %}" class="btn btn-primary">Редактировать</a>
-          <!-- Добавляем пробел между кнопками с помощью неразрываемого пробела -->
-          &nbsp;
-          <form method="post" action="{% url 'delete' pk=task.id %}">
-            {% csrf_token %}
-            <button type="submit" class="btn btn-danger">Удалить</button>
-          </form>
+          <a href="{% url 'delete' pk=task.id %}" class="btn btn-danger" style="margin-left: 5px;">Удалить</a>
         </div>
       </li>
     {% endfor %}
