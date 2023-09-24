@@ -9,7 +9,6 @@
         <p><b>Время создания:</b> {{ task.created }}</p>
         <p><b>Дедлайн:</b> {{ task.deadline }}</p>
 
-        <!-- Кнопки "Редактировать" и "Удалить" с пробелом между ними -->
         <div class="btn-group-toggle" style="display: flex; align-items: center;">
           <a href="{% url 'edit' pk=task.id %}" class="btn btn-primary">Редактировать</a>
           <a href="{% url 'delete' pk=task.id %}" class="btn btn-danger" style="margin-left: 5px;">Удалить</a>
