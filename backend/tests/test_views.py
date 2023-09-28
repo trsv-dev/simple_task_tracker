@@ -1,8 +1,6 @@
 from http import HTTPStatus
 
 from django.contrib.auth import get_user_model
-# from django.contrib.auth.models import User
-from django.core.exceptions import ObjectDoesNotExist
 from django.test import TestCase, Client
 from django.urls import reverse
 
