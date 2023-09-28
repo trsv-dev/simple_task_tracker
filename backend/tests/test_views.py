@@ -32,7 +32,6 @@ class ViewsTestCase(TestCase):
         self.test_title = 'Тестовая задача'
         self.test_description = 'Описание тестовой задачи'
         self.test_data = {
-            'author': self.test_user.id,
             'title': self.test_title,
             'description': self.test_description,
             'priority': 'Высокий',
@@ -46,10 +45,16 @@ class ViewsTestCase(TestCase):
             'status': 'В процессе выполнения',
             'deadline': '2100-01-01 00:00:00',
         }
+        self.test_task = Task.objects.create(
+            author=self.test_user,
+            title=self.test_title,
+            description=self.test_description
+        )
 
     def tearDown(self):
         """Удаляем тестовые данные после прохождения тестов."""
 
+        self.test_task.delete()
         self.authorized_client.logout()
         self.authorized_client_not_author.logout()
         self.test_user.delete()
@@ -104,37 +109,32 @@ class ViewsTestCase(TestCase):
             data=self.test_data,
         )
 
-        self.assertFalse(
-            Task.objects.filter(
-                title=self.test_title,
-                description=self.test_description
-            ),
-            msg='Задача не должна создаваться неавторизованным пользователем!'  # вынести в новый тест
+        # Счетчик уже будет равен 1, т.к. в классе setUp у нас
+        # создана одна тестовая задача.
+        tasks_count = Task.objects.count()
+
+        self.assertTrue(
+            tasks_count != 2,
+            msg='Задача не должна создаваться неавторизованным пользователем!'
         )
 
-        self.assertIn(
+        self.assertEqual(
             response.status_code,
-            [HTTPStatus.FOUND, HTTPStatus.FORBIDDEN],
-            'Неавторизованный пользователь должен быть переадресован!'
+            HTTPStatus.FOUND,
+            msg='Неавторизованный пользователь должен быть переадресован!'
         )
 
     def test_edit_task_by_author(self):
         """Тестируем редактирование задачи автором."""
 
-        test_task = Task.objects.create(
-            author=self.test_user,
-            title=self.test_title,
-            description=self.test_description
-        )
-
-        edit_url = reverse('edit', args=[test_task.id])
+        edit_url = reverse('edit', args=[self.test_task.id])
         response_with_context = self.authorized_client.get(edit_url)
 
         edit_response = self.authorized_client.post(edit_url, self.edited_data)
-        edited_task = Task.objects.get(pk=test_task.pk)
+        edited_task = Task.objects.get(pk=self.test_task.pk)
 
         self.assertNotEqual(
-            test_task.title,
+            self.test_task.title,
             edited_task.title,
             'Задача до и после редактирования должны различаться!'
         )
@@ -145,32 +145,26 @@ class ViewsTestCase(TestCase):
             'После редактирования задачи должен '
             'происходить редирект на главную страницу! (временно)'
         )
-        print(response_with_context.context)
+
         self.assertEqual(
             response_with_context.context['task'],
-            test_task,
-            'Контекст должен содержать задачу, которую мы редактировали.'
+            self.test_task,
+            'Контекст должен содержать задачу, которую мы редактировали!'
         )
 
     def test_edit_task_by_other_user(self):
         """Тестируем редактирование задачи не автором."""
 
-        test_task = Task.objects.create(
-            author=self.test_user,
-            title=self.test_title,
-            description=self.test_description
-        )
-
-        url = reverse('edit', args=[test_task.pk])
+        edit_url = reverse('edit', args=[self.test_task.pk])
         response = self.authorized_client_not_author.post(
-            url, self.edited_data
+            edit_url, self.edited_data
         )
 
-        edited_task = Task.objects.get(pk=test_task.pk)
+        edited_task = Task.objects.get(pk=self.test_task.pk)
 
         self.assertEqual(
             edited_task,
-            test_task,
+            self.test_task,
             'Не автор не может изменить задачу!'
         )
 
@@ -184,17 +178,15 @@ class ViewsTestCase(TestCase):
     def test_delete_task_by_author(self):
         """Тестируем удаление задачи от существующего пользователя."""
 
-        test_task = Task.objects.create(
-            author=self.test_user,
-            title=self.test_title,
-            description=self.test_description
-        )
-
-        delete_url = reverse('delete', args=[test_task.pk])
+        delete_url = reverse('delete', args=[self.test_task.pk])
         response = self.authorized_client.delete(delete_url)
 
-        with self.assertRaises(ObjectDoesNotExist):
-            Task.objects.get(pk=test_task.pk)
+        task_count = Task.objects.count()
+
+        self.assertTrue(
+            task_count == 0,
+            'Задача должна удаляться автором'
+        )
 
         self.assertEqual(
             response.status_code,
@@ -209,17 +201,8 @@ class ViewsTestCase(TestCase):
         отличного от автора задачи.
         """
 
-        test_task = Task.objects.create(
-            author=self.test_user,
-            title=self.test_title,
-            description=self.test_description
-        )
-        other_user = User.objects.create_user(username='other_user')
-        other_client = Client()
-        other_client.force_login(other_user)
-        delete_url = reverse('delete', args=[test_task.pk])
-
-        response = other_client.delete(delete_url)
+        delete_url = reverse('delete', args=[self.test_task.pk])
+        response = self.authorized_client_not_author.delete(delete_url)
 
         self.assertEqual(
             response.status_code,
@@ -231,14 +214,7 @@ class ViewsTestCase(TestCase):
     def test_task_delete_response_status(self):
         """Тестируем статус ответа при удалении задачи."""
 
-        test_task = Task.objects.create(
-            author=self.test_user,
-            title=self.test_title,
-            description=self.test_description
-        )
-
-        self.client.force_login(self.test_user)
-        delete_url = reverse('delete', args=[test_task.pk])
+        delete_url = reverse('delete', args=[self.test_task.pk])
         response = self.client.delete(delete_url)
 
         self.assertEqual(
