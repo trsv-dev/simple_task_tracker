@@ -1,12 +1,10 @@
 import pytest
 from django.contrib.auth import get_user_model
-from django.test import TestCase
-from django.urls import reverse
 from django.test import Client
+from django.test import TestCase
 from django.utils import timezone
 
-from tracker.models import (Task, Tags, TaskTag, PRIORITY,
-                            HIGH, MEDIUM, LOW, PENDING)
+from tracker.models import (Task, Tags, TaskTag, HIGH, MEDIUM, LOW, PENDING)
 
 User = get_user_model()
 
