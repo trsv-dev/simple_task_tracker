@@ -3,9 +3,10 @@ from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.urls import reverse
 from django.test import Client
+from django.utils import timezone
 
-from tracker.models import Task, Tags, TaskTag, PRIORITY
-
+from tracker.models import (Task, Tags, TaskTag, PRIORITY,
+                            HIGH, MEDIUM, LOW, PENDING)
 
 User = get_user_model()
 
@@ -46,7 +47,7 @@ class ModelsTestCase(TestCase):
     def setUp(self):
         """Тестовые данные."""
 
-        self.test_user = User.objects.create(
+        self.test_user = User.objects.create_user(
             username='test_user'
         )
         self.authorized_client = Client()
@@ -86,14 +87,18 @@ class ModelsTestCase(TestCase):
     def test_task_model_has_required_fields(self):
         """Проверяем, что модель Task имеет все необходимые поля."""
 
+        task = self.test_task
+        task_fields = [field.name for field in task._meta.get_fields()]
         required_fields = ['author', 'title', 'description', 'priority',
                            'status', 'deadline', 'tags']
 
-        for field_name in required_fields:
-            self.assertTrue(
-                hasattr(self.test_task, field_name),
-                f'Поле {field_name} отсутствует в модели Task'
-            )
+        for field in required_fields:
+            with self.subTest(field=field):
+                self.assertIn(
+                    field,
+                    task_fields,
+                    msg=f'Поле {field} отсутствует в модели Task!'
+                )
 
     def test_labels_have_correct_names(self):
         """Проверяем, что verbose_names совпадают с ожидаемыми."""
@@ -163,22 +168,40 @@ class ModelsTestCase(TestCase):
     def test_task_model_return_colors(self):
         """Проверяем, что модель Task возвращает цвета."""
 
-        edit_url = reverse('edit', args=[self.test_task.pk])
-        response = self.authorized_client.post(edit_url, data=self.edited_data)
+        for priority, expected_color in [(HIGH, 'red'),
+                                         (MEDIUM, 'blue'), (LOW, 'green')]:
+            task = Task.objects.create(
+                author=self.test_user,
+                title=self.test_title,
+                description=self.test_description,
+                priority=priority,
+                status=PENDING,
+                deadline=timezone.now()
+            )
 
-        edited_task = Task.objects.get(pk=self.test_task.pk)
-        self.assertEqual(edited_task.get_priority_color(), 'red')
+            model_color = task.get_priority_color()
+
+            self.assertEqual(
+                model_color,
+                expected_color,
+                f'Цвет приоритета {model_color} не совпадает с '
+                f'ожидаемым {expected_color}!'
+            )
 
     def test_tags_model_has_required_fields(self):
         """Проверяем, что модель Tags имеет все необходимые поля."""
 
+        tag = self.test_tag
+        tag_fields = [field.name for field in tag._meta.get_fields()]
         required_fields = ['name', 'slug']
 
-        for field_name in required_fields:
-            self.assertTrue(
-                hasattr(self.test_tag, field_name),
-                f'Поле {field_name} отсутствует в модели Tag'
-            )
+        for field in required_fields:
+            with self.subTest(field=field):
+                self.assertIn(
+                    field,
+                    tag_fields,
+                    f'Поле {field} отсутствует в модели Tag'
+                )
 
     def test_tags_model_return_str_title(self):
         """Проверяем, что метод __str__ класса Tag возвращает строковое имя."""
@@ -213,10 +236,14 @@ class ModelsTestCase(TestCase):
     def test_tasktag_model_has_required_fields(self):
         """Проверяем, что модель TaskTag имеет все необходимые поля."""
 
+        tasktag = self.test_tasktag
+        tasktag_fields = [field.name for field in tasktag._meta.get_fields()]
         required_fields = ['task', 'tag']
 
-        for field_name in required_fields:
-            self.assertTrue(
-                hasattr(self.test_tasktag, field_name),
-                f'Поле {field_name} отсутствует в модели TaskTag'
-            )
+        for field in required_fields:
+            with self.subTest(field=field):
+                self.assertIn(
+                    field,
+                    tasktag_fields,
+                    f'Поле {field} отсутствует в модели TaskTag'
+                )
