@@ -4,51 +4,67 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
-    <title>Создать задачу</title>
+    <title>{% if task %}Редактировать{% else %}Создать{% endif %} задачу</title>
 </head>
 <body>
 <div class="container mt-5">
-    <h1 class="text-center">Создать новую задачу</h1>
+    <h1 class="text-center">{% if task %}Редактировать{% else %}Создать{% endif %} задачу</h1>
 
-    <form method="post">
+    <form method="post" {% if task %}action="{% url 'edit' pk=task.pk %}"{% else %}action="{% url 'create' %}"{% endif %}>
         {% csrf_token %}
 
-        {% if request.method == 'POST' %}
-            {{ serializer.errors }}
+        {% if task %}
+            <input type="hidden" name="pk" value="{{ task.pk }}">
         {% endif %}
 
         <div class="form-group">
-            <label for="title">Название:</label>
-            <input type="text" class="form-control" id="title" name="title" placeholder="Введите название задачи" required>
+            <label for="id_title">Название:</label>
+            <input type="text" class="form-control" id="id_title" name="title" {% if task %}value="{{ task.title }}"{% endif %} required>
         </div>
         <div class="form-group">
-            <label for="description">Описание:</label>
-            <textarea class="form-control" id="description" name="description" rows="4" placeholder="Введите описание задачи" required></textarea>
+            <label for="id_description">Описание:</label>
+            <textarea class="form-control" id="id_description" name="description" rows="4" required>{% if task %}{{ task.description }}{% endif %}</textarea>
         </div>
         <div class="form-group">
             <label for="priority">Приоритет:</label>
             <select class="form-control" id="priority" name="priority" required>
-                <option value="Низкий">Низкий</option>
-                <option value="Средний">Средний</option>
-                <option value="Высокий">Высокий</option>
+                <option value="Низкий" {% if task and task.priority == 'Низкий' %}selected{% endif %}>Низкий</option>
+                <option value="Средний" {% if task and task.priority == 'Средний' %}selected{% endif %}>Средний</option>
+                <option value="Высокий" {% if task and task.priority == 'Высокий' %}selected{% endif %}>Высокий</option>
             </select>
         </div>
         <div class="form-group">
             <label for="status">Статус:</label>
             <select class="form-control" id="status" name="status" required>
-                <option value="Ожидает выполнения">Ожидает выполнения</option>
-                <option value="В процессе выполнения">В процессе выполнения</option>
-                <option value="Выполнено">Выполнено</option>
+                <option value="Ожидает выполнения" {% if task and task.status == 'Ожидает выполнения' %}selected{% endif %}>Ожидает выполнения</option>
+                <option value="В процессе выполнения" {% if task and task.status == 'В процессе выполнения' %}selected{% endif %}>В процессе выполнения</option>
+                <option value="Выполнено" {% if task and task.status == 'Выполнено' %}selected{% endif %}>Выполнено</option>
             </select>
         </div>
+
         <div class="form-group">
-            <label for="deadline">Дедлайн:</label>
-            <input type="datetime-local" class="form-control" id="deadline" name="deadline" required>
+            <label for="id_deadline">Дедлайн:</label>
+            <input type="datetime-local" class="form-control" id="id_deadline" name="deadline" {% if task %}value="{{ task.deadline|date:'Y-m-d\TH:i' }}"{% endif %} required>
         </div>
-        <button type="submit" class="btn btn-primary">Создать</button>
-        <a href="{% url 'index' %}" class="btn btn-secondary">Отмена</a>
+        <div class="btn-group-toggle">
+            <button type="submit" class="btn btn-success">{% if task %}Сохранить{% else %}Создать{% endif %}</button>
+            <a href="{% url 'index' %}" class="btn btn-secondary">Отмена</a>
+        </div>
     </form>
+
+    {% if serializer.errors %}
+        <div class="alert alert-danger">
+            {% for field, errors in serializer.errors.items %}
+                <strong>{{ field }}:</strong>
+                {% for error in errors %}
+                    {{ error }}
+                {% endfor %}
+                <br>
+            {% endfor %}
+        </div>
+    {% endif %}
 </div>
+{% include 'includes/footer.html' %}
 
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>

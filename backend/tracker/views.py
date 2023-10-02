@@ -28,14 +28,14 @@ def create_task(request):
 def edit_task(request, pk):
     username = request.user
     task = get_object_or_404(Task, pk=pk)
-    if task.author != username:
+    if not (username == task.author or username.is_staff):
         return redirect('index')
     form = TaskCreateForm(request.POST, instance=task)
     if form.is_valid():
         form.save()
         return redirect('index')
     context = {'task': task}
-    return render(request, 'tasks/edit.html', context)
+    return render(request, 'tasks/create.html', context)
 
 
 @login_required
