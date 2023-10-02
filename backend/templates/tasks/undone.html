@@ -4,11 +4,11 @@
       <li class="list-group-item">
         <h2 style="color: {{ task.get_priority_color }}">{{ task.title }}</h2>
         <p><b>Описание:</b> {{ task.description }}</p>
+        <p><b>Автор:</b> {{ task.author }}</p>
         <p><b>Приоритет:</b> {{ task.priority }}</p>
         <p><b>Статус:</b> {{ task.status }}</p>
         <p><b>Время создания:</b> {{ task.created }}</p>
         <p><b>Дедлайн:</b> {{ task.deadline }}</p>
-        <p><b>Автор:</b> {{ task.author }}</p>
 
         <div class="btn-group-toggle" style="display: flex; align-items: center;">
           {% if user.is_authenticated %}
