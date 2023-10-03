@@ -19,7 +19,8 @@ class TaskAdmin(admin.ModelAdmin):
     show_tags.short_description = 'Теги'
 
     list_display = ('author', 'title', 'description', 'show_tags', 'priority',
-                    'status', 'created', 'deadline')
+                    'status', 'created', 'deadline', 'is_done', 'done_by',
+                    'done_by_time')
     ordering = ('created',)
     inlines = (TagsInLine,)
 

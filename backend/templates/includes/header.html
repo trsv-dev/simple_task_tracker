@@ -1,20 +1,21 @@
 {% block header_content %}
 <div class="container mt-5">
 <h1 class="text-center">
-    <a href="{% url 'index' %}" style="text-decoration: none; color: inherit;">
-    <h1 style="text-align: center;">Трекер задач</h1>
+    <a href="{% url 'tracker:index' %}" style="text-decoration: none; color: inherit;">
+        <h1 style="text-align: center;">Трекер задач</h1>
     </a>
 </h1>
     <div style="text-align: center;">
-        {% if not request.resolver_match.url_name == 'login' %}
+        {% if request.resolver_match.url_name != 'login' and request.resolver_match.url_name != 'register' %}
             {% if user.is_staff or user.is_admin %}
                 <a class="nav-link link-dark" href="{% url 'admin:index' %}" style="display: inline-block;">Админ-панель</a>
             {% endif %}
             {% if user.is_authenticated %}
-                <a class="nav-link link-dark" href="{% url 'create' %}" style="display: inline-block;">Создать задачу</a>
-                <a class="nav-link link-dark" href="{% url 'logout' %}" style="display: inline-block;">Выйти (вошли как {{ user.username }})</a>
+                <a class="nav-link link-dark" href="{% url 'tracker:create' %}" style="display: inline-block;">Создать задачу</a>
+                <a class="nav-link link-dark" href="{% url 'users:logout' %}" style="display: inline-block;">Выйти (вошли как {{ user.username }})</a>
             {% else %}
-                <a class="nav-link link-dark" href="{% url 'login' %}" style="display: inline-block;">Войти</a>
+                <a class="nav-link link-dark" href="{% url 'users:login' %}" style="display: inline-block;">Войти</a> |
+                <a class="nav-link link-dark" href="{% url 'users:register' %}" style="display: inline-block;">Зарегистрироваться</a>
             {% endif %}
         {% endif %}
     </div>

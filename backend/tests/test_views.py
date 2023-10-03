@@ -61,7 +61,7 @@ class ViewsTestCase(TestCase):
     def test_homepage_by_guest_client(self):
         """Тестируем доступность главной страницы."""
 
-        response = self.guest_client.get(reverse('index'))
+        response = self.guest_client.get(reverse('tracker:index'))
         self.assertEqual(response.status_code, HTTPStatus.OK)
 
     def test_create_page_by_authorized_client(self):
@@ -70,7 +70,7 @@ class ViewsTestCase(TestCase):
         для авторизованного пользователя.
         """
 
-        response = self.authorized_client.get(reverse('create'))
+        response = self.authorized_client.get(reverse('tracker:create'))
         self.assertEqual(response.status_code, HTTPStatus.OK)
 
     def test_create_task_by_authorized_user(self):
@@ -80,7 +80,7 @@ class ViewsTestCase(TestCase):
         """
 
         response = self.authorized_client.post(
-            reverse('create'),
+            reverse('tracker:create'),
             data=self.test_data
         )
         created_test_task = Task.objects.last()
@@ -103,7 +103,7 @@ class ViewsTestCase(TestCase):
 
         unauthorized_user = Client()
         response = unauthorized_user.post(
-            reverse('create'),
+            reverse('tracker:create'),
             data=self.test_data,
         )
 
@@ -125,7 +125,7 @@ class ViewsTestCase(TestCase):
     def test_edit_task_by_author(self):
         """Тестируем редактирование задачи автором."""
 
-        edit_url = reverse('edit', args=[self.test_task.id])
+        edit_url = reverse('tracker:edit', args=[self.test_task.id])
         response_with_context = self.authorized_client.get(edit_url)
 
         edit_response = self.authorized_client.post(edit_url, self.edited_data)
@@ -153,7 +153,7 @@ class ViewsTestCase(TestCase):
     def test_edit_task_by_other_user(self):
         """Тестируем редактирование задачи не автором."""
 
-        edit_url = reverse('edit', args=[self.test_task.pk])
+        edit_url = reverse('tracker:edit', args=[self.test_task.pk])
         response = self.authorized_client_not_author.post(
             edit_url, self.edited_data
         )
@@ -176,7 +176,10 @@ class ViewsTestCase(TestCase):
     def test_delete_task_by_author(self):
         """Тестируем удаление задачи от существующего пользователя."""
 
-        delete_url = reverse('delete', args=[self.test_task.pk])
+        delete_url = reverse(
+            'tracker:delete',
+            args=[self.test_task.pk]
+        )
         response = self.authorized_client.delete(delete_url)
 
         task_count = Task.objects.count()
@@ -199,7 +202,10 @@ class ViewsTestCase(TestCase):
         отличного от автора задачи.
         """
 
-        delete_url = reverse('delete', args=[self.test_task.pk])
+        delete_url = reverse(
+            'tracker:delete',
+            args=[self.test_task.pk]
+        )
         response = self.authorized_client_not_author.delete(delete_url)
 
         self.assertEqual(
@@ -212,7 +218,10 @@ class ViewsTestCase(TestCase):
     def test_task_delete_response_status(self):
         """Тестируем статус ответа при удалении задачи."""
 
-        delete_url = reverse('delete', args=[self.test_task.pk])
+        delete_url = reverse(
+            'tracker:delete',
+            args=[self.test_task.pk]
+        )
         response = self.client.delete(delete_url)
 
         self.assertEqual(

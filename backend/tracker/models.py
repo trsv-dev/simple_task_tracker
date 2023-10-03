@@ -95,6 +95,25 @@ class Task(models.Model):
         default=timezone.now,
         verbose_name='Дедлайн'
     )
+    is_done = models.BooleanField(
+        default=False,
+        verbose_name='Выполнено'
+    )
+    done_by = models.ForeignKey(
+        User,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name='done_by',
+        verbose_name='Пометил(а) как выполненное',
+        help_text='Выберите пользователя, отметившего задачу выполненной'
+    )
+    done_by_time = models.DateTimeField(
+        null=True,
+        blank=True,
+        verbose_name='Время выполнения',
+        help_text='Время, когда задача была отмечена выполненной'
+    )
     tags = models.ManyToManyField(
         Tags,
         blank=True,

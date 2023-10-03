@@ -10,7 +10,7 @@
 <div class="container mt-5">
     <h1 class="text-center">{% if task %}Редактировать{% else %}Создать{% endif %} задачу</h1>
 
-    <form method="post" {% if task %}action="{% url 'edit' pk=task.pk %}"{% else %}action="{% url 'create' %}"{% endif %}>
+    <form method="post" {% if task %}action="{% url 'tracker:edit' pk=task.pk %}"{% else %}action="{% url 'tracker:create' %}"{% endif %}>
         {% csrf_token %}
 
         {% if task %}
@@ -23,7 +23,7 @@
         </div>
         <div class="form-group">
             <label for="id_description">Описание:</label>
-            <textarea class="form-control" id="id_description" name="description" rows="4" required>{% if task %}{{ task.description }}{% endif %}</textarea>
+            <textarea class="form-control" id="id_description" name="description" rows="6" required>{% if task %}{{ task.description }}{% endif %}</textarea>
         </div>
         <div class="form-group">
             <label for="priority">Приоритет:</label>
@@ -48,7 +48,7 @@
         </div>
         <div class="btn-group-toggle">
             <button type="submit" class="btn btn-success">{% if task %}Сохранить{% else %}Создать{% endif %}</button>
-            <a href="{% url 'index' %}" class="btn btn-secondary">Отмена</a>
+            <a href="{% url 'tracker:index' %}" class="btn btn-secondary">Отмена</a>
         </div>
     </form>
 
