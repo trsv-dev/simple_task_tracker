@@ -41,23 +41,16 @@
                 <option value="Выполнено" {% if task and task.status == 'Выполнено' %}selected{% endif %}>Выполнено</option>
             </select>
         </div>
-
-
         <div class="form-group">
             <label for="id_assigned_to">Ответственный:</label>
             <select class="form-control" id="id_assigned_to" name="assigned_to">
                 {% for user in all_users %}
-                    <option value="{{ user.id }}" {% if user.id == task.assigned_to.id %}selected{% endif %}>
+                    <option value="{{ user.id }}" {% if task.assigned_to and user.id == task.assigned_to.id %}selected{% elif not task.assigned_to and user.id == request.user.id %}selected{% endif %}>
                         {{ user.username }}
                     </option>
                 {% endfor %}
-                {% if not task.assigned_to %}
-                    <option value="" selected>---------</option>
-                {% endif %}
             </select>
         </div>
-
-
         <div class="form-group">
             <label for="id_deadline">Дедлайн:</label>
             <input type="datetime-local" class="form-control" id="id_deadline" name="deadline" {% if task %}value="{{ task.deadline|date:'Y-m-d\TH:i' }}"{% endif %} required>

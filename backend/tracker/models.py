@@ -115,7 +115,7 @@ class Task(models.Model):
         blank=True,
         on_delete=models.SET_NULL,
         related_name='done_by',
-        verbose_name='Пометил(а) как выполненное',
+        verbose_name='Выполнил(а)',
         help_text='Выберите пользователя, отметившего задачу выполненной'
     )
     done_by_time = models.DateTimeField(

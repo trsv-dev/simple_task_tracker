@@ -30,7 +30,6 @@ def create_task(request):
     if form.is_valid():
         task = form.save(commit=False)
         task.author = username
-        # task.assigned_to = username
         form.save()
         return redirect('tracker:index')
     return render(request, 'tasks/create.html', context)
