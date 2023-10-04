@@ -34,6 +34,7 @@ class ViewsTestCase(TestCase):
             'description': self.test_description,
             'priority': 'Высокий',
             'status': 'В процессе выполнения',
+            'assigned_to': self.test_user,
             'deadline': '2100-01-01 00:00:00',
             'is_done': 'False',
             'done_by': '',
@@ -44,6 +45,10 @@ class ViewsTestCase(TestCase):
             'description': 'Измененное описание тестовой задачи',
             'priority': 'Высокий',
             'status': 'В процессе выполнения',
+            # Для 'assigned_to' используем self.test_user.id или '1',
+            # т.к. в модели ForeignKey, а это значит что значение поля
+            # будет равняться id пользователя по умолчанию.
+            'assigned_to': self.test_user.id,
             'deadline': '2100-01-01 00:00:00',
             'is_done': 'False',
             'done_by': '',
@@ -52,7 +57,8 @@ class ViewsTestCase(TestCase):
         self.test_task = Task.objects.create(
             author=self.test_user,
             title=self.test_title,
-            description=self.test_description
+            description=self.test_description,
+            assigned_to=self.test_user,
         )
 
     def tearDown(self):
@@ -99,6 +105,18 @@ class ViewsTestCase(TestCase):
                 title='Тестовая задача',
                 author=self.test_user
             ).exists()
+        )
+
+        self.assertEqual(
+            created_test_task.author,
+            self.test_user,
+            msg='Автор задачи должен быть установлен корректно!'
+        )
+
+        self.assertEqual(
+            created_test_task.assigned_to.id,
+            self.test_user.id,
+            msg='Исполнитель по умолчанию должен быть равен текущему юзеру!'
         )
 
     def test_create_task_by_unauthorized_user(self):

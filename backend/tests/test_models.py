@@ -56,7 +56,8 @@ class ModelsTestCase(TestCase):
         self.test_task = Task.objects.create(
             author=self.test_user,
             title=self.test_title,
-            description=self.test_description
+            description=self.test_description,
+            assigned_to=self.test_user,
         )
 
         self.edited_data = {
@@ -64,7 +65,14 @@ class ModelsTestCase(TestCase):
             'description': 'Измененное описание тестовой задачи',
             'priority': 'Высокий',
             'status': 'В процессе выполнения',
+            # Для 'assigned_to' используем self.test_user.id или '1',
+            # т.к. в модели ForeignKey, а это значит что значение поля
+            # будет равняться id пользователя по умолчанию.
+            'assigned_to': self.test_user.id,
             'deadline': '2100-01-01 00:00:00',
+            'is_done': 'False',
+            'done_by': '',
+            'done_by_time': ''
         }
 
         self.test_tag = Tags.objects.create(name='test_tag', slug='test_slug')
@@ -174,6 +182,7 @@ class ModelsTestCase(TestCase):
                 description=self.test_description,
                 priority=priority,
                 status=PENDING,
+                assigned_to=self.test_user,
                 deadline=timezone.now()
             )
 

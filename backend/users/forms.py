@@ -6,7 +6,8 @@ from django.contrib.auth.models import User
 class CustomUserCreationForm(UserCreationForm):
     """
     Добавляет поле email в стандартную форму
-    регистрации пользователя UserCreationForm.
+    регистрации пользователя UserCreationForm из
+    django.contrib.auth.forms.
     """
 
     email = forms.EmailField()

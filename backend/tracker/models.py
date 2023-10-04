@@ -87,6 +87,16 @@ class Task(models.Model):
         verbose_name='Статус',
         help_text='Выберите статус'
     )
+    assigned_to = models.ForeignKey(
+        User,
+        default=User,
+        null=False,
+        blank=False,
+        on_delete=models.CASCADE,
+        verbose_name='Исполнитель',
+        help_text='Выберите пользователя, который '
+                  'будет ответственен за задачу.'
+    )
     created = models.DateTimeField(
         auto_now_add=True,
         verbose_name='Время создания'

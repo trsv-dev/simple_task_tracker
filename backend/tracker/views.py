@@ -1,4 +1,5 @@
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.models import User
 from django.shortcuts import render, redirect, get_object_or_404
 from django.utils import timezone
 
@@ -19,11 +20,17 @@ def create_task(request):
     """Создание задачи."""
 
     username = request.user
+    all_users = User.objects.all()
     form = TaskCreateForm(request.POST)
-    context = {'form': form}
+    context = {
+        'form': form,
+        'current_user': username,
+        'all_users': all_users
+    }
     if form.is_valid():
         task = form.save(commit=False)
         task.author = username
+        # task.assigned_to = username
         form.save()
         return redirect('tracker:index')
     return render(request, 'tasks/create.html', context)
@@ -34,6 +41,7 @@ def edit_task(request, pk):
     """Редактирование задачи."""
 
     username = request.user
+    all_users = User.objects.all()
     task = get_object_or_404(Task, pk=pk)
     if not (username == task.author or username.is_staff):
         return redirect('tracker:index')
@@ -41,7 +49,10 @@ def edit_task(request, pk):
     if form.is_valid():
         form.save()
         return redirect('tracker:index')
-    context = {'task': task}
+    context = {
+        'task': task,
+        'all_users': all_users
+    }
     return render(request, 'tasks/create.html', context)
 
 
