@@ -4,4 +4,10 @@
     <div class="text-center">
         Вы вышли из системы. Если захотите снова войти - вы знаете что делать.
     </div>
+
+    <script>
+        setTimeout(function() {
+            window.location.href = "{% url 'tracker:index' %}";
+        }, 3000);
+    </script>
 {% endblock %}

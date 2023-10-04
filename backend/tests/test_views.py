@@ -35,6 +35,9 @@ class ViewsTestCase(TestCase):
             'priority': 'Высокий',
             'status': 'В процессе выполнения',
             'deadline': '2100-01-01 00:00:00',
+            'is_done': 'False',
+            'done_by': '',
+            'done_by_time': ''
         }
         self.edited_data = {
             'title': 'Измененное название тестовой задачи',
@@ -42,6 +45,9 @@ class ViewsTestCase(TestCase):
             'priority': 'Высокий',
             'status': 'В процессе выполнения',
             'deadline': '2100-01-01 00:00:00',
+            'is_done': 'False',
+            'done_by': '',
+            'done_by_time': ''
         }
         self.test_task = Task.objects.create(
             author=self.test_user,
@@ -228,4 +234,58 @@ class ViewsTestCase(TestCase):
             response.status_code,
             HTTPStatus.FOUND,
             'При удалении задачи возвращен код страницы, отличный от 302.'
+        )
+
+    def test_task_mark_as_done_by_author(self):
+        """Тестируем отметку задачи как выполненной автором."""
+
+        done_url = reverse(
+            'tracker:mark_as_done',
+            args=[self.test_task.pk]
+        )
+        response = self.authorized_client.post(done_url)
+
+        done_task = Task.objects.get(pk=self.test_task.pk)
+
+        self.assertNotEqual(
+            done_task.is_done,
+            self.test_task.is_done,
+            msg='Задача должна быть помечена как выполненная!'
+        )
+
+        self.assertEqual(
+            response.status_code,
+            HTTPStatus.FOUND,
+            msg='После отметки задачи как выполненной должен '
+                'происходить редирект на главную страницу!'
+        )
+
+    def test_task_mark_as_undone_by_author(self):
+        """Тестируем снятие отметки 'выполнено' с задачи автором."""
+
+        done_url = reverse(
+            'tracker:mark_as_done',
+            args=[self.test_task.pk]
+        )
+        response = self.authorized_client.post(done_url)
+        done_task = Task.objects.get(pk=self.test_task.pk)
+
+        undone_url = reverse(
+            'tracker:mark_as_undone',
+            args=[self.test_task.pk]
+        )
+        response = self.authorized_client.post(undone_url)
+        undone_task = Task.objects.get(pk=self.test_task.pk)
+
+        self.assertNotEqual(
+            done_task.is_done,
+            undone_task.is_done,
+            msg='Задача должна быть помечена как невыполненная!'
+        )
+
+        self.assertEqual(
+            response.status_code,
+            HTTPStatus.FOUND,
+            msg='После снятия отметки "выполнено" с задачи должен '
+                'происходить редирект на главную!'
         )

@@ -77,5 +77,7 @@ def mark_as_undone(request, pk):
     task = Task.objects.get(pk=pk)
     if task.is_done:
         task.is_done = False
+        task.done_by_time = None
+        task.done_by = None
         task.save()
         return redirect('tracker:index')
