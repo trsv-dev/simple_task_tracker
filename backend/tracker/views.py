@@ -61,7 +61,7 @@ def delete_task(request, pk):
 
     username = request.user
     task = get_object_or_404(Task, pk=pk)
-    if task.author != username:
+    if not (username.is_staff or task.author == username):
         return redirect('tracker:index')
     task.delete()
     return redirect('tracker:index')
