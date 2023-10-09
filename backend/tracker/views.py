@@ -3,8 +3,10 @@ from django.contrib.auth.models import User
 from django.shortcuts import render, redirect, get_object_or_404
 from django.utils import timezone
 
+from task_tracker.settings import TEMPLATES_DIR
 from tracker.forms import TaskCreateForm
 from tracker.models import Task
+from tracker.utils import send_email_message
 
 
 def index(request):
@@ -22,15 +24,26 @@ def create_task(request):
     username = request.user
     all_users = User.objects.all()
     form = TaskCreateForm(request.POST)
+
+    template = f'{TEMPLATES_DIR}/email_templates/task_mail.html'
+
     context = {
         'form': form,
         'current_user': username,
         'all_users': all_users
     }
+
     if form.is_valid():
         task = form.save(commit=False)
         task.author = username
         form.save()
+
+        send_email_message(
+            email=task.assigned_to.email,
+            template=template,
+            task=task,
+        )
+
         return redirect('tracker:index')
     return render(request, 'tasks/create.html', context)
 
@@ -61,9 +74,28 @@ def delete_task(request, pk):
 
     username = request.user
     task = get_object_or_404(Task, pk=pk)
+    template = f'{TEMPLATES_DIR}/email_templates/delete_task_mail.html'
+
     if not (username.is_staff or task.author == username):
         return redirect('tracker:index')
+
+    email = task.assigned_to.email
+
+    context_to_delete = {
+        'author': task.author.username,
+        'title': task.title,
+        'username': username,
+        'assigned_to':  task.assigned_to
+    }
+
     task.delete()
+
+    send_email_message(
+        email=email,
+        template=template,
+        context_to_delete=context_to_delete
+    )
+
     return redirect('tracker:index')
 
 
