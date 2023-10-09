@@ -6,7 +6,7 @@ from django.utils import timezone
 from task_tracker.settings import TEMPLATES_DIR
 from tracker.forms import TaskCreateForm
 from tracker.models import Task
-from tracker.utils import send_email_message
+from tracker.utils import send_email_message, send_email_message_async
 
 
 def index(request):
@@ -38,7 +38,7 @@ def create_task(request):
         task.author = username
         form.save()
 
-        send_email_message(
+        send_email_message_async(
             email=task.assigned_to.email,
             template=template,
             task=task,
@@ -90,7 +90,7 @@ def delete_task(request, pk):
 
     task.delete()
 
-    send_email_message(
+    send_email_message_async(
         email=email,
         template=template,
         context_to_delete=context_to_delete
