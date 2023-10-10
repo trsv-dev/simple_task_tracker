@@ -55,16 +55,47 @@ def edit_task(request, pk):
     username = request.user
     all_users = User.objects.all()
     task = get_object_or_404(Task, pk=pk)
+    previous_assigned_to_username = task.assigned_to
+
     if not (username == task.author or username.is_staff):
         return redirect('tracker:index')
+
     form = TaskCreateForm(request.POST, instance=task)
+
     if form.is_valid():
+        task = form.save(commit=False)
+        new_assigned_to_username = form.cleaned_data.get('assigned_to')
+
+        if new_assigned_to_username != previous_assigned_to_username:
+            task.assigned_to = new_assigned_to_username
+
+            email = new_assigned_to_username.email
+
+            template = (f'{TEMPLATES_DIR}/email_templates/'
+                        f'reassigned_to_mail.html')
+
+            context_to_edit = {
+                'previous_assigned_to_username': previous_assigned_to_username,
+                'assigned_to': task.assigned_to,
+                'author': task.author.username,
+                'title': task.title
+            }
+
+            send_email_message_async(
+                email=email,
+                template=template,
+                context=context_to_edit
+            )
+
         form.save()
+
         return redirect('tracker:index')
+
     context = {
         'task': task,
         'all_users': all_users
     }
+
     return render(request, 'tasks/create.html', context)
 
 
@@ -93,7 +124,7 @@ def delete_task(request, pk):
     send_email_message_async(
         email=email,
         template=template,
-        context_to_delete=context_to_delete
+        context=context_to_delete
     )
 
     return redirect('tracker:index')

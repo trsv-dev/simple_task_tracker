@@ -6,7 +6,7 @@ from django.template.loader import render_to_string
 from task_tracker.settings import EMAIL_HOST_USER
 
 
-def send_email_message(email, template, task=None, context_to_delete=None,):
+def send_email_message(email, template, task=None, context=None,):
     """
     Отправка письма на электронную почту пользователю,
     которого отметили ответственным за выполнение задачи,
@@ -14,7 +14,7 @@ def send_email_message(email, template, task=None, context_to_delete=None,):
     """
 
     if task:
-        email_context = {
+        create_context = {
             'author': task.author,
             'title': task.title,
             'description': task.description,
@@ -28,10 +28,10 @@ def send_email_message(email, template, task=None, context_to_delete=None,):
             'done_by_time': task.done_by_time
         }
 
-    if context_to_delete:
-        message = render_to_string(template, context_to_delete)
+    if context:
+        message = render_to_string(template, context)
     else:
-        message = render_to_string(template, email_context)
+        message = render_to_string(template, create_context)
 
     send_mail(
         subject='Письмо от Simple task tracker',
@@ -43,7 +43,7 @@ def send_email_message(email, template, task=None, context_to_delete=None,):
 
 
 def send_email_message_async(email, template, task=None,
-                             context_to_delete=None):
+                             context=None):
     """
     Простая асинхронная отправка письма на электронную
     почту пользователю.
@@ -52,6 +52,6 @@ def send_email_message_async(email, template, task=None,
     send_mail_thread = Thread(
         target=send_email_message,
         name='send_email_message',
-        args=(email, template, task, context_to_delete)
+        args=(email, template, task, context)
     )
     send_mail_thread.start()

@@ -1,6 +1,8 @@
+import time
 from http import HTTPStatus
 
 from django.contrib.auth import get_user_model
+from django.core import mail
 from django.test import TestCase, Client
 from django.urls import reverse
 
@@ -16,10 +18,12 @@ class ViewsTestCase(TestCase):
         """Тестовые данные."""
 
         self.test_user = User.objects.create_user(
-            username='test_user'
+            username='test_user',
+            email='test@test.test'
         )
         self.test_not_author = User.objects.create_user(
-            username='test_not_author'
+            username='test_not_author',
+            email='test@test.test'
         )
         self.guest_client = Client()
         self.authorized_client = Client()
@@ -48,7 +52,7 @@ class ViewsTestCase(TestCase):
             # Для 'assigned_to' используем self.test_user.id или '1',
             # т.к. в модели ForeignKey, а это значит что значение поля
             # будет равняться id пользователя по умолчанию.
-            'assigned_to': self.test_user.id,
+            'assigned_to': self.test_not_author.id,
             'deadline': '2100-01-01 00:00:00',
             'is_done': 'False',
             'done_by': '',
@@ -252,6 +256,27 @@ class ViewsTestCase(TestCase):
             response.status_code,
             HTTPStatus.FOUND,
             'При удалении задачи возвращен код страницы, отличный от 302.'
+        )
+
+    def test_change_task_assigned_to_by_author(self):
+        """
+        Тестируем смену пользователя, ответственного за
+        выполнение задачи.
+        """
+
+        old_assigned_to = self.test_task.assigned_to
+
+        edit_url = reverse('tracker:edit', args=[self.test_task.pk])
+        edit_response = self.authorized_client.post(edit_url, self.edited_data)
+
+        edited_task = Task.objects.get(pk=self.test_task.pk)
+        new_assigned_to = edited_task.assigned_to
+
+        self.assertNotEqual(
+            new_assigned_to,
+            old_assigned_to,
+            msg='Ответственный за задачу пользователь должен '
+                'смениться при его изменении.'
         )
 
     def test_task_mark_as_done_by_author(self):
