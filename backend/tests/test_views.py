@@ -1,8 +1,6 @@
-import time
 from http import HTTPStatus
 
 from django.contrib.auth import get_user_model
-from django.core import mail
 from django.test import TestCase, Client
 from django.urls import reverse
 
@@ -58,6 +56,17 @@ class ViewsTestCase(TestCase):
             'done_by': '',
             'done_by_time': ''
         }
+        self.invalid_data = {
+            'title': '',
+            'description': 'Описание тестовой задачи',
+            'priority': 'Высокий',
+            'status': 'В процессе выполнения',
+            'assigned_to': self.test_user.id,
+            'deadline': '2100-01-01 00:00:00',
+            'is_done': 'False',
+            'done_by': '',
+            'done_by_time': ''
+        }
         self.test_task = Task.objects.create(
             author=self.test_user,
             title=self.test_title,
@@ -99,11 +108,14 @@ class ViewsTestCase(TestCase):
             reverse('tracker:create'),
             data=self.test_data
         )
+
         created_test_task = Task.objects.last()
+
         self.assertTrue(
             created_test_task,
             'Ошибка при создании объекта Task!'
         )
+
         self.assertTrue(
             Task.objects.filter(
                 title='Тестовая задача',
@@ -121,6 +133,36 @@ class ViewsTestCase(TestCase):
             created_test_task.assigned_to.id,
             self.test_user.id,
             msg='Исполнитель по умолчанию должен быть равен текущему юзеру!'
+        )
+
+    def test_create_task_with_invalid_form(self):
+        """Тестируем создание задачи с невалидной формой."""
+
+        # Значение будет равно 1, т.к. в тестовых данных создается задача.
+        tasks_count = Task.objects.count()
+
+        response = self.authorized_client.post(
+            reverse('tracker:create'),
+            data=self.invalid_data
+        )
+
+        form = response.context['form']
+
+        self.assertFormError(
+            form,
+            'title',
+            'Обязательное поле.'
+        )
+
+        self.assertNotEqual(
+            tasks_count,
+            2,
+            msg='Невалидная форма не должна приводить к созданию задачи!')
+
+        self.assertEqual(
+            response.status_code,
+            HTTPStatus.OK,
+            msg='Должна возвращаться страница создания задачи!'
         )
 
     def test_create_task_by_unauthorized_user(self):
@@ -331,4 +373,34 @@ class ViewsTestCase(TestCase):
             HTTPStatus.FOUND,
             msg='После снятия отметки "выполнено" с задачи должен '
                 'происходить редирект на главную!'
+        )
+
+    def test_create_task_with_invalid_form(self):
+        """Тестируем создание задачи с невалидной формой."""
+
+        # Значение будет равно 1, т.к. в тестовых данных создается задача.
+        tasks_count = Task.objects.count()
+
+        response = self.authorized_client.post(
+            reverse('tracker:create'),
+            data=self.invalid_data
+        )
+
+        form = response.context['form']
+
+        self.assertFormError(
+            form,
+            'title',
+            'Обязательное поле.'
+        )
+
+        self.assertNotEqual(
+            tasks_count,
+            2,
+            msg='Невалидная форма не должна приводить к созданию задачи!')
+
+        self.assertEqual(
+            response.status_code,
+            HTTPStatus.OK,
+            msg='Должна возвращаться страница создания задачи!'
         )
