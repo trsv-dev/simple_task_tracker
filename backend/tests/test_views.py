@@ -31,12 +31,20 @@ class ViewsTestCase(TestCase):
 
         self.test_title = 'Тестовая задача'
         self.test_description = 'Описание тестовой задачи'
+
+        self.test_task = Task.objects.create(
+            author=self.test_user,
+            title=self.test_title,
+            description=self.test_description,
+            assigned_to=self.test_user,
+        )
+
         self.test_data = {
-            'title': self.test_title,
-            'description': self.test_description,
+            'title': 'Тестовая задача 2',
+            'description': 'Описание тестовой задачи 2',
             'priority': 'Высокий',
             'status': 'В процессе выполнения',
-            'assigned_to': self.test_user,
+            'assigned_to': self.test_user.id,
             'deadline': '2100-01-01 00:00:00',
             'is_done': 'False',
             'done_by': '',
@@ -67,12 +75,6 @@ class ViewsTestCase(TestCase):
             'done_by': '',
             'done_by_time': ''
         }
-        self.test_task = Task.objects.create(
-            author=self.test_user,
-            title=self.test_title,
-            description=self.test_description,
-            assigned_to=self.test_user,
-        )
 
     def tearDown(self):
         """Удаляем тестовые данные после прохождения тестов."""
@@ -109,16 +111,21 @@ class ViewsTestCase(TestCase):
             data=self.test_data
         )
 
+        # Значение будет равно 1, т.к. в тестовых данных создается задача,
+        # т.е. нужно вычесть 1 из общего кол-ва.
+        tasks_count = Task.objects.count() - 1
         created_test_task = Task.objects.last()
+        assigned_to_id = created_test_task.assigned_to.id
 
-        self.assertTrue(
-            created_test_task,
-            'Ошибка при создании объекта Task!'
+        self.assertEqual(
+            tasks_count,
+            1,
+            msg='Задача должна создаваться!'
         )
 
         self.assertTrue(
             Task.objects.filter(
-                title='Тестовая задача',
+                title='Тестовая задача 2',
                 author=self.test_user
             ).exists()
         )
@@ -130,16 +137,24 @@ class ViewsTestCase(TestCase):
         )
 
         self.assertEqual(
-            created_test_task.assigned_to.id,
+            assigned_to_id,
             self.test_user.id,
             msg='Исполнитель по умолчанию должен быть равен текущему юзеру!'
+        )
+
+        self.assertEqual(
+            response.status_code,
+            HTTPStatus.FOUND,
+            msg='После создания задачи должна происходить '
+                'переадресация на главную страницу!'
         )
 
     def test_create_task_with_invalid_form(self):
         """Тестируем создание задачи с невалидной формой."""
 
-        # Значение будет равно 1, т.к. в тестовых данных создается задача.
-        tasks_count = Task.objects.count()
+        # Значение будет равно 1, т.к. в тестовых данных создается задача,
+        # т.е. нужно вычесть 1 из общего кол-ва.
+        tasks_count = Task.objects.count() - 1
 
         response = self.authorized_client.post(
             reverse('tracker:create'),
@@ -156,7 +171,7 @@ class ViewsTestCase(TestCase):
 
         self.assertNotEqual(
             tasks_count,
-            2,
+            1,
             msg='Невалидная форма не должна приводить к созданию задачи!')
 
         self.assertEqual(
@@ -177,12 +192,12 @@ class ViewsTestCase(TestCase):
             data=self.test_data,
         )
 
-        # Счетчик уже будет равен 1, т.к. в классе setUp у нас
-        # создана одна тестовая задача.
-        tasks_count = Task.objects.count()
+        # Значение будет равно 1, т.к. в тестовых данных создается задача,
+        # т.е. нужно вычесть 1 из общего кол-ва.
+        tasks_count = Task.objects.count() - 1
 
         self.assertTrue(
-            tasks_count != 2,
+            tasks_count == 0,
             msg='Задача не должна создаваться неавторизованным пользователем!'
         )
 
@@ -373,34 +388,4 @@ class ViewsTestCase(TestCase):
             HTTPStatus.FOUND,
             msg='После снятия отметки "выполнено" с задачи должен '
                 'происходить редирект на главную!'
-        )
-
-    def test_create_task_with_invalid_form(self):
-        """Тестируем создание задачи с невалидной формой."""
-
-        # Значение будет равно 1, т.к. в тестовых данных создается задача.
-        tasks_count = Task.objects.count()
-
-        response = self.authorized_client.post(
-            reverse('tracker:create'),
-            data=self.invalid_data
-        )
-
-        form = response.context['form']
-
-        self.assertFormError(
-            form,
-            'title',
-            'Обязательное поле.'
-        )
-
-        self.assertNotEqual(
-            tasks_count,
-            2,
-            msg='Невалидная форма не должна приводить к созданию задачи!')
-
-        self.assertEqual(
-            response.status_code,
-            HTTPStatus.OK,
-            msg='Должна возвращаться страница создания задачи!'
         )
