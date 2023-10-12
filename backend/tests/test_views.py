@@ -17,17 +17,32 @@ class ViewsTestCase(TestCase):
 
         self.test_user = User.objects.create_user(
             username='test_user',
-            email='test@test.test'
+            email='test_user@test.test'
         )
         self.test_not_author = User.objects.create_user(
             username='test_not_author',
-            email='test@test.test'
+            email='test_not_author@test.test'
+        )
+        self.test_admin_user = User.objects.create_user(
+            username='test_admin_user',
+            email='test_admin_user@test.test',
+            is_staff=True
+        )
+        self.test_assigned_to_user = User.objects.create_user(
+            username='assigned_to_user',
+            email='assigned_to_user@test.test'
         )
         self.guest_client = Client()
         self.authorized_client = Client()
         self.authorized_client_not_author = Client()
+        self.authorized_client_admin = Client()
+        self.authorized_client_assigned_to_user = Client()
         self.authorized_client.force_login(self.test_user)
         self.authorized_client_not_author.force_login(self.test_not_author)
+        self.authorized_client_admin.force_login(self.test_admin_user)
+        self.authorized_client_assigned_to_user.force_login(
+            self.test_assigned_to_user
+        )
 
         self.test_title = 'Тестовая задача'
         self.test_description = 'Описание тестовой задачи'
@@ -36,7 +51,7 @@ class ViewsTestCase(TestCase):
             author=self.test_user,
             title=self.test_title,
             description=self.test_description,
-            assigned_to=self.test_user,
+            assigned_to=self.test_assigned_to_user,
         )
 
         self.test_data = {
@@ -69,7 +84,7 @@ class ViewsTestCase(TestCase):
             'description': 'Описание тестовой задачи',
             'priority': 'Высокий',
             'status': 'В процессе выполнения',
-            'assigned_to': self.test_user.id,
+            'assigned_to': self.test_assigned_to_user.id,
             'deadline': '2100-01-01 00:00:00',
             'is_done': 'False',
             'done_by': '',
@@ -82,8 +97,12 @@ class ViewsTestCase(TestCase):
         self.test_task.delete()
         self.authorized_client.logout()
         self.authorized_client_not_author.logout()
+        self.authorized_client_admin.logout()
         self.test_user.delete()
         self.test_not_author.delete()
+        self.test_admin_user.delete()
+        self.authorized_client_assigned_to_user.logout()
+        self.test_assigned_to_user.delete()
 
     def test_homepage_by_guest_client(self):
         """Тестируем доступность главной страницы."""
@@ -142,12 +161,7 @@ class ViewsTestCase(TestCase):
             msg='Исполнитель по умолчанию должен быть равен текущему юзеру!'
         )
 
-        self.assertEqual(
-            response.status_code,
-            HTTPStatus.FOUND,
-            msg='После создания задачи должна происходить '
-                'переадресация на главную страницу!'
-        )
+        self.assertRedirects(response, reverse('tracker:index'))
 
     def test_create_task_with_invalid_form(self):
         """Тестируем создание задачи с невалидной формой."""
@@ -222,12 +236,7 @@ class ViewsTestCase(TestCase):
             'Задача до и после редактирования должны различаться!'
         )
 
-        self.assertEqual(
-            edit_response.status_code,
-            HTTPStatus.FOUND,
-            'После редактирования задачи должен '
-            'происходить редирект на главную страницу! (временно)'
-        )
+        self.assertRedirects(edit_response, reverse('tracker:index'))
 
         self.assertEqual(
             response_with_context.context['task'],
@@ -251,11 +260,59 @@ class ViewsTestCase(TestCase):
             'Не автор не может изменить задачу!'
         )
 
+        self.assertRedirects(response, reverse('tracker:index'))
+
+    def test_edit_task_by_admin(self):
+        """Тестируем редактирование задачи админом."""
+
+        edit_url = reverse('tracker:edit', args=[self.test_task.id])
+        response_with_context = self.authorized_client_admin.get(edit_url)
+
+        edit_response = self.authorized_client_admin.post(
+            edit_url, self.edited_data
+        )
+        edited_task = Task.objects.get(pk=self.test_task.pk)
+
+        self.assertNotEqual(
+            edited_task.title,
+            self.test_task.title,
+            msg='Задача до и после редактирования должны различаться!'
+        )
+
+        self.assertRedirects(edit_response, reverse('tracker:index'))
+
         self.assertEqual(
-            response.status_code,
-            HTTPStatus.FOUND,
-            'Не автор при попытке изменения задачи '
-            'должен быть переадресован на главную страницу!'
+            response_with_context.context['task'],
+            self.test_task,
+            'Контекст должен содержать задачу, которую мы редактировали!'
+        )
+
+    def test_edit_task_by_assigned_to_user(self):
+        """Тестируем редактирование задачи ответственным пользователем."""
+
+        edit_url = reverse('tracker:edit', args=[self.test_task.id])
+        response_with_context = self.authorized_client_assigned_to_user.get(
+            edit_url
+        )
+
+        edit_response = self.authorized_client_assigned_to_user.post(
+            edit_url,
+            self.edited_data
+        )
+        edited_task = Task.objects.get(pk=self.test_task.pk)
+
+        self.assertNotEqual(
+            edited_task.title,
+            self.test_task.title,
+            msg='Задача до и после редактирования должны различаться!'
+        )
+
+        self.assertRedirects(edit_response, reverse('tracker:index'))
+
+        self.assertEqual(
+            response_with_context.context['task'],
+            self.test_task,
+            'Контекст должен содержать задачу, которую мы редактировали!'
         )
 
     def test_delete_task_by_author(self):
@@ -274,12 +331,7 @@ class ViewsTestCase(TestCase):
             'Задача должна удаляться автором'
         )
 
-        self.assertEqual(
-            response.status_code,
-            HTTPStatus.FOUND,
-            'Если пользователь не является автором должен '
-            'происходить редирект на главную страницу! (временно)'
-        )
+        self.assertRedirects(response, reverse('tracker:index'))
 
     def test_delete_task_by_other_user(self):
         """
@@ -293,12 +345,51 @@ class ViewsTestCase(TestCase):
         )
         response = self.authorized_client_not_author.delete(delete_url)
 
-        self.assertEqual(
-            response.status_code,
-            HTTPStatus.FOUND,
-            'При попытке удаления задачи не автором должен '
-            'происходить редирект на главную страницу! (временно)'
+        self.assertRedirects(response, reverse('tracker:index'))
+
+    def test_delete_task_by_admin(self):
+        """Тестируем удаление задачи админом."""
+
+        # Счетчик будет равен 1, т.к. в тестовых данных мы создаем задачу.
+        task_count_before = Task.objects.count()
+
+        delete_url = reverse(
+            'tracker:delete',
+            args=[self.test_task.pk]
         )
+
+        response = self.authorized_client_admin.post(delete_url)
+
+        task_count_after = Task.objects.count()
+
+        self.assertNotEqual(
+            task_count_after,
+            task_count_before,
+            msg='Задача должна удаляться админом!')
+
+        self.assertRedirects(response, reverse('tracker:index'))
+
+    def test_delete_task_by_assigned_to_user(self):
+        """Тестируем удаление задачи ответственным пользователем."""
+
+        task_count_before = Task.objects.count()
+
+        delete_url = reverse(
+            'tracker:delete',
+            args=[self.test_task.pk]
+        )
+
+        response = self.authorized_client_assigned_to_user.post(delete_url)
+
+        task_count_after = Task.objects.count()
+
+        self.assertNotEqual(
+            task_count_after,
+            task_count_before,
+            msg='Задача должна удаляться ответственным пользователем!'
+        )
+
+        self.assertRedirects(response, reverse('tracker:index'))
 
     def test_task_delete_response_status(self):
         """Тестируем статус ответа при удалении задачи."""
@@ -339,26 +430,44 @@ class ViewsTestCase(TestCase):
     def test_task_mark_as_done_by_author(self):
         """Тестируем отметку задачи как выполненной автором."""
 
+        is_done_before = self.test_task.is_done
+
         done_url = reverse(
             'tracker:mark_as_done',
             args=[self.test_task.pk]
         )
         response = self.authorized_client.post(done_url)
 
-        done_task = Task.objects.get(pk=self.test_task.pk)
+        is_done_after = Task.objects.get(pk=self.test_task.pk).is_done
 
         self.assertNotEqual(
-            done_task.is_done,
-            self.test_task.is_done,
+            is_done_after,
+            is_done_before,
             msg='Задача должна быть помечена как выполненная!'
         )
 
-        self.assertEqual(
-            response.status_code,
-            HTTPStatus.FOUND,
-            msg='После отметки задачи как выполненной должен '
-                'происходить редирект на главную страницу!'
+        self.assertRedirects(response, reverse('tracker:index'))
+
+    def test_task_mark_as_done_by_admin(self):
+        """Тестируем отметку задачи как выполненной автором."""
+
+        is_done_before = self.test_task.is_done
+
+        done_url = reverse(
+            'tracker:mark_as_done',
+            args=[self.test_task.pk]
         )
+        response = self.authorized_client_admin.post(done_url)
+
+        is_done_after = Task.objects.get(pk=self.test_task.pk).is_done
+
+        self.assertNotEqual(
+            is_done_after,
+            is_done_before,
+            msg='Задача должна быть помечена как выполненная!'
+        )
+
+        self.assertRedirects(response, reverse('tracker:index'))
 
     def test_task_mark_as_undone_by_author(self):
         """Тестируем снятие отметки 'выполнено' с задачи автором."""
@@ -383,9 +492,29 @@ class ViewsTestCase(TestCase):
             msg='Задача должна быть помечена как невыполненная!'
         )
 
-        self.assertEqual(
-            response.status_code,
-            HTTPStatus.FOUND,
-            msg='После снятия отметки "выполнено" с задачи должен '
-                'происходить редирект на главную!'
+        self.assertRedirects(response, reverse('tracker:index'))
+
+    def test_task_mark_as_undone_by_admin(self):
+        """Тестируем снятие отметки 'выполнено' с задачи автором."""
+
+        done_url = reverse(
+            'tracker:mark_as_done',
+            args=[self.test_task.pk]
         )
+        response = self.authorized_client_admin.post(done_url)
+        done_task = Task.objects.get(pk=self.test_task.pk)
+
+        undone_url = reverse(
+            'tracker:mark_as_undone',
+            args=[self.test_task.pk]
+        )
+        response = self.authorized_client_admin.post(undone_url)
+        undone_task = Task.objects.get(pk=self.test_task.pk)
+
+        self.assertNotEqual(
+            done_task.is_done,
+            undone_task.is_done,
+            msg='Задача должна быть помечена как невыполненная!'
+        )
+
+        self.assertRedirects(response, reverse('tracker:index'))

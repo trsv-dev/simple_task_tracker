@@ -6,7 +6,20 @@ from django.utils import timezone
 from task_tracker.settings import TEMPLATES_DIR
 from tracker.forms import TaskCreateForm
 from tracker.models import Task
-from tracker.utils import send_email_message, send_email_message_async
+from tracker.utils import send_email_message_async
+
+
+def check_rights_to_task(username, task):
+    """
+    Проверяем, является ли пользователь автором задачи,
+    админом или ответственным за задачу.
+    """
+
+    return (
+            username == task.author or
+            username.is_staff or
+            username == task.assigned_to
+    )
 
 
 def index(request):
@@ -57,7 +70,7 @@ def edit_task(request, pk):
     task = get_object_or_404(Task, pk=pk)
     previous_assigned_to_username = task.assigned_to
 
-    if not (username == task.author or username.is_staff):
+    if check_rights_to_task(username, task) is False:
         return redirect('tracker:index')
 
     form = TaskCreateForm(request.POST, instance=task)
@@ -107,7 +120,7 @@ def delete_task(request, pk):
     task = get_object_or_404(Task, pk=pk)
     template = f'{TEMPLATES_DIR}/email_templates/delete_task_mail.html'
 
-    if not (username.is_staff or task.author == username):
+    if check_rights_to_task(username, task) is False:
         return redirect('tracker:index')
 
     email = task.assigned_to.email
