@@ -54,4 +54,5 @@ def send_email_message_async(email, template, task=None,
         name='send_email_message',
         args=(email, template, task, context)
     )
+
     send_mail_thread.start()

@@ -1,9 +1,8 @@
 import threading
 
+from django.contrib.auth import get_user_model
 from django.core import mail
 from django.test import TestCase
-
-from django.contrib.auth import get_user_model
 from django.utils import timezone
 
 from task_tracker.settings import TEMPLATES_DIR
@@ -93,7 +92,8 @@ class EmailTestCase(TestCase):
         send_email_message_async(
             email=self.test_user.email,
             template=email_template,
-            task=self.test_task)
+            task=self.test_task
+        )
 
         # Получаем первый поток (и подразумеваем, что он единственный,
         # т.к. вызов функции один), для этого берем срез.
@@ -112,7 +112,7 @@ class EmailTestCase(TestCase):
             msg='Заголовка задачи нет в письме!'
         )
 
-    def test_email_sending_with_context(self):
+    def test_email_sending_with_edit_delete_context(self):
         """Тестируем отправку почты с контекстом."""
 
         email_templates = (
@@ -128,12 +128,41 @@ class EmailTestCase(TestCase):
                 context=context
             )
 
-        self.assertEqual(
-            len(mail.outbox),
-            2
+        # Ожидаем, что количество отправленных писем равно 2
+        self.assertEqual(len(mail.outbox), 2)
+
+        self.assertTrue(
+            mail.outbox[0].body != mail.outbox[1].body,
+            msg='Тексты писем совпадают. Письма не должны '
+                'содержать один и тот же текст!'
         )
 
     def test_async_email_sending_with_context(self):
         """Тестируем асинхронную отправку почты с контекстом."""
 
-        pass
+        email_templates = (
+            f'{TEMPLATES_DIR}/email_templates/reassigned_to_mail.html',
+            f'{TEMPLATES_DIR}/email_templates/delete_task_mail.html'
+        )
+
+        contexts = (self.context_to_edit, self.context_to_delete)
+
+        for template, context in enumerate(contexts):
+            send_email_message_async(
+                email=self.test_assigned_to_user,
+                template=email_templates[template],
+                context=context
+            )
+
+        for thread in threading.enumerate():
+            if thread.name == 'send_email_message':
+                thread.join(timeout=5)
+
+        # Ожидаем, что количество отправленных писем равно 2
+        self.assertEqual(len(mail.outbox), 2)
+
+        self.assertTrue(
+            mail.outbox[0].body != mail.outbox[1].body,
+            msg='Тексты писем совпадают. Письма не должны '
+                'содержать один и тот же текст!'
+        )
