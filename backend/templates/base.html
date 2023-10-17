@@ -1,22 +1,14 @@
 {% load static %}
+{% include 'includes/header.html' %}
 
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width">
-    {% include 'includes/header.html' %}
-    <link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}">
-</head>
 <body>
     {% block content %}
         {% include 'tasks/main.html' %}
     {% endblock %}
+
     {% include 'includes/footer.html' %}
 
-    <!-- Include Bootstrap JavaScript libraries -->
     <script src="{% static 'js/jquery.min.js' %}"></script>
     <script src="{% static 'js/popper.min.js' %}"></script>
     <script src="{% static 'js/bootstrap.min.js' %}"></script>
 </body>
-</html>

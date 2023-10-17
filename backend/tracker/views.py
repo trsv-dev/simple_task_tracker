@@ -30,6 +30,14 @@ def index(request):
     return render(request, 'base.html', context)
 
 
+def task_detail(request, pk):
+    """Отображение деталей задачи."""
+
+    task = Task.objects.get(pk=pk)
+    context = {'task': task}
+    return render(request, 'tasks/task_detail.html', context)
+
+
 @login_required
 def create_task(request):
     """Создание задачи."""

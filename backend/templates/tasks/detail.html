@@ -8,14 +8,3 @@
 {% if task.is_done %}
   <p><b>Пометил(а) выполненным:</b> {{ task.done_by }} ({{ task.done_by_time }})</p>
 {% endif %}
-
-{% if user.is_authenticated and task.is_done == False %}
-  {% if user.is_staff or user == task.author or user == task.assigned_to %}
-      <a href="{% url 'tracker:edit' pk=task.id %}" class="btn btn-outline-primary">Редактировать</a>
-      <a href="{% url 'tracker:delete' pk=task.id %}" class="btn btn-outline-danger">Удалить</a>
-      <a href="{% url 'tracker:mark_as_done' pk=task.id %}" class="btn btn-outline-success">Выполнено</a>
-  {% endif %}
-<!--            <a href="{% url 'tracker:mark_as_done' pk=task.id %}" class="btn btn-success" style="margin-left: auto;">Выполнено</a>-->
-  {% elif user.is_staff or user == task.author or user == task.assigned_to %}
-    <a href="{% url 'tracker:mark_as_undone' pk=task.id %}" class="btn btn-outline-dark" style="margin-left: auto;">Отмена</a>
-{% endif %}
