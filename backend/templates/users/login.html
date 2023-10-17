@@ -1,18 +1,27 @@
 {% extends 'base.html' %}
 
 {% block content %}
-    {% if form.errors %}
-    <p style="color: darkred">{{ form.errors.error}}</p>
-    {% endif %}
-    <form action="{% url 'users:login' %}" method="post">
-      <main class="container mt-5">
-        <div class="row">
-            <div class="col-md-8 offset-md-2">
-                {{ form }}
-                {% csrf_token %}
-                <button type="submit" class="btn btn-success">Войти</button>
-            </div>
-        </div>
-      </main>
-    </form>
+  <main class="container mt-5">
+    <div class="row justify-content-center">
+      <div class="col-md-6">
+        <p class="h4 mb-4" style="text-align: center;">Авторизация</p>
+        <form method="post" action="{% url 'users:login' %}" class="text-center border border-light p-5">
+          {% csrf_token %}
+          {% if form.errors and request.method == 'POST' %}
+              <div class="alert alert-danger">
+                  {% for field, errors in form.errors.items %}
+                      {% for error in errors %}
+                          {{ error }}
+                      {% endfor %}
+                      <br>
+                  {% endfor %}
+              </div>
+          {% endif %}
+          <input type="text" id="{{ form.username.id_for_label }}" class="form-control mb-4" placeholder="Имя пользователя" name="{{ form.username.name }}" required autofocus>
+          <input type="password" id="{{ form.password.id_for_label }}" class="form-control mb-4" placeholder="Пароль" name="{{ form.password.name }}" required>
+          <button class="btn btn-outline-success my-4" type="submit">Войти</button>
+        </form>
+      </div>
+    </div>
+  </main>
 {% endblock %}
