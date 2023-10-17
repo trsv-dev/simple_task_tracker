@@ -33,7 +33,8 @@ class EmailTestCase(TestCase):
             'title': 'Тестовая задача',
             'description': 'Описание тестовой задачи',
             'priority': 'Высокий',
-            'status': 'В процессе выполнения',
+            'status': 'Ожидает выполнения',
+            'previous_status': '',
             'assigned_to': self.test_user,
             'deadline': timezone.make_aware(
                 timezone.datetime(2100, 1, 1)

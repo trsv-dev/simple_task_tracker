@@ -1,0 +1,21 @@
+<p><b>Описание:</b> {{ task.description }}</p>
+<p><b>Автор:</b> {{ task.author }}</p>
+<p><b>Приоритет:</b> {{ task.priority }}</p>
+<p><b>Статус:</b> {{ task.status }}</p>
+<p><b>Ответственный:</b> {{ task.assigned_to }}</p>
+<p><b>Время создания:</b> {{ task.created }}</p>
+<p><b>Дедлайн:</b> {{ task.deadline }}</p>
+{% if task.is_done %}
+  <p><b>Пометил(а) выполненным:</b> {{ task.done_by }} ({{ task.done_by_time }})</p>
+{% endif %}
+
+{% if user.is_authenticated and task.is_done == False %}
+  {% if user.is_staff or user == task.author or user == task.assigned_to %}
+      <a href="{% url 'tracker:edit' pk=task.id %}" class="btn btn-outline-primary">Редактировать</a>
+      <a href="{% url 'tracker:delete' pk=task.id %}" class="btn btn-outline-danger">Удалить</a>
+      <a href="{% url 'tracker:mark_as_done' pk=task.id %}" class="btn btn-outline-success">Выполнено</a>
+  {% endif %}
+<!--            <a href="{% url 'tracker:mark_as_done' pk=task.id %}" class="btn btn-success" style="margin-left: auto;">Выполнено</a>-->
+  {% elif user.is_staff or user == task.author or user == task.assigned_to %}
+    <a href="{% url 'tracker:mark_as_undone' pk=task.id %}" class="btn btn-outline-dark" style="margin-left: auto;">Отмена</a>
+{% endif %}

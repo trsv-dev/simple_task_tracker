@@ -58,7 +58,8 @@ class ViewsTestCase(TestCase):
             'title': 'Тестовая задача 2',
             'description': 'Описание тестовой задачи 2',
             'priority': 'Высокий',
-            'status': 'В процессе выполнения',
+            'status': 'Ожидает выполнения',
+            'previous_status': '',
             'assigned_to': self.test_user.id,
             'deadline': '2100-01-01 00:00:00',
             'is_done': 'False',
@@ -70,6 +71,7 @@ class ViewsTestCase(TestCase):
             'description': 'Измененное описание тестовой задачи',
             'priority': 'Высокий',
             'status': 'В процессе выполнения',
+            'previous_status': 'Ожидает выполнения',
             # Для 'assigned_to' используем self.test_user.id или '1',
             # т.к. в модели ForeignKey, а это значит что значение поля
             # будет равняться id пользователя по умолчанию.
@@ -84,6 +86,7 @@ class ViewsTestCase(TestCase):
             'description': 'Описание тестовой задачи',
             'priority': 'Высокий',
             'status': 'В процессе выполнения',
+            'previous_status': 'Ожидает выполнения',
             'assigned_to': self.test_assigned_to_user.id,
             'deadline': '2100-01-01 00:00:00',
             'is_done': 'False',

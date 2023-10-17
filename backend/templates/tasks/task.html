@@ -1,0 +1,31 @@
+{% if task.priority == 'Низкий' %}
+    <div class="card text-gray mb-3" style='background-color: #bfe0bf;'>
+      <div class="card-header">{{ task.title }}</div>
+      <div class="card-body">
+        <p class="card-text">
+            {% include 'tasks/detail.html' %}
+        </p>
+      </div>
+    </div>
+{% endif %}
+{% if task.priority == 'Средний' %}
+    <div class="card text-gray mb-3" style='background-color: rgba(149,194,245,0.3);'>
+      <div class="card-header">{{ task.title }}</div>
+      <div class="card-body">
+        <p class="card-text">
+            {% include 'tasks/detail.html' %}
+        </p>
+      </div>
+    </div>
+{% endif %}
+{% if task.priority == 'Высокий' %}
+    <div class="card text-gray mb-3" style='background-color: #f8c9c9;'>
+      <div class="card-header">{{ task.title }}</div>
+      <div class="card-body">
+        <p class="card-text">
+            {% include 'tasks/detail.html' %}
+        </p>
+      </div>
+    </div>
+{% endif %}
+

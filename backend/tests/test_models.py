@@ -65,6 +65,7 @@ class ModelsTestCase(TestCase):
             'description': 'Измененное описание тестовой задачи',
             'priority': 'Высокий',
             'status': 'В процессе выполнения',
+            'previous_status': '',
             # Для 'assigned_to' используем self.test_user.id или '1',
             # т.к. в модели ForeignKey, а это значит что значение поля
             # будет равняться id пользователя по умолчанию.

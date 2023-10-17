@@ -4,10 +4,15 @@
     {% if form.errors %}
     <p style="color: darkred">{{ form.errors.error}}</p>
     {% endif %}
-
     <form action="{% url 'users:login' %}" method="post">
-        {{ form }}
-        {% csrf_token %}
-        <button type="submit" class="btn btn-success">Войти</button>
+      <main class="container mt-5">
+        <div class="row">
+            <div class="col-md-8 offset-md-2">
+                {{ form }}
+                {% csrf_token %}
+                <button type="submit" class="btn btn-success">Войти</button>
+            </div>
+        </div>
+      </main>
     </form>
 {% endblock %}

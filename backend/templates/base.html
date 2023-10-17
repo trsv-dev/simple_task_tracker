@@ -9,15 +9,9 @@
     <link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}">
 </head>
 <body>
-    <main class="container mt-5">
-        <div class="row">
-            <div class="col-md-8 offset-md-2">
-                {% block content %}
-                    {% include 'tasks/undone.html' %}
-                {% endblock %}
-            </div>
-        </div>
-    </main>
+    {% block content %}
+        {% include 'tasks/main.html' %}
+    {% endblock %}
     {% include 'includes/footer.html' %}
 
     <!-- Include Bootstrap JavaScript libraries -->

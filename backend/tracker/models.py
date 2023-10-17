@@ -1,5 +1,5 @@
 from django.contrib.auth import get_user_model
-from django.core.validators import RegexValidator
+from django.core.validators import RegexValidator, MinValueValidator
 from django.db import models
 from django.utils import timezone
 
@@ -87,6 +87,12 @@ class Task(models.Model):
         verbose_name='Статус',
         help_text='Выберите статус'
     )
+    previous_status = models.CharField(
+        max_length=120,
+        blank=True,
+        null=True,
+        verbose_name='Предыдущий статус',
+    )
     assigned_to = models.ForeignKey(
         User,
         default=User,
@@ -103,11 +109,17 @@ class Task(models.Model):
     )
     deadline = models.DateTimeField(
         default=timezone.now,
+        validators=(
+            MinValueValidator(
+                timezone.now, message='Дедлайн не может быть в прошлом!'
+            ),
+        ),
         verbose_name='Дедлайн'
     )
     is_done = models.BooleanField(
         default=False,
-        verbose_name='Выполнено'
+        verbose_name='Выполнено',
+        help_text='Отмечено ли задание как выполненное'
     )
     done_by = models.ForeignKey(
         User,

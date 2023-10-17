@@ -9,62 +9,9 @@
 <body>
 <div class="container mt-5">
     <h1 class="text-center">{% if task %}Редактировать{% else %}Создать{% endif %} задачу</h1>
-
-    <form method="post" {% if task %}action="{% url 'tracker:edit' pk=task.pk %}"{% else %}action="{% url 'tracker:create' %}"{% endif %}>
-        {% csrf_token %}
-
-        {% if task %}
-            <input type="hidden" name="pk" value="{{ task.pk }}">
-        {% endif %}
-
-        <div class="form-group">
-            <label for="id_title">Название:</label>
-            <input type="text" class="form-control" id="id_title" name="title" {% if task %}value="{{ task.title }}"{% endif %} required>
-        </div>
-        <div class="form-group">
-            <label for="id_description">Описание:</label>
-            <textarea class="form-control" id="id_description" name="description" rows="6" required>{% if task %}{{ task.description }}{% endif %}</textarea>
-        </div>
-        <div class="form-group">
-            <label for="priority">Приоритет:</label>
-            <select class="form-control" id="priority" name="priority" required>
-                <option value="Низкий" {% if task and task.priority == 'Низкий' %}selected{% endif %}>Низкий</option>
-                <option value="Средний" {% if task and task.priority == 'Средний' %}selected{% endif %}>Средний</option>
-                <option value="Высокий" {% if task and task.priority == 'Высокий' %}selected{% endif %}>Высокий</option>
-            </select>
-        </div>
-        <div class="form-group">
-            <label for="status">Статус:</label>
-            <select class="form-control" id="status" name="status" required>
-                <option value="Ожидает выполнения" {% if task and task.status == 'Ожидает выполнения' %}selected{% endif %}>Ожидает выполнения</option>
-                <option value="В процессе выполнения" {% if task and task.status == 'В процессе выполнения' %}selected{% endif %}>В процессе выполнения</option>
-                <option value="Выполнено" {% if task and task.status == 'Выполнено' %}selected{% endif %}>Выполнено</option>
-            </select>
-        </div>
-        <div class="form-group">
-            <label for="id_assigned_to">Ответственный:</label>
-            <select class="form-control" id="id_assigned_to" name="assigned_to">
-                {% for user in all_users %}
-                    <option value="{{ user.id }}" {% if task.assigned_to and user.id == task.assigned_to.id %}selected{% elif not task.assigned_to and user.id == request.user.id %}selected{% endif %}>
-                        {{ user.username }}
-                    </option>
-                {% endfor %}
-            </select>
-        </div>
-        <div class="form-group">
-            <label for="id_deadline">Дедлайн:</label>
-            <input type="datetime-local" class="form-control" id="id_deadline" name="deadline" {% if task %}value="{{ task.deadline|date:'Y-m-d\TH:i' }}"{% endif %} required>
-        </div>
-        <div class="btn-group-toggle">
-            <button type="submit" class="btn btn-success">{% if task %}Сохранить{% else %}Создать{% endif %}</button>
-            <a href="{% url 'tracker:index' %}" class="btn btn-secondary">Отмена</a>
-        </div>
-    </form>
-
-    {% if serializer.errors %}
+    {% if form.errors and request.method == 'POST' %}
         <div class="alert alert-danger">
-            {% for field, errors in serializer.errors.items %}
-                <strong>{{ field }}:</strong>
+            {% for field, errors in form.errors.items %}
                 {% for error in errors %}
                     {{ error }}
                 {% endfor %}
@@ -72,6 +19,60 @@
             {% endfor %}
         </div>
     {% endif %}
+    <form method="post" {% if task %}action="{% url 'tracker:edit' pk=task.pk %}"{% else %}action="{% url 'tracker:create' %}"{% endif %}>
+        {% csrf_token %}
+
+        {% if task %}
+            <input type="hidden" name="pk" value="{{ task.pk }}">
+        {% endif %}
+        <div class="form-group">
+            <label for="id_title">Название:</label>
+            <input type="text" class="form-control" id="id_title" name="title" {% if task %}value="{{ task.title }}"{% elif form.title.value %}value="{{ form.title.value }}"{% endif %} required>
+        </div>
+
+        <div class="form-group">
+            <label for="id_description">Описание:</label>
+            <textarea class="form-control" id="id_description" name="description" rows="6" required>{% if task %}{{ task.description }}{% elif form.description.value %}{{ form.description.value }}{% endif %}</textarea>
+        </div>
+
+        <div class="form-group">
+            <label for="priority">Приоритет:</label>
+            <select class="form-control" id="priority" name="priority" required>
+                <option value="Низкий" {% if task and task.priority == 'Низкий' %}selected{% elif form.priority.value == 'Низкий' %}selected{% endif %}>Низкий</option>
+                <option value="Средний" {% if task and task.priority == 'Средний' %}selected{% elif form.priority.value == 'Средний' %}selected{% endif %}>Средний</option>
+                <option value="Высокий" {% if task and task.priority == 'Высокий' %}selected{% elif form.priority.value == 'Высокий' %}selected{% endif %}>Высокий</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="status">Статус:</label>
+            <select class="form-control" id="status" name="status" required>
+                <option value="Ожидает выполнения" {% if task and task.status == 'Ожидает выполнения' %}selected{% elif form.status.value == 'Ожидает выполнения' %}selected{% endif %}>Ожидает выполнения</option>
+                <option value="В процессе выполнения" {% if task and task.status == 'В процессе выполнения' %}selected{% elif form.status.value == 'В процессе выполнения' %}selected{% endif %}>В процессе выполнения</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="id_assigned_to">Ответственный:</label>
+            <select class="form-control" id="id_assigned_to" name="assigned_to">
+                {% for user in all_users %}
+                    <option value="{{ user.id }}" {% if task and task.assigned_to and user.id == task.assigned_to.id %}selected{% elif not task and user.id == request.user.id %}selected{% elif form.assigned_to.value|stringformat:"s" == user.id|stringformat:"s" %}selected{% endif %}>
+                        {{ user.username }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="id_deadline">Дедлайн:</label>
+            <input type="datetime-local" class="form-control" id="id_deadline" name="deadline" {% if task %}value="{{ task.deadline|date:'Y-m-d\TH:i' }}"{% elif form.deadline.value %}value="{{ form.deadline.value }}"{% endif %} required>
+        </div>
+
+        <div class="btn-group-toggle">
+            <button type="submit" class="btn btn-success">{% if task %}Сохранить{% else %}Создать{% endif %}</button>
+            <a href="{% url 'tracker:index' %}" class="btn btn-secondary">Отмена</a>
+        </div>
+    </form>
 </div>
 {% include 'includes/footer.html' %}
 

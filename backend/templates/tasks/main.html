@@ -1,0 +1,35 @@
+{% if tasks %}
+  <div class="container-fluid">
+    <div class="row">
+      <div class="col-md-4">
+        <h5 class="card-title text-center">Ожидающие</h5>
+          {% for task in tasks %}
+            {% if not task.is_done and task.status == "Ожидает выполнения" %}
+                {% include 'tasks/task.html' %}
+            {% endif %}
+          {% endfor %}
+      </div>
+
+      <div class="col-md-4">
+        <h5 class="card-title text-center">Выполняющиеся</h5>
+        {% for task in tasks %}
+          {% if not task.is_done and task.status == "В процессе выполнения" %}
+              {% include 'tasks/task.html' %}
+          {% endif %}
+        {% endfor %}
+      </div>
+
+      <div class="col-md-4">
+        <h5 class="card-title text-center">Выполненные</h5>
+        {% for task in tasks %}
+          {% if task.is_done or task.status == 'Выполнено' %}
+              {% include 'tasks/task.html' %}
+          {% endif %}
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+{% else %}
+    <p class="text-center">Список заданий пуст</p>
+{% endif %}
