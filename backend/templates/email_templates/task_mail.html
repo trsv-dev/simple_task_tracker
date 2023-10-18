@@ -12,6 +12,9 @@
     <p>Приоритет: <strong>{{priority}}</strong></p>
     <p>Статус: <strong>{{status}}</strong></p>
     <p>Дедлайн: <strong>{{deadline}}</strong></p>
+    {% if link %}
+        <p>Ссылка на задачу: {{link}}</p>
+    {% endif %}
     <br>
     <p>Перед дедлайном мы еще раз напомним вам о задаче.</p>
     <br>

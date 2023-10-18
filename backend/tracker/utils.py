@@ -1,12 +1,14 @@
 from threading import Thread
 
 from django.core.mail import send_mail
+from django.http import request
 from django.template.loader import render_to_string
+from django.urls import reverse
 
 from task_tracker.settings import EMAIL_HOST_USER
 
 
-def send_email_message(email, template, task=None, context=None,):
+def send_email_message(email, template, task=None, context=None, link=None):
     """
     Отправка письма на электронную почту пользователю,
     которого отметили ответственным за выполнение задачи,
@@ -25,7 +27,8 @@ def send_email_message(email, template, task=None, context=None,):
             'deadline': task.deadline,
             'is_done': task.is_done,
             'done_by': task.done_by if task.is_done else None,
-            'done_by_time': task.done_by_time
+            'done_by_time': task.done_by_time,
+            'link': link if link else None
         }
 
     if context:
@@ -43,7 +46,7 @@ def send_email_message(email, template, task=None, context=None,):
 
 
 def send_email_message_async(email, template, task=None,
-                             context=None):
+                             context=None, link=None):
     """
     Простая асинхронная отправка письма на электронную
     почту пользователю.
@@ -52,7 +55,7 @@ def send_email_message_async(email, template, task=None,
     send_mail_thread = Thread(
         target=send_email_message,
         name='send_email_message',
-        args=(email, template, task, context)
+        args=(email, template, task, context, link)
     )
 
     send_mail_thread.start()

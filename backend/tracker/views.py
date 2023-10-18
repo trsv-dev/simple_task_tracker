@@ -1,12 +1,21 @@
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.shortcuts import render, redirect, get_object_or_404
+from django.urls import reverse
 from django.utils import timezone
 
 from task_tracker.settings import TEMPLATES_DIR
 from tracker.forms import TaskCreateForm
 from tracker.models import Task
 from tracker.utils import send_email_message_async
+
+
+def get_task_link(request, pk):
+    """Получение прямой ссылки на задачу."""
+
+    return request.build_absolute_uri(
+        reverse('tracker:detail', args=[pk])
+    )
 
 
 def check_rights_to_task(username, task):
@@ -51,7 +60,7 @@ def create_task(request):
     context = {
         'form': form,
         'current_user': username,
-        'all_users': all_users
+        'all_users': all_users,
     }
 
     if form.is_valid():
@@ -63,6 +72,7 @@ def create_task(request):
             email=task.assigned_to.email,
             template=template,
             task=task,
+            link=get_task_link(request, pk=task.id)
         )
         return redirect('tracker:index')
     return render(request, 'tasks/create.html', context)
