@@ -9,7 +9,7 @@ from django.utils import timezone
 from task_tracker.settings import TEMPLATES_DIR
 from tracker.models import Task
 from tracker.utils import send_email_message, send_email_message_async
-from tracker.views import get_task_link
+# from tracker.views import get_task_link
 
 User = get_user_model()
 
@@ -85,7 +85,7 @@ class EmailTestCase(TestCase):
             email=self.test_user.email,
             template=email_template,
             task=self.test_task,
-            link=get_task_link(self.fake_request, pk=self.test_task.pk)
+            # link=get_task_link(self.fake_request, pk=self.test_task.pk)
         )
 
         self.assertEqual(len(mail.outbox), 1)
@@ -105,7 +105,7 @@ class EmailTestCase(TestCase):
             email=self.test_user.email,
             template=email_template,
             task=self.test_task,
-            link=get_task_link(self.fake_request, self.test_task.pk),
+            # link=get_task_link(self.fake_request, self.test_task.pk),
         )
 
         # Получаем первый поток (и подразумеваем, что он единственный,

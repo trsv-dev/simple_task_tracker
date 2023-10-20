@@ -9,6 +9,9 @@
     <p>Вам была перенаправлена задача: <strong>{{title}}</strong></p>
     <p>Автор задачи: <strong>{{author}}</strong></p>
     <p>Предыдущий исполнитель задачи: <strong>{{previous_assigned_to_username}}</strong></p>
+    {% if link %}
+        <p>Ссылка на задачу: {{link}}</p>
+    {% endif %}
     <br>
     <p>Не отвечайте на это письмо, оно сгенерировано автоматически.</p>
 

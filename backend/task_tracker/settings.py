@@ -5,7 +5,6 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = os.getenv('SECRET_KEY', 'you_need_to_set_the_secret_key_in_env')
@@ -21,6 +20,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django_celery_beat',
 
     'tracker.apps.TrackerConfig',
     'users.apps.UsersConfig',
@@ -68,14 +68,12 @@ STATICFILES_DIRS = [BASE_DIR / 'static']
 
 WSGI_APPLICATION = 'task_tracker.wsgi.application'
 
-
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
-
 
 AUTH_PASSWORD_VALIDATORS = [
     {
@@ -92,7 +90,6 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-
 LANGUAGE_CODE = 'ru-Ru'
 
 TIME_ZONE = 'Europe/Moscow'
@@ -103,13 +100,23 @@ USE_TZ = True
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-
 # Отправка писем Яндекс-почтой (Не работает на pythonanywhere.com)
-RECIPIENT_ADDRESS = os.getenv('RECIPIENT_ADDRESS', 'your_email_on_yandex@yandex.ru')
+RECIPIENT_ADDRESS = os.getenv('RECIPIENT_ADDRESS',
+                              'your_email_on_yandex@yandex.ru')
 EMAIL_HOST = os.getenv('EMAIL_HOST', 'smtp.yandex.ru')
 EMAIL_PORT = os.getenv('EMAIL_PORT', '465')
 EMAIL_USE_SSL = os.getenv('EMAIL_USE_SSL', 'False') == 'True'
-DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', 'your_email_on_yandex@yandex.ru')
-EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', 'your_email_on_yandex@yandex.ru')
-EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', 'your_strong_email_password')
-EMAIL_BACKEND = os.getenv('EMAIL_BACKEND', 'django.core.mail.backends.smtp.EmailBackend')
+DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL',
+                               'your_email_on_yandex@yandex.ru')
+EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER',
+                            'your_email_on_yandex@yandex.ru')
+EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD',
+                                'your_strong_email_password')
+EMAIL_BACKEND = os.getenv('EMAIL_BACKEND',
+                          'django.core.mail.backends.smtp.EmailBackend')
+
+
+CELERY_BROKER_URL = 'redis://127.0.0.1:6379/0'
+CELERY_RESULT_BACKEND = 'redis://127.0.0.1:6379/0'
+
+CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = True

@@ -1,3 +1,5 @@
+from datetime import timedelta
+
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.shortcuts import render, redirect, get_object_or_404
@@ -7,15 +9,9 @@ from django.utils import timezone
 from task_tracker.settings import TEMPLATES_DIR
 from tracker.forms import TaskCreateForm
 from tracker.models import Task
-from tracker.utils import send_email_message_async
-
-
-def get_task_link(request, pk):
-    """Получение прямой ссылки на задачу."""
-
-    return request.build_absolute_uri(
-        reverse('tracker:detail', args=[pk])
-    )
+from tracker.serializers import TaskSerializer
+from tracker.utils import (deadline_reminder_email,
+                           send_email_message,)
 
 
 def check_rights_to_task(username, task):
@@ -68,12 +64,32 @@ def create_task(request):
         task.author = username
         form.save()
 
-        send_email_message_async(
-            email=task.assigned_to.email,
-            template=template,
-            task=task,
-            link=get_task_link(request, pk=task.id)
+        assigned_to_email = task.assigned_to.email
+        task_instance = Task.objects.get(id=task.pk)
+        serializer = TaskSerializer(
+            task_instance, context={'request': request}
         )
+        serialized_data = serializer.data
+
+        eta_time = task.deadline - timedelta(minutes=5)
+
+        send_email_message.apply_async(
+            kwargs={
+                'email': assigned_to_email,
+                'template': template,
+                'context': serialized_data,
+            },
+            countdown=5
+        )
+
+        deadline_reminder_email.apply_async(
+            kwargs={
+                'email': assigned_to_email,
+                'context': serialized_data
+            },
+            eta=eta_time
+        )
+
         return redirect('tracker:index')
     return render(request, 'tasks/create.html', context)
 
@@ -85,7 +101,7 @@ def edit_task(request, pk):
     username = request.user
     all_users = User.objects.all()
     task = get_object_or_404(Task, pk=pk)
-    previous_assigned_to_username = task.assigned_to
+    previous_assigned_to_username = task.assigned_to.username
 
     if check_rights_to_task(username, task) is False:
         return redirect('tracker:index')
@@ -99,25 +115,30 @@ def edit_task(request, pk):
         if new_assigned_to_username != previous_assigned_to_username:
             task.assigned_to = new_assigned_to_username
 
-            email = new_assigned_to_username.email
-
-            template = (f'{TEMPLATES_DIR}/email_templates/'
-                        f'reassigned_to_mail.html')
-
-            context_to_edit = {
-                'previous_assigned_to_username': previous_assigned_to_username,
-                'assigned_to': task.assigned_to,
-                'author': task.author.username,
-                'title': task.title
-            }
-
-            send_email_message_async(
-                email=email,
-                template=template,
-                context=context_to_edit
-            )
-
         form.save()
+
+        assigned_to_email = new_assigned_to_username.email
+
+        task_instance = Task.objects.get(id=task.pk)
+        serializer = TaskSerializer(
+            task_instance, context={'request': request}
+        )
+        serialized_data = serializer.data
+
+        serialized_data[
+            'previous_assigned_to_username'] = previous_assigned_to_username
+
+        template = (f'{TEMPLATES_DIR}/email_templates/'
+                    f'reassigned_to_mail.html')
+
+        send_email_message.apply_async(
+            kwargs={
+                'email': assigned_to_email,
+                'template': template,
+                'context': serialized_data,
+            },
+            countdown=5
+        )
 
         return redirect('tracker:index')
 
@@ -141,21 +162,22 @@ def delete_task(request, pk):
     if check_rights_to_task(username, task) is False:
         return redirect('tracker:index')
 
-    email = task.assigned_to.email
+    assigned_to_email = task.assigned_to.email
 
-    context_to_delete = {
-        'author': task.author.username,
-        'title': task.title,
-        'username': username,
-        'assigned_to':  task.assigned_to
-    }
+    task_instance = task
+    serializer = TaskSerializer(task_instance, context={'request': request})
+    serialized_data = serializer.data
+    serialized_data['username'] = username.username
 
     task.delete()
 
-    send_email_message_async(
-        email=email,
-        template=template,
-        context=context_to_delete
+    send_email_message.apply_async(
+        kwargs={
+            'email': assigned_to_email,
+            'template': template,
+            'context': serialized_data,
+        },
+        countdown=5
     )
 
     return redirect('tracker:index')
