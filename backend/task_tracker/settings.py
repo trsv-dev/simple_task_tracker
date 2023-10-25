@@ -98,6 +98,8 @@ USE_I18N = True
 
 USE_TZ = True
 
+TASKS_IN_PROFILE_PAGE = os.getenv('TASKS_IN_PROFILE_PAGE', 10)
+
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Отправка писем Яндекс-почтой (Не работает на pythonanywhere.com)

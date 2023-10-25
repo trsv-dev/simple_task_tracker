@@ -2,9 +2,11 @@ from datetime import timedelta
 
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
+from django.core.paginator import Paginator
 from django.shortcuts import render, redirect, get_object_or_404
 from django.utils import timezone
 
+from task_tracker.settings import TASKS_IN_PROFILE_PAGE
 from task_tracker.settings import TEMPLATES_DIR
 from tracker.forms import TaskCreateForm, CommentForm
 from tracker.models import Task, Comment
@@ -44,15 +46,20 @@ def index(request):
     return render(request, 'base.html', context)
 
 
-def profile(request, pk):
+def profile(request, user):
     """Отображение профиля пользователя."""
 
-    username = User.objects.get(pk=pk)
-    tasks = Task.objects.filter(assigned_to=username).order_by('deadline')
+    profile_user = get_object_or_404(User, username=user)
+    tasks = Task.objects.filter(assigned_to=profile_user).order_by('deadline')
+
+    paginator = Paginator(tasks, TASKS_IN_PROFILE_PAGE)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
 
     context = {
-        'username': username,
+        'username': profile_user,
         'tasks': tasks,
+        'page_obj': page_obj
     }
 
     return render(request, 'tasks/profile.html', context)
