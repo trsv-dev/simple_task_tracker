@@ -3,15 +3,24 @@ from datetime import timedelta
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.shortcuts import render, redirect, get_object_or_404
-from django.urls import reverse
 from django.utils import timezone
 
 from task_tracker.settings import TEMPLATES_DIR
-from tracker.forms import TaskCreateForm
-from tracker.models import Task
+from tracker.forms import TaskCreateForm, CommentForm
+from tracker.models import Task, Comment
 from tracker.serializers import TaskSerializer
-from tracker.utils import (deadline_reminder_email,
-                           send_email_message,)
+from tracker.utils import send_email_message, get_link
+
+templates = {
+    'create_task_template':
+        f'{TEMPLATES_DIR}/email_templates/task_mail.html',
+    'delete_task_template':
+        f'{TEMPLATES_DIR}/email_templates/delete_task_mail.html',
+    'reassigned_task_template':
+        f'{TEMPLATES_DIR}/email_templates/reassigned_to_mail.html',
+    'deadline_template':
+        f'{TEMPLATES_DIR}/email_templates/deadline_mail.html'
+}
 
 
 def check_rights_to_task(username, task):
@@ -35,11 +44,37 @@ def index(request):
     return render(request, 'base.html', context)
 
 
+def profile(request, pk):
+    """Отображение профиля пользователя."""
+
+    username = User.objects.get(pk=pk)
+    tasks = Task.objects.filter(assigned_to=username).order_by('deadline')
+
+    context = {
+        'username': username,
+        'tasks': tasks,
+    }
+
+    return render(request, 'tasks/profile.html', context)
+
+
 def task_detail(request, pk):
     """Отображение деталей задачи."""
 
-    task = Task.objects.get(pk=pk)
-    context = {'task': task}
+    task = get_object_or_404(Task, pk=pk)
+    comments = Comment.objects.filter(task=task)
+    form = CommentForm(request.POST)
+
+    # Задел на будущее (вложенные комментарии и ответы на них).
+    # parent_comments = comments.filter(parent_comment=None)
+    context = {
+        'task': task,
+        'comments': comments,
+        # 'parent_comments': parent_comments,
+        'form': form
+
+    }
+
     return render(request, 'tasks/task_detail.html', context)
 
 
@@ -49,9 +84,7 @@ def create_task(request):
 
     username = request.user
     all_users = User.objects.all()
-    form = TaskCreateForm(request.POST)
-
-    template = f'{TEMPLATES_DIR}/email_templates/task_mail.html'
+    form = TaskCreateForm(request.POST or None)
 
     context = {
         'form': form,
@@ -71,20 +104,23 @@ def create_task(request):
         )
         serialized_data = serializer.data
 
+        # Изменить на желаемое время напоминания о дедлайне,
+        # пока для проверки стоит напоминание за 5 минут.
         eta_time = task.deadline - timedelta(minutes=5)
 
         send_email_message.apply_async(
             kwargs={
                 'email': assigned_to_email,
-                'template': template,
+                'template': templates['create_task_template'],
                 'context': serialized_data,
             },
             countdown=5
         )
 
-        deadline_reminder_email.apply_async(
+        send_email_message.apply_async(
             kwargs={
                 'email': assigned_to_email,
+                'template': templates['deadline_template'],
                 'context': serialized_data
             },
             eta=eta_time
@@ -106,7 +142,7 @@ def edit_task(request, pk):
     if check_rights_to_task(username, task) is False:
         return redirect('tracker:index')
 
-    form = TaskCreateForm(request.POST, instance=task)
+    form = TaskCreateForm(request.POST or None, instance=task)
 
     if form.is_valid():
         task = form.save(commit=False)
@@ -128,13 +164,10 @@ def edit_task(request, pk):
         serialized_data[
             'previous_assigned_to_username'] = previous_assigned_to_username
 
-        template = (f'{TEMPLATES_DIR}/email_templates/'
-                    f'reassigned_to_mail.html')
-
         send_email_message.apply_async(
             kwargs={
                 'email': assigned_to_email,
-                'template': template,
+                'template': templates['reassigned_task_template'],
                 'context': serialized_data,
             },
             countdown=5
@@ -157,7 +190,6 @@ def delete_task(request, pk):
 
     username = request.user
     task = get_object_or_404(Task, pk=pk)
-    template = f'{TEMPLATES_DIR}/email_templates/delete_task_mail.html'
 
     if check_rights_to_task(username, task) is False:
         return redirect('tracker:index')
@@ -174,7 +206,7 @@ def delete_task(request, pk):
     send_email_message.apply_async(
         kwargs={
             'email': assigned_to_email,
-            'template': template,
+            'template': templates['delete_task_template'],
             'context': serialized_data,
         },
         countdown=5
@@ -210,3 +242,45 @@ def mark_as_undone(request, pk):
         task.done_by = None
         task.save()
         return redirect('tracker:index')
+
+
+@login_required
+def create_comment(request, task_pk):
+    """Создание комментария."""
+
+    form = CommentForm(request.POST or None)
+    task = get_object_or_404(Task, pk=task_pk)
+
+    context = {
+        'form': form,
+        'task': task
+    }
+
+    if form.is_valid():
+        comment = form.save(commit=False)
+        comment.task = task
+        comment.author = request.user
+        form.save()
+
+        parent_comment_id = request.POST.get('parent_comment')
+        if parent_comment_id:
+            parent_comment = get_object_or_404(Comment, pk=parent_comment_id)
+            comment.parent_comment = parent_comment
+            comment.save()
+
+        return redirect('tracker:detail', pk=task.pk)
+    return render(request, 'tasks/create_comment.html', context)
+
+
+@login_required
+def edit_comment(request, pk):
+    """Редактирование комментария."""
+
+    pass
+
+
+@login_required
+def delete_comment(request, pk):
+    """Удаление комментария."""
+
+    pass

@@ -1,0 +1,51 @@
+<div class="container">
+  <div class="card">
+    <div class="card-header">
+      <h5>Комментарии</h5>
+    </div>
+    <div class="card-body">
+      {% if comments %}
+        {% for comment in comments %}
+          <div class="comment">
+            <strong>{{ comment.author }}</strong><br>
+            <p>{{ comment.text }}</p>
+            <p class="text-muted">{{ comment.created }}</p>
+{#                {% if user.is_authenticated %}#}
+{#                  <form method="post" action="{% url 'tracker:create_comment' task_pk=task.pk %}">#}
+{#                    {% csrf_token %}#}
+{#                    <input type="hidden" name="parent_comment" value="{{ comment.id }}">#}
+{#                    <textarea class="form-control" name="text" rows="3" required></textarea>#}
+{#                    <button type="submit" class="btn btn-outline-primary">Ответить</button>#}
+{#                  </form>#}
+{#                {% endif %}#}
+          </div>
+          <hr>
+        {% endfor %}
+      {% else %}
+        <p class="text-center">Комментариев нет</p>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+{% if user.is_authenticated %}
+<div class="container mt-3">
+  <div class="card">
+    <div class="card-header">
+      <h5>Добавить комментарий</h5>
+    </div>
+    <div class="card-body">
+      <form method="post" action="{% url 'tracker:create_comment' task_pk=task.pk %}">
+        {% csrf_token %}
+
+        <div class="form-group">
+            <textarea class="form-control" id="id_text" name="text" rows="3" required>{{ form.text.value|default:'' }}</textarea>
+        </div>
+        <div class="btn-group-toggle mt-2">
+            <button type="submit" class="btn btn-outline-primary">Отправить</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endif %}

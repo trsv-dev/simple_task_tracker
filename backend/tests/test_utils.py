@@ -8,7 +8,7 @@ from django.utils import timezone
 
 from task_tracker.settings import TEMPLATES_DIR
 from tracker.models import Task
-from tracker.utils import send_email_message, send_email_message_async
+from tracker.utils import send_email_message
 # from tracker.views import get_task_link
 
 User = get_user_model()
@@ -101,7 +101,7 @@ class EmailTestCase(TestCase):
 
         email_template = f'{TEMPLATES_DIR}/email_templates/task_mail.html'
 
-        send_email_message_async(
+        send_email_message(
             email=self.test_user.email,
             template=email_template,
             task=self.test_task,
@@ -161,7 +161,7 @@ class EmailTestCase(TestCase):
         contexts = (self.context_to_edit, self.context_to_delete)
 
         for template, context in enumerate(contexts):
-            send_email_message_async(
+            send_email_message(
                 email=self.test_assigned_to_user,
                 template=email_templates[template],
                 context=context

@@ -1,6 +1,6 @@
 from django import forms
 
-from tracker.models import Task
+from tracker.models import Task, Comment
 
 
 class TaskCreateForm(forms.ModelForm):
@@ -19,3 +19,15 @@ class TaskCreateForm(forms.ModelForm):
             'deadline': 'Дедлайн',
             'assigned_to': 'Ответственный',
         }
+
+
+class CommentForm(forms.ModelForm):
+    """Форма создания комментария."""
+
+    class Meta:
+        model = Comment
+        fields = ('text',)
+
+    labels = {
+        'text': 'Текст'
+    }

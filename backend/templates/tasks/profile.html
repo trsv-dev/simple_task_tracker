@@ -1,0 +1,52 @@
+{% include 'includes/header.html' %}
+
+{% block content %}
+  <div class="container mt-4">
+    <section class="user-profile text-center">
+        <p>Профиль пользователя <strong> {{ username }} </strong></p>
+        <p>Всего задач:<strong> {{ tasks.count }} </strong></p>
+    </section>
+
+    <div class="card">
+      <div class="card-body">
+        <section class="task-list">
+          {% if tasks %}
+            {% for task in tasks %}
+              <div class="task-item">
+                <br>
+                {% include 'tasks/short_detail.html' %}
+                <br>
+                {% if not forloop.last %}<hr>{% endif %}
+              </div>
+            {% endfor %}
+          {% endif %}
+        </section>
+      </div>
+    </div>
+  </div>
+{% endblock %}
+
+{% include 'includes/footer.html' %}
+
+
+{#{% include 'includes/header.html' %}#}
+{##}
+{#{% block content %}#}
+{#<div class="container">#}
+{#  <div class="card-body">#}
+{#    <p><b>Профиль пользователя</b> {{ username }}</p>#}
+{#    <p><b>Всего задач</b> {{ tasks.count }}</p>#}
+{##}
+{#  <br>#}
+{#    {% if tasks %}#}
+{#        {% for task in tasks %}#}
+{#            <br>#}
+{#            {% include 'tasks/short_detail.html' %}#}
+{#            <br>#}
+{#        {% endfor %}#}
+{#    {% endif %}#}
+{##}
+{#    {% include 'includes/footer.html' %}#}
+{#  </div>#}
+{#</div>#}
+{#{% endblock %}#}

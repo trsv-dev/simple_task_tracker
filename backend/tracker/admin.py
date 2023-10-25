@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from tracker.models import Task, Tags, TaskTag
+from tracker.models import Task, Tags, TaskTag, Comment
 
 admin.site.site_header = "Трекер задач"
 admin.site.site_title = "Панель администрирования"
@@ -24,6 +24,12 @@ class TaskAdmin(admin.ModelAdmin):
     readonly_fields = ('previous_status',)
     ordering = ('created',)
     inlines = (TagsInLine,)
+
+
+@admin.register(Comment)
+class CommentAdmin(admin.ModelAdmin):
+    list_display = ('task', 'author', 'text', 'created')
+    ordering = ('created',)
 
 
 @admin.register(TaskTag)
