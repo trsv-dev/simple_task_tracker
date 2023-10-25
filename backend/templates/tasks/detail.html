@@ -1,0 +1,10 @@
+<p><b>Описание:</b> {{ task.description }}</p>
+<p><b>Автор:</b> {{ task.author }}</p>
+<p><b>Приоритет:</b> {{ task.priority }}</p>
+<p><b>Статус:</b> {{ task.status }}</p>
+<p><b>Ответственный:</b> {{ task.assigned_to }}</p>
+<p><b>Время создания:</b> {{ task.created }}</p>
+<p><b>Дедлайн:</b> {{ task.deadline }}</p>
+{% if task.is_done %}
+  <p><b>Пометил(а) выполненным:</b> {{ task.done_by }} ({{ task.done_by_time }})</p>
+{% endif %}

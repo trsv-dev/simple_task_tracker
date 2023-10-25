@@ -1,0 +1,10 @@
+{% load static %}
+{% include 'includes/header.html' %}
+
+<body>
+    {% block content %}
+        {% include 'tasks/main.html' %}
+    {% endblock %}
+
+    {% include 'includes/footer.html' %}
+</body>

@@ -1,0 +1,53 @@
+{% include 'includes/header.html' %}
+
+{% block content %}
+  <div class="container mt-4">
+    <section class="user-profile text-center">
+        <p>Профиль пользователя <strong> {{ username }} </strong></p>
+        <p>Всего задач:<strong> {{ tasks.count }} </strong></p>
+    </section>
+
+    <div class="card">
+      <div class="card-body">
+        <section class="task-list">
+          {% if tasks %}
+            {% for task in page_obj %}
+              <div class="task-item">
+                <br>
+                {% include 'tasks/short_detail.html' %}
+                <br>
+                {% if not forloop.last %}<hr>{% endif %}
+              </div>
+            {% endfor %}
+          {% else %}
+            <div class="text-center">
+                У вас нет незакрытых задач!
+            </div>
+          {% endif %}
+        </section>
+      </div>
+    </div>
+  </div>
+  <div class="pagination justify-content-center align-items-center mt-4">
+    <span class="step-links">
+    {% if page_obj %}
+        {% if page_obj.has_previous %}
+            <a href="?page=1">&laquo; первая</a>
+            <a href="?page={{ page_obj.previous_page_number }}">предыдущая</a>
+        {% endif %}
+
+        <span class="current">
+            {{ page_obj.number }} из {{ page_obj.paginator.num_pages }}
+        </span>
+
+        {% if page_obj.has_next %}
+            <a href="?page={{ page_obj.next_page_number }}">следующая</a>
+            <a href="?page={{ page_obj.paginator.num_pages }}">последняя &raquo;</a>
+        {% endif %}
+    {% endif %}
+
+    </span>
+</div>
+{% endblock %}
+
+{% include 'includes/footer.html' %}

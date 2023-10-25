@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container">
+  <div class="card">
+        {% if task.priority == 'Высокий' %}
+            <h5 class="card-header" style='background-color: #f8d4d4;'>{{ task.title }}</h5>
+        {% elif task.priority == 'Низкий' %}
+            <h5 class="card-header" style='background-color: #c6e0c6;'>{{ task.title }}</h5>
+        {% elif task.priority == 'Средний' %}
+            <h5 class="card-header" style='background-color: rgba(149,194,245,0.3);'>{{ task.title }}</h5>
+        {% endif %}
+    <div class="card-body">
+      <p class="card-text">{% include 'tasks/detail.html' %}</p>
+      {% if user.is_authenticated and task.is_done == False %}
+        {% if user.is_staff or user == task.author or user == task.assigned_to %}
+            <a href="{% url 'tracker:edit' pk=task.id %}" class="btn btn-outline-primary">Редактировать</a>
+            <a href="{% url 'tracker:delete' pk=task.id %}" class="btn btn-outline-danger">Удалить</a>
+            <a href="{% url 'tracker:mark_as_done' pk=task.id %}" class="btn btn-outline-success">Выполнено</a>
+        {% endif %}
+        {% elif user.is_staff or user == task.author or user == task.assigned_to %}
+          <a href="{% url 'tracker:mark_as_undone' pk=task.id %}" class="btn btn-outline-dark" style="margin-left: auto;">Отмена</a>
+      {% endif %}
+        <a href="{% url 'tracker:index'%}" class="btn btn-outline-dark">Назад</a>
+    </div>
+  </div>
+</div>
+    <br>
+{% include 'tasks/create_comment.html' %}
+{% endblock %}
