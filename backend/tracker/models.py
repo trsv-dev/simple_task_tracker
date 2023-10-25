@@ -149,14 +149,14 @@ class Task(models.Model):
         for tag_name in tags_list:
             tag, create = Tags.objects.get_or_create(tag=tag_name)
 
-    def get_priority_color(self):
-        """Выбор цвета в зависимости от приоритета."""
-
-        if self.priority == HIGH:
-            return 'red'
-        elif self.priority == MEDIUM:
-            return 'blue'
-        return 'green'
+    # def get_priority_color(self):
+    #     """Выбор цвета в зависимости от приоритета."""
+    #
+    #     if self.priority == HIGH:
+    #         return 'red'
+    #     elif self.priority == MEDIUM:
+    #         return 'blue'
+    #     return 'green'
 
     class Meta:
         verbose_name = 'Задача'

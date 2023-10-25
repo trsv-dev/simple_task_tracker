@@ -9,7 +9,7 @@ from task_tracker.settings import TEMPLATES_DIR
 from tracker.forms import TaskCreateForm, CommentForm
 from tracker.models import Task, Comment
 from tracker.serializers import TaskSerializer
-from tracker.utils import send_email_message, get_link
+from tracker.utils import send_email_message
 
 templates = {
     'create_task_template':
