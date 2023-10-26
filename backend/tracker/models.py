@@ -3,7 +3,6 @@ from django.core.validators import RegexValidator, MinValueValidator
 from django.db import models
 from django.utils import timezone
 
-
 User = get_user_model()
 
 PENDING = 'Ожидает выполнения'

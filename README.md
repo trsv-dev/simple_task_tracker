@@ -15,7 +15,7 @@ git clone git@github.com:trsv-dev/simple_task_tracker.git -b develop
 ```
 Перейдите в папку проекта:
 ```
-cd simple_task_tracker/backend
+cd simple_task_tracker/
 ```
 Установите виртуальное окружение (**если работаете в Linux**):
 ```
@@ -25,6 +25,10 @@ python3.10 -m venv venv
 ```
 source venv/bin/activate
 ```
+Установите зависимости из файла requirements.txt:
+```
+pip install -r requirements.txt
+``` 
 Выполните миграции:
 ```
 python manage.py migrate
@@ -33,18 +37,12 @@ python manage.py migrate
 ```
 python manage.py createsuperuser
 ```
-Перейдите в директорию выше:
-```
-cd ..
-```
-Установите зависимости из файла requirements.txt:
-```
-pip install -r requirements.txt
-``` 
 В корне проекта найдите файл **.env.example**, переименуйте в **.env** и заполните своими данными.
 Как правило, для разработки там менять ничего не нужно. Чтобы заработала почта, скопируйте и вставьте в
 **.env** в раздел "Email settings" следующие данные (тестовый пустой ящик на Яндекс.Почте):
 ```
+#Email settings:
+###############################################################################
 RECIPIENT_ADDRESS='trsv.dev@yandex.ru'
 EMAIL_HOST='smtp.yandex.ru'
 EMAIL_PORT=465
@@ -54,7 +52,7 @@ EMAIL_HOST_USER='trsv.dev@yandex.ru'
 EMAIL_HOST_PASSWORD='hzitlzdryltagtly'
 EMAIL_BACKEND='django.core.mail.backends.smtp.EmailBackend'
 ```
-Возвращаемся в папку **_backend_**:
+Переходим в папку **_backend_**:
 ```
 cd /backend
 ```
@@ -66,19 +64,19 @@ python manage.py runserver
 
 Логиниться можно под данными суперпользователя.
 
-Скачиваем контейнер с Redis:
+Открываем еще одно окно терминала, скачиваем контейнер с Redis:
 ```
 docker pull redis
 ```
 И запускаем его в режиме демона:
 ```
-docker run -d --name redis-container -p 6379:6379 redis
+docker run -d --name redis -p 6379:6379 redis
 ```
 Запускаем Celery (**_в отдельном окне консоли_**, открытом по тому же пути, т.е. в папке /backend):
 ```
 celery -A task_tracker.celery worker -l info
 ```
-**_Опционально:_** Запуск Flower (**_в отдельном окне консоли_**, открытом по тому же пути, т.е. в папке /backend). Мониторинг задач в celery, будет доступен по http://127.0.0.1:5555
+**_Опционально:_** Запуск Flower (**_в отдельном окне консоли_**, открытом по тому же пути, т.е. в папке /backend). Мониторинг задач в celery будет доступен по http://127.0.0.1:5555
 ```
 celery -A task_tracker.celery flower
 ```
