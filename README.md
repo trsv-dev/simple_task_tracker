@@ -78,7 +78,7 @@ docker run -d --name redis-container -p 6379:6379 redis
 ```
 celery -A task_tracker.celery worker -l info
 ```
-**_Опционально:_** Запуск Flower (**_в отдельном окне консоли_**, открытом по тому же пути, т.е. в папке /backend). Мониторинг задач в celery, будет доступен по http://127.0.0.1:5555
+**_Опционально:_** Запуск Flower (**_в отдельном окне консоли_**, открытом по тому же пути, т.е. в папке /backend). Мониторинг задач в celery будет доступен по http://127.0.0.1:5555
 ```
 celery -A task_tracker.celery flower
 ```
