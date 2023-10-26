@@ -2,7 +2,6 @@ from django.contrib.auth import get_user_model
 from django.core.validators import RegexValidator, MinValueValidator
 from django.db import models
 from django.utils import timezone
-from markdown import markdown
 
 User = get_user_model()
 
