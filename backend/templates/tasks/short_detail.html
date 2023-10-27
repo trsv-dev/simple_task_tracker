@@ -1,4 +1,6 @@
-<p>{{ task.description|truncatechars:150 }}</p>
+{% load tracker_tags %}
+
+<p>{{ task.description|markdown|truncatechars_html:50 }}</p>
 <p><b>Автор:</b> {{ task.author }}</p>
 <p><b>Дедлайн:</b> {{ task.deadline }}</p>
 <a href="{% url 'tracker:detail' pk=task.id %}" class="btn btn-outline-dark">Подробнее</a>

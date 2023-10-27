@@ -3,6 +3,7 @@ from datetime import timedelta
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.core.paginator import Paginator
+from django.db import transaction
 from django.shortcuts import render, redirect, get_object_or_404
 from django.utils import timezone
 
@@ -138,6 +139,7 @@ def create_task(request):
 
 
 @login_required
+@transaction.atomic
 def edit_task(request, pk):
     """Редактирование задачи."""
 
@@ -153,34 +155,40 @@ def edit_task(request, pk):
 
     if form.is_valid():
         task = form.save(commit=False)
-        new_assigned_to_username = form.cleaned_data.get('assigned_to')
+        new_assigned_to = form.cleaned_data.get('assigned_to')
 
-        if new_assigned_to_username != previous_assigned_to_username:
-            task.assigned_to = new_assigned_to_username
+        if new_assigned_to.username == previous_assigned_to_username:
 
-        form.save()
+            form.save()
 
-        assigned_to_email = new_assigned_to_username.email
+            return redirect('tracker:index')
 
-        task_instance = Task.objects.get(id=task.pk)
-        serializer = TaskSerializer(
-            task_instance, context={'request': request}
-        )
-        serialized_data = serializer.data
+        else:
+            task.assigned_to = new_assigned_to
+            assigned_to_email = new_assigned_to.email
 
-        serialized_data[
-            'previous_assigned_to_username'] = previous_assigned_to_username
+            form.save()
 
-        send_email_message.apply_async(
-            kwargs={
-                'email': assigned_to_email,
-                'template': templates['reassigned_task_template'],
-                'context': serialized_data,
-            },
-            countdown=5
-        )
+            task_instance = Task.objects.get(id=task.pk)
+            serializer = TaskSerializer(
+                task_instance, context={'request': request}
+            )
+            serialized_data = serializer.data
 
-        return redirect('tracker:index')
+            serialized_data[
+                'previous_assigned_to_username'
+            ] = previous_assigned_to_username
+
+            send_email_message.apply_async(
+                kwargs={
+                    'email': assigned_to_email,
+                    'template': templates['reassigned_task_template'],
+                    'context': serialized_data,
+                },
+                countdown=5
+            )
+
+            return redirect('tracker:index')
 
     context = {
         'task': task,

@@ -1,3 +1,5 @@
+{% load tracker_tags %}
+
 <div class="container">
   <div class="card">
     <div class="card-header">
@@ -8,16 +10,16 @@
         {% for comment in comments %}
           <div class="comment">
             <strong>{{ comment.author }}</strong><br>
-            <p>{{ comment.text }}</p>
+            <p>{{ comment.text|markdown }}</p>
             <p class="text-muted">{{ comment.created }}</p>
-{#                {% if user.is_authenticated %}#}
-{#                  <form method="post" action="{% url 'tracker:create_comment' task_pk=task.pk %}">#}
-{#                    {% csrf_token %}#}
-{#                    <input type="hidden" name="parent_comment" value="{{ comment.id }}">#}
-{#                    <textarea class="form-control" name="text" rows="3" required></textarea>#}
-{#                    <button type="submit" class="btn btn-outline-primary">Ответить</button>#}
-{#                  </form>#}
-{#                {% endif %}#}
+<!--{#                {% if user.is_authenticated %}#}-->
+<!--{#                  <form method="post" action="{% url 'tracker:create_comment' task_pk=task.pk %}">#}-->
+<!--{#                    {% csrf_token %}#}-->
+<!--{#                    <input type="hidden" name="parent_comment" value="{{ comment.id }}">#}-->
+<!--{#                    <textarea class="form-control" name="text" rows="3" required></textarea>#}-->
+<!--{#                    <button type="submit" class="btn btn-outline-primary">Ответить</button>#}-->
+<!--{#                  </form>#}-->
+<!--{#                {% endif %}#}-->
           </div>
           <hr>
         {% endfor %}

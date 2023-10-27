@@ -1,4 +1,12 @@
-<p><b>Описание:</b> {{ task.description }}</p>
+{% load static %}
+{% load tracker_tags %}
+
+<link rel="stylesheet" href="{% static 'css/default.min.css' %}">
+<script src="{% static 'js/highlight.min.js' %}"></script>
+
+<script>hljs.highlightAll();</script>
+
+<p><b>Описание:</b> {{ task.description|markdown }}</p>
 <p><b>Автор:</b> {{ task.author }}</p>
 <p><b>Приоритет:</b> {{ task.priority }}</p>
 <p><b>Статус:</b> {{ task.status }}</p>
