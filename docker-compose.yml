@@ -1,0 +1,82 @@
+version: '3.3'
+
+volumes:
+  pg_data:
+  static:
+  media:
+  redis_data:
+  workers_data:
+  flower_data:
+
+services:
+  postgres:
+    container_name: postgres
+    image: postgres:16-alpine
+    env_file:
+      - .env
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+
+  redis:
+    container_name: redis
+    image: redis:7.2-alpine
+    env_file:
+      - .env
+    volumes:
+      - redis_data:/data
+
+  flower:
+    container_name: flower
+    image: mher/flower:2.0.0
+    env_file:
+      - .env
+    environment:
+      - CELERY_BROKER_URL=${CELERY_BROKER_URL}
+      - FLOWER_PORT=${FLOWER_PORT}
+      - FLOWER_BASIC_AUTH=${FLOWER_USER}:${FLOWER_PASSWORD}
+    ports:
+      - ${FLOWER_PORT}:5555
+    volumes:
+      - flower_data:/data
+
+  worker:
+    container_name: celery_worker_1
+    build: ./backend/
+    env_file:
+      - .env
+    hostname: worker
+    entrypoint: celery
+    command: -A task_tracker.celery worker --loglevel=info
+    volumes:
+      - workers_data:/app/workers_data
+    links:
+      - redis
+    depends_on:
+      - redis
+
+  backend:
+    container_name: backend
+    build: ./backend/
+    command: |
+      bash -c 'sleep 5 &&
+      python manage.py migrate &&
+      python manage.py collectstatic --noinput &&
+      gunicorn --bind 0:8000 task_tracker.wsgi'
+    env_file:
+      - .env
+    volumes:
+      - static:/app/static/
+      - media:/app/media/
+    depends_on:
+      - postgres
+      - redis
+
+  nginx:
+    container_name: nginx
+    build: ./gateway/
+    volumes:
+      - static:/app/static/
+    ports:
+      - ${NGINX_PORT}:80
+    depends_on:
+      - backend
