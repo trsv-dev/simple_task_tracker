@@ -8,27 +8,28 @@
         <p>Всего задач:<strong> {{ tasks.count }} </strong></p>
     </section>
 
-    <div class="card">
-      <div class="card-body">
-        <section class="task-list">
-          {% if tasks %}
-            {% for task in page_obj %}
-              <div class="task-item">
-                <p>{{ task.title|truncatechars_html:150 }}</p>
-                {% include 'tasks/short_detail.html' %}
-                <br>
-                {% if not forloop.last %}<hr>{% endif %}
-              </div>
-            {% endfor %}
-          {% else %}
-            <div class="text-center">
-                У вас нет незакрытых задач! 👍
-            </div>
-          {% endif %}
-        </section>
-      </div>
-    </div>
+    <section class="task-list">
+      {% if tasks %}
+        {% for task in page_obj %}
+        <div class="card">
+            {% include 'includes/task_title_colors.html' %}
+        <div class="card-body">
+          <div class="task-item">
+            {% include 'tasks/short_detail.html' %}
+            <br>
+<!--                {% if not forloop.last %}<hr>{% endif %}-->
+          </div>
+        </div>
+        </div>
+        {% endfor %}
+      {% else %}
+        <div class="text-center">
+            У вас нет незакрытых задач! 👍
+        </div>
+      {% endif %}
+    </section>
   </div>
+
   <div class="pagination justify-content-center align-items-center mt-4">
     <span class="step-links">
     {% if page_obj %}
