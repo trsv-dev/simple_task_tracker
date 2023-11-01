@@ -6,6 +6,7 @@ from django.core.paginator import Paginator
 from django.db import transaction
 from django.shortcuts import render, redirect, get_object_or_404
 from django.utils import timezone
+from django.views.decorators.http import require_POST
 
 from task_tracker.settings import TASKS_IN_PROFILE_PAGE
 from task_tracker.settings import TEMPLATES_DIR
@@ -200,6 +201,7 @@ def edit_task(request, pk):
 
 
 @login_required
+@require_POST
 def delete_task(request, pk):
     """Удаление задачи."""
 
@@ -277,11 +279,11 @@ def create_comment(request, task_pk):
         comment.author = request.user
         form.save()
 
-        parent_comment_id = request.POST.get('parent_comment')
-        if parent_comment_id:
-            parent_comment = get_object_or_404(Comment, pk=parent_comment_id)
-            comment.parent_comment = parent_comment
-            comment.save()
+        # parent_comment_id = request.POST.get('parent_comment')
+        # if parent_comment_id:
+        #     parent_comment = get_object_or_404(Comment, pk=parent_comment_id)
+        #     comment.parent_comment = parent_comment
+        #     comment.save()
 
         return redirect('tracker:detail', pk=task.pk)
     return render(request, 'tasks/create_comment.html', context)
@@ -295,7 +297,17 @@ def edit_comment(request, pk):
 
 
 @login_required
+@require_POST
 def delete_comment(request, pk):
     """Удаление комментария."""
 
-    pass
+    comment = get_object_or_404(Comment, pk=pk)
+    user = request.user
+    task = comment.task
+
+    if user != comment.author:
+        return redirect('tracker:detail', pk=task.pk)
+
+    comment.delete()
+
+    return redirect('tracker:detail', pk=task.pk)

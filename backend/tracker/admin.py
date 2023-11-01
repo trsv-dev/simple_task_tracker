@@ -18,7 +18,7 @@ class TaskAdmin(admin.ModelAdmin):
 
     show_tags.short_description = 'Теги'
 
-    list_display = ('author', 'title', 'description', 'show_tags', 'priority',
+    list_display = ('id', 'author', 'title', 'description', 'show_tags', 'priority',
                     'status', 'previous_status', 'assigned_to', 'created',
                     'deadline', 'is_done', 'done_by', 'done_by_time')
     readonly_fields = ('previous_status',)
@@ -28,7 +28,7 @@ class TaskAdmin(admin.ModelAdmin):
 
 @admin.register(Comment)
 class CommentAdmin(admin.ModelAdmin):
-    list_display = ('task', 'author', 'text', 'created')
+    list_display = ('task', 'author', 'id', 'text', 'created')
     ordering = ('created',)
 
 
