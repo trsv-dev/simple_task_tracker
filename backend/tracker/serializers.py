@@ -4,7 +4,7 @@ from django.urls import reverse
 from django.utils import timezone
 from rest_framework import serializers
 
-from .models import Task
+from .models import Task, User
 
 locale.setlocale(locale.LC_TIME, 'ru_RU.UTF-8')
 
@@ -45,3 +45,16 @@ class TaskSerializer(serializers.ModelSerializer):
             '%d %B %Y г. %H:%M'
         )
         return representation
+
+
+class UserSerializer(serializers.ModelSerializer):
+    """
+    Сериализатор для пользователя, которому
+    отправляется письмо об упоминании.
+    """
+
+    username = serializers.StringRelatedField(read_only=True)
+
+    class Meta:
+        model = User
+        fields = '__all__'
