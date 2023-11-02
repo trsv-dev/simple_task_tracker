@@ -5,9 +5,37 @@
 
 ![img.png](img.png)
 
+## Описание
 
-_Тут будет подробное описание проекта и технологий._
-### Запуск проекта в контейнерах Docker (подразумевается, что Docker уже установлен):
+Это пэт-проект, главной целью которого является возможность 
+попробовать в деле интересующие технологии, такие как Docker, Celery, Redis.
+
+## Возможности
+
+- На главной странице проекта можно назначать задания пользователям;
+- Задачи может создавать только зарегистрированный пользователь;
+- О новом назначенном задании пользователи узнают из письма, которое приходит им на почту;
+- Ответственный за задачу пользователь (и администратор) может переназначить задачу другому
+пользователю, о чем ему будет сообщено в электронном письме;
+- Редактировать задачу может автор задачи, администратор или ответственный пользователь;
+- Удалить задачу может автор задачи, администратор или ответственный пользователь;
+- В случае приближения дедлайна ответственный пользователь получает оповещение на электронную почту;
+- Есть возможность обсуждения задачи посредством комментариев под задачей;
+- Оставлять комментарии может только зарегистрированный пользователь;
+- Удалить комментарий может только автор комментария;
+- В комментариях можно упоминать пользователя (пользователей) через '@', например, @username;
+Упомянутому пользователю (пользователям) придет сообщение на электронную почту с информацией о том,
+что их упомянули в комментариях к такой-то задаче;
+- В комментариях и описании задачи есть возможность использовать базовое Markdown форматирование, 
+например, вставку кода;
+- На странице деталей задачи и в комментариях работает подсветка синтаксиса.
+
+## Планы
+
+_Напишу позже_
+
+
+## Запуск проекта в контейнерах Docker (подразумевается, что Docker уже установлен):
 Клонируйте репозиторий с **develop веткой** к себе на машину:
 ```
 git clone git@github.com:trsv-dev/simple_task_tracker.git -b develop
@@ -30,6 +58,29 @@ EMAIL_HOST_USER='trsv.dev@yandex.ru'
 EMAIL_HOST_PASSWORD='hzitlzdryltagtly'
 EMAIL_BACKEND='django.core.mail.backends.smtp.EmailBackend'
 ```
+</details>
+
+Так же обратите внимание на секцию **#Celery settings**. Если вы запускаете контейнеры, то 
+вам нужно раскомментировать две конфигурационные строки. Ваш конфиг должен быть таким:
+
+<details>
+    <summary>Конфиг Celery</summary>
+
+```
+#Celery settings:
+###############################################################################
+
+#### Comment these two strings if you use it in Docker:
+CELERY_BROKER_URL='redis://redis:6379/0'
+CELERY_RESULT_BACKEND='redis://redis:6379/0'
+
+#### Comment these two strings if you use in in local development environment:
+#CELERY_BROKER_URL='redis://127.0.0.1:6379/0'
+#CELERY_RESULT_BACKEND='redis://127.0.0.1:6379/0'
+
+CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP=True
+```
+
 </details>
 
 
@@ -59,7 +110,7 @@ docker compose -f docker-compose.yml exec backend python manage.py createsuperus
 Сайт доступен по http://127.0.0.1:8000, Flower доступен по http://127.0.0.1:5555 
 с логином/паролем, заданным вами в .env (по умолчанию - _admin_ / _MySuperStrongPassword_).
 
-### Запуск проекта в dev-режиме
+## Запуск проекта в dev-режиме
 Клонируйте репозиторий с **develop веткой** к себе на машину:
 ```
 git clone git@github.com:trsv-dev/simple_task_tracker.git -b develop
@@ -106,6 +157,29 @@ EMAIL_HOST_USER='trsv.dev@yandex.ru'
 EMAIL_HOST_PASSWORD='hzitlzdryltagtly'
 EMAIL_BACKEND='django.core.mail.backends.smtp.EmailBackend'
 ```
+</details>
+
+Так же обратите внимание на секцию **#Celery settings**. Если вы разрабатываете локально, то 
+вам нужно раскомментировать две конфигурационные строки. Ваш конфиг должен быть таким:
+
+<details>
+    <summary>Конфиг Celery</summary>
+
+```
+#Celery settings:
+###############################################################################
+
+#### Comment these two strings if you use it in Docker:
+#CELERY_BROKER_URL='redis://redis:6379/0'
+#CELERY_RESULT_BACKEND='redis://redis:6379/0'
+
+#### Comment these two strings if you use in in local development environment:
+CELERY_BROKER_URL='redis://127.0.0.1:6379/0'
+CELERY_RESULT_BACKEND='redis://127.0.0.1:6379/0'
+
+CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP=True
+```
+
 </details>
 
 Переходим в папку **_backend_**:

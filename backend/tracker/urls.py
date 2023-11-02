@@ -17,7 +17,10 @@ urlpatterns = [
         name='create_comment'
     ),
     # path('task/<int:pk>/comment/', views.edit_comment, name='edit_comment'),
-    # path('<int:pk>/comment', views.delete_comment, name='delete_comment'),
+    path(
+        'delete_comment/<int:pk>/',
+        views.delete_comment,
+        name='delete_comment'),
     path(
         'tasks/<int:pk>/mark_as_done/',
         views.mark_as_done,

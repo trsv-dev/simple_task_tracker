@@ -1,4 +1,6 @@
+import re
 from datetime import timedelta
+from pprint import pprint
 
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
@@ -6,12 +8,13 @@ from django.core.paginator import Paginator
 from django.db import transaction
 from django.shortcuts import render, redirect, get_object_or_404
 from django.utils import timezone
+from django.views.decorators.http import require_POST
 
 from task_tracker.settings import TASKS_IN_PROFILE_PAGE
 from task_tracker.settings import TEMPLATES_DIR
 from tracker.forms import TaskCreateForm, CommentForm
 from tracker.models import Task, Comment
-from tracker.serializers import TaskSerializer
+from tracker.serializers import TaskSerializer, UserSerializer
 from tracker.utils import send_email_message
 
 templates = {
@@ -22,7 +25,9 @@ templates = {
     'reassigned_task_template':
         f'{TEMPLATES_DIR}/email_templates/reassigned_to_mail.html',
     'deadline_template':
-        f'{TEMPLATES_DIR}/email_templates/deadline_mail.html'
+        f'{TEMPLATES_DIR}/email_templates/deadline_mail.html',
+    'message_to_mentioned_user':
+        f'{TEMPLATES_DIR}/email_templates/message_to_mentioned_user.html'
 }
 
 
@@ -200,6 +205,7 @@ def edit_task(request, pk):
 
 
 @login_required
+@require_POST
 def delete_task(request, pk):
     """Удаление задачи."""
 
@@ -277,11 +283,13 @@ def create_comment(request, task_pk):
         comment.author = request.user
         form.save()
 
-        parent_comment_id = request.POST.get('parent_comment')
-        if parent_comment_id:
-            parent_comment = get_object_or_404(Comment, pk=parent_comment_id)
-            comment.parent_comment = parent_comment
-            comment.save()
+        notify_mentioned_users(request, comment.text, comment.task)
+
+        # parent_comment_id = request.POST.get('parent_comment')
+        # if parent_comment_id:
+        #     parent_comment = get_object_or_404(Comment, pk=parent_comment_id)
+        #     comment.parent_comment = parent_comment
+        #     comment.save()
 
         return redirect('tracker:detail', pk=task.pk)
     return render(request, 'tasks/create_comment.html', context)
@@ -295,7 +303,68 @@ def edit_comment(request, pk):
 
 
 @login_required
+@require_POST
 def delete_comment(request, pk):
     """Удаление комментария."""
 
-    pass
+    comment = get_object_or_404(Comment, pk=pk)
+    user = request.user
+    task = comment.task
+
+    if user != comment.author:
+        return redirect('tracker:detail', pk=task.pk)
+
+    comment.delete()
+
+    return redirect('tracker:detail', pk=task.pk)
+
+
+def notify_mentioned_users(request, comment_text, comment_task):
+    """
+    Если в комментарии пользователя указали через @username
+    присылает уведомление на электронную почту об упоминании.
+    """
+
+    search_pattern = re.compile(r'@(\w+)')
+    mentioned_usernames = search_pattern.findall(comment_text)
+
+    task_instance = comment_task
+
+    for username in mentioned_usernames:
+        user = get_object_or_404(User, username=username)
+        user_email = user.email
+
+        # Получаем данные username из сериализатора, иначе Celery не пропустит
+        # несериализованные данные.
+        user_instance = user
+        serializer = UserSerializer(
+            user_instance, context={'request': request}
+        )
+        username = serializer.data['username']
+
+        # Получаем данные комментария из сериализатора,
+        # иначе Celery не пропустит несериализованные данные.
+        serializer = TaskSerializer(
+            task_instance, context={'request': request}
+        )
+        comment_task = serializer.data['title']
+        task_link = serializer.data['link']
+
+        comment_author = request.user.username
+
+        context = {
+            'username': username,
+            'comment_text': comment_text,
+            'comment_task': comment_task,
+            'comment_author': comment_author,
+            'task_link': task_link
+        }
+
+        send_email_message.apply_async(
+            kwargs={
+                'email': user_email,
+                'template': templates['message_to_mentioned_user'],
+                'context': context
+            },
+            countdown=5
+        )
