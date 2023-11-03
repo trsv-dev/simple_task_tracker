@@ -1,6 +1,3 @@
-import smtplib
-
-import requests
 from celery import shared_task
 from django.core.mail import send_mail
 from django.template.loader import render_to_string
@@ -21,7 +18,7 @@ def get_link(instance, request):
 
 @shared_task(
     bind=True, autoretry_for=(Exception,), retry_backoff=True,
-    retry_kwargs={'max_retries': 15}
+    retry_kwargs={'max_retries': 30}
 )
 def send_email_message(self, email, template, context):
     """
