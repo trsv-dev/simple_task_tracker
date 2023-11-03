@@ -23,12 +23,15 @@
 - Есть возможность обсуждения задачи посредством комментариев под задачей;
 - Оставлять комментарии может только зарегистрированный пользователь;
 - Удалить комментарий может только автор комментария;
-- В комментариях можно упоминать пользователя (пользователей) через '@', например, @username;
+- В комментариях можно упоминать пользователя (пользователей) через '@', например, @username.
 Упомянутому пользователю (пользователям) придет сообщение на электронную почту с информацией о том,
 что их упомянули в комментариях к такой-то задаче;
 - В комментариях и описании задачи есть возможность использовать базовое Markdown форматирование, 
 например, вставку кода;
 - На странице деталей задачи и в комментариях работает подсветка синтаксиса.
+- Отправка оповещений по электронной почте происходит асинхронно, если интернет-соединение
+было потеряно или сервер не ответил то будет совершено несколько попыток отправки с экспоненциальным
+возрастанием времени между попытками.
 
 ## Планы
 
@@ -74,7 +77,7 @@ EMAIL_BACKEND='django.core.mail.backends.smtp.EmailBackend'
 CELERY_BROKER_URL='redis://redis:6379/0'
 CELERY_RESULT_BACKEND='redis://redis:6379/0'
 
-#### Comment these two strings if you use in in local development environment:
+#### Comment these two strings if you use it in local development environment:
 #CELERY_BROKER_URL='redis://127.0.0.1:6379/0'
 #CELERY_RESULT_BACKEND='redis://127.0.0.1:6379/0'
 
@@ -173,7 +176,7 @@ EMAIL_BACKEND='django.core.mail.backends.smtp.EmailBackend'
 #CELERY_BROKER_URL='redis://redis:6379/0'
 #CELERY_RESULT_BACKEND='redis://redis:6379/0'
 
-#### Comment these two strings if you use in in local development environment:
+#### Comment these two strings if you use it in local development environment:
 CELERY_BROKER_URL='redis://127.0.0.1:6379/0'
 CELERY_RESULT_BACKEND='redis://127.0.0.1:6379/0'
 
