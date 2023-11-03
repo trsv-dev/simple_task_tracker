@@ -1,3 +1,6 @@
+import smtplib
+
+import requests
 from celery import shared_task
 from django.core.mail import send_mail
 from django.template.loader import render_to_string
@@ -16,8 +19,11 @@ def get_link(instance, request):
     )
 
 
-@shared_task
-def send_email_message(email, template, context):
+@shared_task(
+    bind=True, autoretry_for=(Exception,), retry_backoff=True,
+    retry_kwargs={'max_retries': 15}
+)
+def send_email_message(self, email, template, context):
     """
     Отправка письма на электронную почту пользователю,
     которого отметили ответственным за выполнение задачи,
@@ -35,5 +41,5 @@ def send_email_message(email, template, context):
             recipient_list=[email],
             html_message=message
         )
-    except Exception as e:
-        print(f'Ошибка отправки почты: {e}')
+    except Exception:
+        print(f'Ошибка отправки почты: {Exception}')
