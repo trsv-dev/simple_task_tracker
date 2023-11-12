@@ -72,7 +72,11 @@
             <button type="submit" class="btn btn-outline-success">
                 {% if task %}Сохранить{% else %}Создать{% endif %}
             </button>
-            <a href="{% url 'tracker:detail' pk=task.id %}" class="btn btn-outline-secondary">Отмена</a>
+            {% if task %}
+                <a href="{% url 'tracker:detail' pk=task.id %}" class="btn btn-outline-secondary">Отмена</a>
+            {% else %}
+                <a href="{% url 'tracker:index' %}" class="btn btn-outline-secondary">Отмена</a>
+            {% endif %}
             {#    Кнопка удаления вынеседа в отдельный блок чтобы явно указать метод POST, который требуется в @require_POST #}
             {% if task %}
                 <button type="submit" formaction="{% url 'tracker:delete' pk=task.id %}" class="btn btn-outline-danger">Удалить</button>
