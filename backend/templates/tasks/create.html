@@ -68,9 +68,15 @@
             <input type="datetime-local" class="form-control" id="id_deadline" name="deadline" {% if task %}value="{{ task.deadline|date:'Y-m-d\TH:i' }}"{% elif form.deadline.value %}value="{{ form.deadline.value }}"{% endif %} required>
         </div>
 
-        <div class="btn-group-toggle">
-            <button type="submit" class="btn btn-outline-success">{% if task %}Сохранить{% else %}Создать{% endif %}</button>
-            <a href="{% url 'tracker:index' %}" class="btn btn-outline-secondary">Отмена</a>
+        <div class="btn-group-justified">
+            <button type="submit" class="btn btn-outline-success">
+                {% if task %}Сохранить{% else %}Создать{% endif %}
+            </button>
+            <a href="{% url 'tracker:detail' pk=task.id %}" class="btn btn-outline-secondary">Отмена</a>
+            {#    Кнопка удаления вынеседа в отдельный блок чтобы явно указать метод POST, который требуется в @require_POST #}
+            {% if task %}
+                <button type="submit" formaction="{% url 'tracker:delete' pk=task.id %}" class="btn btn-outline-danger">Удалить</button>
+            {% endif %}
         </div>
     </form>
 </div>
