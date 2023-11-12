@@ -69,7 +69,7 @@ STATICFILES_DIRS = [BASE_DIR / 'static']
 
 WSGI_APPLICATION = 'task_tracker.wsgi.application'
 
-# SQLite settings (for local development):
+# SQLite settings (при локальной разработке):
 ###############################################################################
 
 DATABASES = {
@@ -79,7 +79,7 @@ DATABASES = {
     }
 }
 
-# PostgreSQL settings (for production or locally in containers):
+# PostgreSQL settings (на продакшне или локально в контейнерах):
 ###############################################################################
 
 # DATABASES = {
