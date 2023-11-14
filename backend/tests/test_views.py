@@ -325,7 +325,8 @@ class ViewsTestCase(TestCase):
             'tracker:delete',
             args=[self.test_task.pk]
         )
-        response = self.authorized_client.delete(delete_url)
+        # Из-за того, что @require_POST исмользуем .post, а не .delete
+        response = self.authorized_client.post(delete_url)
 
         task_count = Task.objects.count()
 
@@ -346,7 +347,10 @@ class ViewsTestCase(TestCase):
             'tracker:delete',
             args=[self.test_task.pk]
         )
-        response = self.authorized_client_not_author.delete(delete_url)
+
+        # response = self.authorized_client_not_author.delete(delete_url)
+        # Из-за того, что @require_POST исмользуем .post, а не .delete
+        response = self.authorized_client_not_author.post(delete_url)
 
         self.assertRedirects(response, reverse('tracker:index'))
 

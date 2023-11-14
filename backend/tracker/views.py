@@ -1,6 +1,5 @@
 import re
 from datetime import timedelta
-from pprint import pprint
 
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
@@ -15,6 +14,7 @@ from task_tracker.settings import TEMPLATES_DIR
 from tracker.forms import TaskCreateForm, CommentForm
 from tracker.models import Task, Comment
 from tracker.serializers import TaskSerializer, UserSerializer
+from tracker.utils import send_email_about_closer_deadline
 from tracker.utils import send_email_message
 
 templates = {
@@ -130,14 +130,16 @@ def create_task(request):
             countdown=5
         )
 
-        send_email_message.apply_async(
-            kwargs={
-                'email': assigned_to_email,
-                'template': templates['deadline_template'],
-                'context': serialized_data
-            },
-            eta=eta_time
-        )
+        # send_email_message.apply_async(
+        #     kwargs={
+        #         'email': assigned_to_email,
+        #         'template': templates['deadline_template'],
+        #         'context': serialized_data
+        #     },
+        #     eta=eta_time
+        # )
+
+        # send_email_about_closer_deadline()
 
         return redirect('tracker:index')
     return render(request, 'tasks/create.html', context)
@@ -152,6 +154,7 @@ def edit_task(request, pk):
     all_users = User.objects.all()
     task = get_object_or_404(Task, pk=pk)
     previous_assigned_to_username = task.assigned_to.username
+    previous_deadline = task.deadline
 
     if check_rights_to_task(username, task) is False:
         return redirect('tracker:index')
@@ -161,18 +164,16 @@ def edit_task(request, pk):
     if form.is_valid():
         task = form.save(commit=False)
         new_assigned_to = form.cleaned_data.get('assigned_to')
+        new_deadline = form.cleaned_data.get('deadline')
 
-        if new_assigned_to.username == previous_assigned_to_username:
+        if new_deadline != previous_deadline:
 
-            form.save()
+            task.is_notified = False
 
-            return redirect('tracker:index')
+        if new_assigned_to.username != previous_assigned_to_username:
 
-        else:
             task.assigned_to = new_assigned_to
             assigned_to_email = new_assigned_to.email
-
-            form.save()
 
             task_instance = Task.objects.get(id=task.pk)
             serializer = TaskSerializer(
@@ -194,6 +195,8 @@ def edit_task(request, pk):
             )
 
             return redirect('tracker:index')
+
+        form.save()
 
     context = {
         'task': task,
