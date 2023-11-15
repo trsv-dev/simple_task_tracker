@@ -1,5 +1,4 @@
 import re
-from datetime import timedelta
 
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
@@ -14,7 +13,6 @@ from task_tracker.settings import TEMPLATES_DIR
 from tracker.forms import TaskCreateForm, CommentForm
 from tracker.models import Task, Comment
 from tracker.serializers import TaskSerializer, UserSerializer
-from tracker.utils import send_email_about_closer_deadline
 from tracker.utils import send_email_message
 
 templates = {
@@ -117,10 +115,6 @@ def create_task(request):
         )
         serialized_data = serializer.data
 
-        # Изменить на желаемое время напоминания о дедлайне,
-        # пока для проверки стоит напоминание за 5 минут.
-        eta_time = task.deadline - timedelta(minutes=5)
-
         send_email_message.apply_async(
             kwargs={
                 'email': assigned_to_email,
@@ -129,17 +123,6 @@ def create_task(request):
             },
             countdown=5
         )
-
-        # send_email_message.apply_async(
-        #     kwargs={
-        #         'email': assigned_to_email,
-        #         'template': templates['deadline_template'],
-        #         'context': serialized_data
-        #     },
-        #     eta=eta_time
-        # )
-
-        # send_email_about_closer_deadline()
 
         return redirect('tracker:index')
     return render(request, 'tasks/create.html', context)
@@ -194,9 +177,8 @@ def edit_task(request, pk):
                 countdown=5
             )
 
-            return redirect('tracker:index')
-
         form.save()
+        return redirect('tracker:index')
 
     context = {
         'task': task,

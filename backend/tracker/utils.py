@@ -1,13 +1,13 @@
+import socket
 from datetime import timedelta
+from smtplib import SMTPException
 
 from celery import shared_task
-from celery.schedules import crontab
 from django.core.mail import send_mail
 from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils import timezone
 
-from task_tracker.celery import app
 from task_tracker.settings import EMAIL_HOST_USER, TEMPLATES_DIR, BASE_URL
 from tracker.models import Task
 from tracker.serializers import TaskSerializer
@@ -24,8 +24,8 @@ def get_link(instance, request):
 
 
 @shared_task(
-    bind=True, autoretry_for=(Exception,), retry_backoff=True,
-    retry_kwargs={'max_retries': 30}
+    bind=True, autoretry_for=(socket.gaierror, SMTPException),
+    retry_backoff=True, retry_kwargs={'max_retries': 30}
 )
 def send_email_message(self, email, template, context):
     """
@@ -45,8 +45,12 @@ def send_email_message(self, email, template, context):
             recipient_list=[email],
             html_message=message
         )
-    except Exception:
-        print(f'Ошибка отправки почты: {Exception}')
+    except socket.gaierror as e:
+        print(f'Временный сбой в разрешении имени: {e}')
+        raise
+    except SMTPException as e:
+        print(f'Ошибка SMTP: {e}')
+        raise
 
 
 @shared_task
@@ -64,7 +68,6 @@ def send_email_about_closer_deadline():
     for task in tasks_with_closer_deadlines:
         if not task.is_notified:
             assigned_to_email = task.assigned_to.email
-            # task_instance = Task.objects.get(id=task.pk)
             task_instance = task
 
             serializer = TaskSerializer(
