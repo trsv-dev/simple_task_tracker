@@ -16,7 +16,10 @@ urlpatterns = [
         views.create_comment,
         name='create_comment'
     ),
-    # path('task/<int:pk>/comment/', views.edit_comment, name='edit_comment'),
+    path(
+        'edit_comment/<int:pk>/',
+        views.edit_comment,
+        name='edit_comment'),
     path(
         'delete_comment/<int:pk>/',
         views.delete_comment,

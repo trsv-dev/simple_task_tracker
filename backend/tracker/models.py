@@ -115,6 +115,11 @@ class Task(models.Model):
         ),
         verbose_name='Дедлайн'
     )
+    is_notified = models.BooleanField(
+        default=False,
+        verbose_name='Уведомлен?',
+        help_text='Уведомлен ли пользователь о приближении дедлайна'
+    )
     is_done = models.BooleanField(
         default=False,
         verbose_name='Выполнено',

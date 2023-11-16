@@ -4,6 +4,7 @@ from django.urls import reverse
 from django.utils import timezone
 from rest_framework import serializers
 
+from task_tracker.settings import BASE_URL
 from .models import Task, User
 
 locale.setlocale(locale.LC_TIME, 'ru_RU.UTF-8')
@@ -27,11 +28,9 @@ class TaskSerializer(serializers.ModelSerializer):
         """Получение прямой ссылки на задачу."""
 
         task_pk = instance.id
-        request = self.context.get('request')
+        task_url = reverse('tracker:detail', args=[task_pk])
 
-        return request.build_absolute_uri(
-            reverse('tracker:detail', args=[task_pk])
-        )
+        return BASE_URL + task_url
 
     def to_representation(self, instance):
         """Показываем дедлайн в привычном формате."""

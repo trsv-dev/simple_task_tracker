@@ -2,6 +2,8 @@ import os
 from pathlib import Path
 
 from dotenv import load_dotenv
+from celery.schedules import crontab
+from datetime import datetime
 
 load_dotenv()
 
@@ -116,6 +118,8 @@ USE_I18N = True
 
 USE_TZ = True
 
+BASE_URL = os.getenv('BASE_URL', 'http://127.0.0.1:8000')
+
 TASKS_IN_PROFILE_PAGE = os.getenv('TASKS_IN_PROFILE_PAGE', 10)
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
@@ -140,3 +144,23 @@ CELERY_BROKER_URL = os.getenv('CELERY_BROKER_URL', 'redis://127.0.0.1:6379/0')
 CELERY_RESULT_BACKEND = os.getenv('CELERY_RESULT_BACKEND', 'redis://127.0.0.1:6379/0')
 
 CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = os.getenv('CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP', 'True') == 'True'
+
+# FLOWER_USER = os.getenv('FLOWER_USER', 'admin')
+# FLOWER_PASSWORD = os.getenv('FLOWER_PASSWORD', 'MySuperStrongPassword')
+# FLOWER_BASIC_AUTH = f'{FLOWER_USER}:{FLOWER_PASSWORD}'
+# FLOWER_UNAUTHENTICATED_API=os.getenv('FLOWER_UNAUTHENTICATED_API', 'True') == 'True'
+
+# CELERY_BEAT_SCHEDULE = {
+#     'Send_email_about_closer_deadline': {
+#         'task': 'tracker.utils.send_email_about_closer_deadline',
+#         'schedule': crontab(minute='*/30'),
+#     },
+# }
+
+# For testing purposes, the deadline is checked every minute.
+CELERY_BEAT_SCHEDULE = {
+    'Send_email_about_closer_deadline': {
+        'task': 'tracker.utils.send_email_about_closer_deadline',
+        'schedule': crontab(),
+    },
+}
