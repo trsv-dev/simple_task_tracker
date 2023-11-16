@@ -1,6 +1,4 @@
 import re
-from datetime import timedelta
-from pprint import pprint
 
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
@@ -117,10 +115,6 @@ def create_task(request):
         )
         serialized_data = serializer.data
 
-        # Изменить на желаемое время напоминания о дедлайне,
-        # пока для проверки стоит напоминание за 5 минут.
-        eta_time = task.deadline - timedelta(minutes=5)
-
         send_email_message.apply_async(
             kwargs={
                 'email': assigned_to_email,
@@ -128,15 +122,6 @@ def create_task(request):
                 'context': serialized_data,
             },
             countdown=5
-        )
-
-        send_email_message.apply_async(
-            kwargs={
-                'email': assigned_to_email,
-                'template': templates['deadline_template'],
-                'context': serialized_data
-            },
-            eta=eta_time
         )
 
         return redirect('tracker:index')
@@ -152,6 +137,7 @@ def edit_task(request, pk):
     all_users = User.objects.all()
     task = get_object_or_404(Task, pk=pk)
     previous_assigned_to_username = task.assigned_to.username
+    previous_deadline = task.deadline
 
     if check_rights_to_task(username, task) is False:
         return redirect('tracker:index')
@@ -161,18 +147,16 @@ def edit_task(request, pk):
     if form.is_valid():
         task = form.save(commit=False)
         new_assigned_to = form.cleaned_data.get('assigned_to')
+        new_deadline = form.cleaned_data.get('deadline')
 
-        if new_assigned_to.username == previous_assigned_to_username:
+        if new_deadline != previous_deadline:
 
-            form.save()
+            task.is_notified = False
 
-            return redirect('tracker:index')
+        if new_assigned_to.username != previous_assigned_to_username:
 
-        else:
             task.assigned_to = new_assigned_to
             assigned_to_email = new_assigned_to.email
-
-            form.save()
 
             task_instance = Task.objects.get(id=task.pk)
             serializer = TaskSerializer(
@@ -193,7 +177,8 @@ def edit_task(request, pk):
                 countdown=5
             )
 
-            return redirect('tracker:index')
+        form.save()
+        return redirect('tracker:index')
 
     context = {
         'task': task,
@@ -299,7 +284,18 @@ def create_comment(request, task_pk):
 def edit_comment(request, pk):
     """Редактирование комментария."""
 
-    pass
+    comment = get_object_or_404(Comment, pk=pk)
+    task = comment.task
+    user = request.user
+    form = CommentForm(request.POST or None, instance=comment)
+
+    if user != comment.author:
+        return redirect('tracker:detail', pk=task.pk)
+
+    if form.is_valid():
+        form.save()
+
+    return redirect('tracker:detail', pk=task.pk)
 
 
 @login_required

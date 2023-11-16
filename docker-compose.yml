@@ -17,6 +17,33 @@ services:
     volumes:
       - pg_data:/var/lib/postgresql/data
 
+  backend:
+    container_name: backend
+    build: ./backend/
+    command: |
+      bash -c 'sleep 10 &&
+      python manage.py migrate &&
+      python manage.py collectstatic --noinput &&
+      gunicorn --bind 0:8000 task_tracker.wsgi'
+    env_file:
+      - .env
+    volumes:
+      - static:/app/static/
+      - media:/app/media/
+    depends_on:
+      - postgres
+      - redis
+
+  nginx:
+    container_name: nginx
+    build: ./gateway/
+    volumes:
+      - static:/app/static/
+    ports:
+      - ${NGINX_PORT}:80
+    depends_on:
+      - backend
+
   redis:
     container_name: redis
     image: redis:7.2-alpine
@@ -39,12 +66,12 @@ services:
     volumes:
       - flower_data:/data
 
-  worker:
-    container_name: celery_worker_1
+  celery_worker:
+    container_name: celery_worker
     build: ./backend/
     env_file:
       - .env
-    hostname: worker
+    hostname: celery_worker
     entrypoint: celery
     command: -A task_tracker.celery worker --loglevel=info
     volumes:
@@ -53,30 +80,21 @@ services:
       - redis
     depends_on:
       - redis
+      - postgres
 
-  backend:
-    container_name: backend
+  celery_beat_worker:
+    container_name: celery_beat_worker
     build: ./backend/
-    command: |
-      bash -c 'sleep 5 &&
-      python manage.py migrate &&
-      python manage.py collectstatic --noinput &&
-      gunicorn --bind 0:8000 task_tracker.wsgi'
     env_file:
       - .env
+    hostname: celery_beat_worker
+    entrypoint: celery
+    command: -A task_tracker.celery beat -l info
     volumes:
-      - static:/app/static/
-      - media:/app/media/
-    depends_on:
-      - postgres
+      - workers_data:/app/workers_data
+    links:
       - redis
-
-  nginx:
-    container_name: nginx
-    build: ./gateway/
-    volumes:
-      - static:/app/static/
-    ports:
-      - ${NGINX_PORT}:80
+      - postgres
     depends_on:
-      - backend
+      - celery_worker
+      - redis

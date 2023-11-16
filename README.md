@@ -8,7 +8,7 @@
 ## Описание
 
 Это пэт-проект, главной целью которого является возможность 
-попробовать в деле интересующие технологии, такие как Docker, Celery, Redis.
+попробовать в деле интересующие технологии, такие как Docker, Celery, Celery Beat, Redis.
 
 ## Возможности
 
@@ -133,6 +133,10 @@ python3.10 -m venv venv
 ```
 source venv/bin/activate
 ```
+Перейдите в папку **backend**:
+```
+cd backend/
+```
 Установите зависимости из файла requirements.txt:
 ```
 pip install -r requirements.txt
@@ -213,6 +217,10 @@ docker run -d --name redis -p 6379:6379 redis
 Запускаем Celery (**_в отдельном окне консоли_**, открытом по тому же пути, т.е. в папке /backend):
 ```
 celery -A task_tracker.celery worker -l info
+```
+Запускаем Celery Beat (**_в отдельном окне консоли_**, открытом по тому же пути, т.е. в папке /backend):
+```
+celery -A task_tracker beat -l info
 ```
 **_Опционально:_** Запуск Flower (**_в отдельном окне консоли_**, открытом по тому же пути, т.е. в папке /backend). Мониторинг задач в celery будет доступен по http://127.0.0.1:5555
 ```
