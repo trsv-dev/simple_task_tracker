@@ -5,22 +5,11 @@ from smtplib import SMTPException
 from celery import shared_task
 from django.core.mail import send_mail
 from django.template.loader import render_to_string
-from django.urls import reverse
 from django.utils import timezone
 
 from task_tracker.settings import EMAIL_HOST_USER, TEMPLATES_DIR, BASE_URL
 from tracker.models import Task
 from tracker.serializers import TaskSerializer
-
-
-def get_link(instance, request):
-    """Получение прямой ссылки на задачу."""
-
-    task_pk = instance.id
-
-    return request.build_absolute_uri(
-        reverse('tracker:detail', args=[task_pk])
-    )
 
 
 @shared_task(
@@ -58,7 +47,9 @@ def send_email_about_closer_deadline():
     """
     Получение списка всех задач с подходящими дедлайнами
     и отправка электронных писем о них. Пометка задач с уже
-    отправленными сообщениями о дедлайне.
+    отправленными сообщениями о дедлайне. При изменении
+    дедлайна в дальнейшем в процессе редактирования задачи
+    отметка снимается.
     """
 
     tasks_with_closer_deadlines = Task.objects.filter(

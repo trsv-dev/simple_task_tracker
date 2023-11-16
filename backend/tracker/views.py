@@ -284,7 +284,18 @@ def create_comment(request, task_pk):
 def edit_comment(request, pk):
     """Редактирование комментария."""
 
-    pass
+    comment = get_object_or_404(Comment, pk=pk)
+    task = comment.task
+    user = request.user
+    form = CommentForm(request.POST or None, instance=comment)
+
+    if user != comment.author:
+        return redirect('tracker:detail', pk=task.pk)
+
+    if form.is_valid():
+        form.save()
+
+    return redirect('tracker:detail', pk=task.pk)
 
 
 @login_required
