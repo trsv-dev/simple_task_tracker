@@ -22,6 +22,7 @@
 - В случае приближения дедлайна ответственный пользователь получает оповещение на электронную почту;
 - Есть возможность обсуждения задачи посредством комментариев под задачей;
 - Оставлять комментарии может только зарегистрированный пользователь;
+- Редактировать комментарии автором;
 - Удалить комментарий может только автор комментария;
 - В комментариях можно упоминать пользователя (пользователей) через '@', например, @username.
 Упомянутому пользователю (пользователям) придет сообщение на электронную почту с информацией о том,
@@ -73,11 +74,13 @@ EMAIL_BACKEND='django.core.mail.backends.smtp.EmailBackend'
 #Celery settings:
 ###############################################################################
 
-#### Comment these two strings if you use it in Docker:
+#### Uncomment these two strings if you use it in Docker:
+#### Comment it if you use in in local development:
 CELERY_BROKER_URL='redis://redis:6379/0'
 CELERY_RESULT_BACKEND='redis://redis:6379/0'
 
-#### Comment these two strings if you use it in local development environment:
+#### Uncomment these two strings if you use in in local development.
+#### Comment it if you use Docker:
 #CELERY_BROKER_URL='redis://127.0.0.1:6379/0'
 #CELERY_RESULT_BACKEND='redis://127.0.0.1:6379/0'
 
@@ -172,11 +175,13 @@ EMAIL_BACKEND='django.core.mail.backends.smtp.EmailBackend'
 #Celery settings:
 ###############################################################################
 
-#### Comment these two strings if you use it in Docker:
+#### Uncomment these two strings if you use it in Docker:
+#### Comment it if you use in in local development:
 #CELERY_BROKER_URL='redis://redis:6379/0'
 #CELERY_RESULT_BACKEND='redis://redis:6379/0'
 
-#### Comment these two strings if you use it in local development environment:
+#### Uncomment these two strings if you use in in local development.
+#### Comment it if you use Docker:
 CELERY_BROKER_URL='redis://127.0.0.1:6379/0'
 CELERY_RESULT_BACKEND='redis://127.0.0.1:6379/0'
 
