@@ -11,12 +11,25 @@
           <div class="comment">
             <strong>{{ comment.author }}</strong>,  <span class="text-muted">{{ comment.created }}</span><br>
             <p>{{ comment.text|markdown }}</p>
-                {% if user.is_authenticated and user == comment.author %}
-                  <form method="post" action="{% url 'tracker:delete_comment' comment.pk %}">
-                   {% csrf_token %}
+            {% if user.is_authenticated and user == comment.author %}
+                <form method="post" action="{% url 'tracker:delete_comment' pk=comment.id %}" style="display:inline;">
+                    {% csrf_token %}
                     <button type="submit" class="btn btn-outline-danger">Удалить</button>
-                  </form>
-                {% endif %}
+                </form>
+              <button type="button" onclick="toggleEditForm({{ comment.pk }})" class="btn btn-outline-primary">Редактировать</button>
+              <div class="card-body" style="display: none;" id="editForm{{ comment.pk }}">
+                <form method="post" action="{% url 'tracker:edit_comment' pk=comment.pk %}">
+                  {% csrf_token %}
+                  <div class="form-group">
+                    <textarea class="form-control" id="id_text" name="text" rows="3" required>{{ comment.text }}</textarea>
+                  </div>
+                  <div class="btn-group-toggle mt-2">
+                    <button type="submit" class="btn btn-outline-primary">Отправить</button>
+                    <a href="{% url 'tracker:detail' pk=task.pk %}" class="btn btn-outline-secondary">Отмена</a>
+                  </div>
+                </form>
+              </div>
+            {% endif %}
           </div>
           <hr>
         {% endfor %}
@@ -36,15 +49,21 @@
     <div class="card-body">
       <form method="post" action="{% url 'tracker:create_comment' task_pk=task.pk %}">
         {% csrf_token %}
-
         <div class="form-group">
-            <textarea class="form-control" id="id_text" name="text" rows="3" required>{{ form.text.value|default:'' }}</textarea>
+          <textarea class="form-control" id="id_text" name="text" rows="3" required>{{ form.text.value|default:'' }}</textarea>
         </div>
         <div class="btn-group-toggle mt-2">
-            <button type="submit" class="btn btn-outline-primary">Отправить</button>
+          <button type="submit" class="btn btn-outline-primary">Отправить</button>
         </div>
       </form>
     </div>
   </div>
 </div>
 {% endif %}
+
+<script>
+  function toggleEditForm(commentId) {
+    var editForm = document.getElementById('editForm' + commentId);
+    editForm.style.display = (editForm.style.display === 'none' || editForm.style.display === '') ? 'block' : 'none';
+  }
+</script>
