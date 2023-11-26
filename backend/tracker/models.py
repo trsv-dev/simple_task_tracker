@@ -1,4 +1,7 @@
+from datetime import timedelta
+
 from django.contrib.auth import get_user_model
+from django.core.exceptions import ValidationError
 from django.core.validators import RegexValidator, MinValueValidator
 from django.db import models
 from django.utils import timezone
@@ -115,6 +118,11 @@ class Task(models.Model):
         ),
         verbose_name='Дедлайн'
     )
+    deadline_reminder = models.DateTimeField(
+        blank=True,
+        null=True,
+        verbose_name='Когда напомнить о дедлайне'
+    )
     is_notified = models.BooleanField(
         default=False,
         verbose_name='Уведомлен?',
@@ -149,18 +157,23 @@ class Task(models.Model):
         help_text='Выберите подходящий тег'
     )
 
+    def save(self, *args, **kwargs):
+        temp_deadline_reminder = self.deadline_reminder
+        if not temp_deadline_reminder:
+            self.deadline_reminder = self.deadline - timedelta(hours=24)
+        elif self.deadline_reminder > self.deadline:
+            raise ValidationError(
+                'Напоминание о дедлайне не может быть позже дедлайна!'
+            )
+        elif self.deadline_reminder < timezone.now():
+            raise ValidationError(
+                'Напоминание о дедлайне не может быть в прошлом!'
+            )
+        super().save(*args, **kwargs)
+
     def add_only_unique_tags(self, tags_list):
         for tag_name in tags_list:
             tag, create = Tags.objects.get_or_create(tag=tag_name)
-
-    # def get_priority_color(self):
-    #     """Выбор цвета в зависимости от приоритета."""
-    #
-    #     if self.priority == HIGH:
-    #         return 'red'
-    #     elif self.priority == MEDIUM:
-    #         return 'blue'
-    #     return 'green'
 
     class Meta:
         verbose_name = 'Задача'

@@ -1,15 +1,32 @@
+import re
 import socket
 from datetime import timedelta
 from smtplib import SMTPException
 
 from celery import shared_task
 from django.core.mail import send_mail
+from django.shortcuts import get_object_or_404
 from django.template.loader import render_to_string
 from django.utils import timezone
 
 from task_tracker.settings import EMAIL_HOST_USER, TEMPLATES_DIR, BASE_URL
-from tracker.models import Task
-from tracker.serializers import TaskSerializer
+from tracker.models import Task, User
+from tracker.serializers import TaskSerializer, UserSerializer
+
+templates = {
+    'create_task_template':
+        f'{TEMPLATES_DIR}/email_templates/task_mail.html',
+    'delete_task_template':
+        f'{TEMPLATES_DIR}/email_templates/delete_task_mail.html',
+    'reassigned_task_template':
+        f'{TEMPLATES_DIR}/email_templates/reassigned_to_mail.html',
+    'deadline_template':
+        f'{TEMPLATES_DIR}/email_templates/deadline_mail.html',
+    'new_deadline_template':
+        f'{TEMPLATES_DIR}/email_templates/new_deadline_mail.html',
+    'message_to_mentioned_user':
+        f'{TEMPLATES_DIR}/email_templates/message_to_mentioned_user.html'
+}
 
 
 @shared_task(
@@ -53,7 +70,8 @@ def send_email_about_closer_deadline():
     """
 
     tasks_with_closer_deadlines = Task.objects.filter(
-        deadline__lt=timezone.now() + timedelta(hours=24)
+        deadline_reminder__lte=timezone.now() + timedelta(minutes=1),
+        is_notified=False
     )
 
     for task in tasks_with_closer_deadlines:
@@ -78,3 +96,54 @@ def send_email_about_closer_deadline():
             )
             task.is_notified = True
             task.save()
+
+
+def notify_mentioned_users(request, comment_text, comment_task):
+    """
+    Если в комментарии пользователя указали через @username
+    присылает уведомление на электронную почту об упоминании.
+    """
+
+    search_pattern = re.compile(r'@(\w+)')
+    mentioned_usernames = search_pattern.findall(comment_text)
+
+    task_instance = comment_task
+
+    for username in mentioned_usernames:
+        user = get_object_or_404(User, username=username)
+        user_email = user.email
+
+        # Получаем данные username из сериализатора, иначе Celery не пропустит
+        # несериализованные данные.
+        user_instance = user
+        serializer = UserSerializer(
+            user_instance, context={'request': request}
+        )
+        username = serializer.data['username']
+
+        # Получаем данные комментария из сериализатора,
+        # иначе Celery не пропустит несериализованные данные.
+        serializer = TaskSerializer(
+            task_instance, context={'request': request}
+        )
+        comment_task = serializer.data['title']
+        task_link = serializer.data['link']
+
+        comment_author = request.user.username
+
+        context = {
+            'username': username,
+            'comment_text': comment_text,
+            'comment_task': comment_task,
+            'comment_author': comment_author,
+            'task_link': task_link
+        }
+
+        send_email_message.apply_async(
+            kwargs={
+                'email': user_email,
+                'template': templates['message_to_mentioned_user'],
+                'context': context
+            },
+            countdown=5
+        )

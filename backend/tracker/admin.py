@@ -20,8 +20,8 @@ class TaskAdmin(admin.ModelAdmin):
 
     list_display = ('id', 'author', 'title', 'description', 'show_tags',
                     'priority', 'status', 'previous_status', 'assigned_to',
-                    'created', 'deadline', 'is_notified', 'is_done', 'done_by',
-                    'done_by_time')
+                    'created', 'deadline', 'deadline_reminder', 'is_notified',
+                    'is_done', 'done_by', 'done_by_time')
     readonly_fields = ('previous_status',)
     ordering = ('created',)
     inlines = (TagsInLine,)

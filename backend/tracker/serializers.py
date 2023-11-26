@@ -5,7 +5,7 @@ from django.utils import timezone
 from rest_framework import serializers
 
 from task_tracker.settings import BASE_URL
-from .models import Task, User
+from tracker.models import Task, User
 
 locale.setlocale(locale.LC_TIME, 'ru_RU.UTF-8')
 
@@ -27,7 +27,13 @@ class TaskSerializer(serializers.ModelSerializer):
     def get_link(self, instance):
         """Получение прямой ссылки на задачу."""
 
-        task_pk = instance.id
+        # Передаем словарь только в случае удаления задачи для сохранения
+        # данных из экземпляра перед удалением.
+
+        if isinstance(instance, dict):
+            task_pk = instance.get('id')
+        else:
+            task_pk = instance.id
         task_url = reverse('tracker:detail', args=[task_pk])
 
         return BASE_URL + task_url
@@ -37,7 +43,15 @@ class TaskSerializer(serializers.ModelSerializer):
 
         representation = super().to_representation(instance)
 
-        local_deadline = instance.deadline.astimezone(
+        # Передаем словарь только в случае удаления задачи для сохранения
+        # данных из экземпляра перед удалением.
+
+        if isinstance(instance, dict):
+            deadline = instance.get('deadline')
+        else:
+            deadline = instance.deadline
+
+        local_deadline = deadline.astimezone(
             timezone.get_current_timezone())
 
         representation['deadline'] = local_deadline.strftime(
