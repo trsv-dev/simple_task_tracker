@@ -264,13 +264,14 @@ def mark_as_done(request, pk):
     """Пометить задачу как выполненную."""
 
     username = request.user
-    task = Task.objects.get(pk=pk)
+    task = get_object_or_404(Task, pk=pk)
     task.previous_status = task.status
     task.is_done = True
     task.status = 'Выполнено'
     task.done_by = username
     task.done_by_time = timezone.now()
-    task.save()
+    # Отменяем проверку даты и времени напоминания о дедлайне в модели.
+    task.save(skip_deadline_reminder_check=True)
     return redirect('tracker:index')
 
 
@@ -278,13 +279,14 @@ def mark_as_done(request, pk):
 def mark_as_undone(request, pk):
     """Пометить задание как невыполненное."""
 
-    task = Task.objects.get(pk=pk)
+    task = get_object_or_404(Task, pk=pk)
     if task.is_done:
         task.is_done = False
         task.status = task.previous_status
         task.done_by_time = None
         task.done_by = None
-        task.save()
+        # Отменяем проверку даты и времени напоминания о дедлайне в модели.
+        task.save(skip_deadline_reminder_check=True)
         return redirect('tracker:index')
 
 

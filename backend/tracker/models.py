@@ -158,17 +158,27 @@ class Task(models.Model):
     )
 
     def save(self, *args, **kwargs):
+
         temp_deadline_reminder = self.deadline_reminder
-        if not temp_deadline_reminder:
-            self.deadline_reminder = self.deadline - timedelta(hours=24)
-        elif self.deadline_reminder > self.deadline:
-            raise ValidationError(
-                'Напоминание о дедлайне не может быть позже дедлайна!'
-            )
-        elif self.deadline_reminder < timezone.now():
-            raise ValidationError(
-                'Напоминание о дедлайне не может быть в прошлом!'
-            )
+
+        # Отключаем проверку даты и времени напоминания о дедлайне если
+        # мы просто ходим отметить задачу как выполненную.
+
+        skip_deadline_reminder_check = kwargs.pop(
+            'skip_deadline_reminder_check', False
+        )
+
+        if not skip_deadline_reminder_check:
+            if not temp_deadline_reminder:
+                self.deadline_reminder = self.deadline - timedelta(hours=24)
+            elif self.deadline_reminder > self.deadline:
+                raise ValidationError(
+                    'Напоминание о дедлайне не может быть позже дедлайна!'
+                )
+            elif self.deadline_reminder < timezone.now():
+                raise ValidationError(
+                    'Напоминание о дедлайне не может быть в прошлом!'
+                )
         super().save(*args, **kwargs)
 
     def add_only_unique_tags(self, tags_list):
