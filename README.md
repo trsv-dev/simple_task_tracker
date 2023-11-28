@@ -217,9 +217,13 @@ docker pull redis
 ```
 docker run -d --name redis -p 6379:6379 redis
 ```
-Запускаем Celery (**_в отдельном окне консоли_**, открытом по тому же пути, т.е. в папке /backend):
+Запускаем первый воркер Celery для "быстрой очереди" (**_в отдельном окне консоли_**, открытом по тому же пути, т.е. в папке /backend):
 ```
-celery -A task_tracker.celery worker -l info
+celery -A task_tracker.celery worker -Q fast_queue -l info -n fast_queue --concurrency=10
+```
+Запускаем второй воркер Celery для "медленной очереди" (**_в отдельном окне консоли_**, открытом по тому же пути, т.е. в папке /backend):
+```
+celery -A task_tracker.celery worker -Q slow_queue -l info -n slow_queue --concurrency=1
 ```
 Запускаем Celery Beat (**_в отдельном окне консоли_**, открытом по тому же пути, т.е. в папке /backend):
 ```

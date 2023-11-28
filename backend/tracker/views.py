@@ -1,9 +1,7 @@
-import re
 from datetime import datetime, timedelta
 
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
-from django.core.exceptions import ValidationError
 from django.core.paginator import Paginator
 from django.db import transaction
 from django.shortcuts import render, redirect, get_object_or_404
@@ -11,27 +9,10 @@ from django.utils import timezone
 from django.views.decorators.http import require_POST
 
 from task_tracker.settings import TASKS_IN_PROFILE_PAGE
-from task_tracker.settings import TEMPLATES_DIR
 from tracker.forms import TaskCreateForm, CommentForm
 from tracker.models import Task, Comment
-from tracker.serializers import TaskSerializer, UserSerializer
+from tracker.serializers import TaskSerializer
 from tracker.utils import send_email_message, notify_mentioned_users, templates
-
-
-# templates = {
-#     'create_task_template':
-#         f'{TEMPLATES_DIR}/email_templates/task_mail.html',
-#     'delete_task_template':
-#         f'{TEMPLATES_DIR}/email_templates/delete_task_mail.html',
-#     'reassigned_task_template':
-#         f'{TEMPLATES_DIR}/email_templates/reassigned_to_mail.html',
-#     'deadline_template':
-#         f'{TEMPLATES_DIR}/email_templates/deadline_mail.html',
-#     'new_deadline_template':
-#         f'{TEMPLATES_DIR}/email_templates/new_deadline_mail.html',
-#     'message_to_mentioned_user':
-#         f'{TEMPLATES_DIR}/email_templates/message_to_mentioned_user.html'
-# }
 
 
 def check_rights_to_task(username, task):
@@ -184,6 +165,7 @@ def edit_task(request, pk):
                 check_deadline_or_deadline_reminder(
                     new_deadline, new_deadline_reminder
                 )):
+            task.deadline = new_deadline
             assigned_to_email = new_assigned_to.email
             universal_mail_sender(request, task, assigned_to_email,
                                   templates['new_deadline_template'], )
@@ -191,6 +173,7 @@ def edit_task(request, pk):
             task.is_notified = False
 
         elif new_deadline_reminder != previous_deadline_reminder:
+            task.deadline_reminder = new_deadline_reminder
             task.is_notified = False
 
         if (new_assigned_to.username != previous_assigned_to_username and
@@ -198,8 +181,6 @@ def edit_task(request, pk):
                     new_deadline, new_deadline_reminder
                 )):
             task.assigned_to = new_assigned_to
-            task.deadline = new_deadline
-            task.deadline_reminder = new_deadline_reminder
             assigned_to_email = new_assigned_to.email
 
             universal_mail_sender(
@@ -208,6 +189,7 @@ def edit_task(request, pk):
                 assigned_to_email,
                 templates['reassigned_task_template'],
                 priority=0,
+                queue='fast_queue',
                 previous_assigned_to_username=previous_assigned_to_username
             )
 
@@ -355,59 +337,8 @@ def delete_comment(request, pk):
     return redirect('tracker:detail', pk=task.pk)
 
 
-# def notify_mentioned_users(request, comment_text, comment_task):
-#     """
-#     Если в комментарии пользователя указали через @username
-#     присылает уведомление на электронную почту об упоминании.
-#     """
-#
-#     search_pattern = re.compile(r'@(\w+)')
-#     mentioned_usernames = search_pattern.findall(comment_text)
-#
-#     task_instance = comment_task
-#
-#     for username in mentioned_usernames:
-#         user = get_object_or_404(User, username=username)
-#         user_email = user.email
-#
-#         # Получаем данные username из сериализатора, иначе Celery не пропустит
-#         # несериализованные данные.
-#         user_instance = user
-#         serializer = UserSerializer(
-#             user_instance, context={'request': request}
-#         )
-#         username = serializer.data['username']
-#
-#         # Получаем данные комментария из сериализатора,
-#         # иначе Celery не пропустит несериализованные данные.
-#         serializer = TaskSerializer(
-#             task_instance, context={'request': request}
-#         )
-#         comment_task = serializer.data['title']
-#         task_link = serializer.data['link']
-#
-#         comment_author = request.user.username
-#
-#         context = {
-#             'username': username,
-#             'comment_text': comment_text,
-#             'comment_task': comment_task,
-#             'comment_author': comment_author,
-#             'task_link': task_link
-#         }
-#
-#         send_email_message.apply_async(
-#             kwargs={
-#                 'email': user_email,
-#                 'template': templates['message_to_mentioned_user'],
-#                 'context': context
-#             },
-#             countdown=5
-#         )
-
-
 def universal_mail_sender(request, task, assigned_to_email,
-                          template, priority=10, **kwargs):
+                          template, priority=9, queue='slow_queue', **kwargs):
     """
     Универсальная функция отправки сообщений о событиях, связанных с задачами.
     """
@@ -431,5 +362,6 @@ def universal_mail_sender(request, task, assigned_to_email,
             'context': serialized_data,
         },
         priority=priority,
+        queue=queue,
         countdown=5
     )
