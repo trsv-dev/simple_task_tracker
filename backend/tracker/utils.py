@@ -3,7 +3,7 @@ import socket
 from datetime import timedelta
 from smtplib import SMTPException
 
-from celery import shared_task
+from celery import shared_task, current_task
 from django.core.mail import send_mail
 from django.shortcuts import get_object_or_404
 from django.template.loader import render_to_string
@@ -60,7 +60,7 @@ def send_email_message(self, email, template, context):
 
 
 @shared_task
-def send_email_about_closer_deadline():
+def send_email_about_closer_deadline(priority=9, queue='slow_queue'):
     """
     Получение списка всех задач с подходящими дедлайнами
     и отправка электронных писем о них. Пометка задач с уже
@@ -92,10 +92,18 @@ def send_email_about_closer_deadline():
                                 f'/email_templates/deadline_mail.html',
                     'context': serialized_data
                 },
-                countdown=5
+                countdown=5,
+                priority=priority,
+                queue=queue
             )
             task.is_notified = True
-            task.save()
+
+            # На случай, если письмо "задержалось" из-за каких-либо причин
+            # и deadline_reminder уже неактуален, установим
+            # skip_deadline_reminder_check=True чтобы не было ошибки валидации,
+            # а напоминание хоть и с опозданием, но пришло.
+
+            task.save(skip_deadline_reminder_check=True)
 
 
 def notify_mentioned_users(request, comment_text, comment_task):

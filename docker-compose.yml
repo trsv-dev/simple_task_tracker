@@ -66,14 +66,30 @@ services:
     volumes:
       - flower_data:/data
 
-  celery_worker:
-    container_name: celery_worker
+  celery_worker_slow_queue:
+    container_name: celery_worker_slow_queue
     build: ./backend/
     env_file:
       - .env
-    hostname: celery_worker
+    hostname: celery_worker_slow_queue
     entrypoint: celery
-    command: -A task_tracker.celery worker --loglevel=info
+    command: -A task_tracker.celery worker -Q slow_queue -l info -n slow_queue --concurrency=1
+    volumes:
+      - workers_data:/app/workers_data
+    links:
+      - redis
+    depends_on:
+      - redis
+      - postgres
+
+  celery_worker_fast_queue:
+    container_name: celery_worker_fast_queue
+    build: ./backend/
+    env_file:
+      - .env
+    hostname: celery_worker_fast_queue
+    entrypoint: celery
+    command: -A task_tracker.celery worker -Q fast_queue -l info -n fast_queue --concurrency=10
     volumes:
       - workers_data:/app/workers_data
     links:
@@ -96,5 +112,6 @@ services:
       - redis
       - postgres
     depends_on:
-      - celery_worker
+      - celery_worker_fast_queue
+      - celery_worker_slow_queue
       - redis

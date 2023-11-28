@@ -157,10 +157,16 @@ CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = os.getenv('CELERY_BROKER_CONNECTION_
 #     },
 # }
 
+CELERY_BROKER_TRANSPORT_OPTIONS = {
+    'priority_steps': list(range(10)),
+    'queue_order_strategy': 'priority',
+}
+
 # For testing purposes, the deadline is checked every minute.
 CELERY_BEAT_SCHEDULE = {
     'Send_email_about_closer_deadline': {
         'task': 'tracker.utils.send_email_about_closer_deadline',
         'schedule': crontab(),
+        'options': {'queue': 'slow_queue'}
     },
 }
