@@ -1,9 +1,12 @@
+from copy import deepcopy
 from datetime import datetime, timedelta
 
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
+from django.core.exceptions import ValidationError
 from django.core.paginator import Paginator
 from django.db import transaction
+from django.http import HttpResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.utils import timezone
 from django.views.decorators.http import require_POST
@@ -41,6 +44,15 @@ def check_deadline_or_deadline_reminder(new_deadline, new_deadline_reminder):
             new_deadline_reminder > timezone.now() and
             new_deadline_reminder < new_deadline
     )
+
+
+def is_title_and_description_changed(original_task, form):
+
+    form_data = form.cleaned_data
+    return ((form_data.get('status') != original_task.status or
+             form_data.get('priority') != original_task.priority) or
+            (form_data.get('title') != original_task.title or
+             form_data.get('description') != original_task.description))
 
 
 def index(request):
@@ -146,11 +158,9 @@ def edit_task(request, pk):
     username = request.user
     all_users = User.objects.all()
     task = get_object_or_404(Task, pk=pk)
-    previous_assigned_to_username = task.assigned_to.username
-    previous_deadline = task.deadline
-    previous_deadline_reminder = task.deadline_reminder
+    original_task = deepcopy(task)
 
-    if check_rights_to_task(username, task) is False:
+    if not check_rights_to_task(username, task):
         return redirect('tracker:index')
 
     form = TaskCreateForm(request.POST or None, instance=task)
@@ -161,40 +171,53 @@ def edit_task(request, pk):
         new_deadline = form.cleaned_data.get('deadline')
         new_deadline_reminder = form.cleaned_data.get('deadline_reminder')
 
-        if (new_deadline != previous_deadline and
-                check_deadline_or_deadline_reminder(
-                    new_deadline, new_deadline_reminder
-                )):
-            task.deadline = new_deadline
-            assigned_to_email = new_assigned_to.email
-            universal_mail_sender(request, task, assigned_to_email,
-                                  templates['new_deadline_template'], )
+        if is_title_and_description_changed(original_task, form):
+            task.save(skip_deadline_reminder_check=True)
+            return redirect('tracker:detail', pk=task.id)
 
-            task.is_notified = False
+        else:
+            if (new_deadline != original_task.deadline and
+                    check_deadline_or_deadline_reminder(
+                        new_deadline, new_deadline_reminder
+                    )):
+                task.deadline = new_deadline
+                assigned_to_email = new_assigned_to.email
+                universal_mail_sender(request, task, assigned_to_email,
+                                      templates['new_deadline_template'], )
 
-        elif new_deadline_reminder != previous_deadline_reminder:
-            task.deadline_reminder = new_deadline_reminder
-            task.is_notified = False
+                task.is_notified = False
 
-        if (new_assigned_to.username != previous_assigned_to_username and
-                check_deadline_or_deadline_reminder(
-                    new_deadline, new_deadline_reminder
-                )):
-            task.assigned_to = new_assigned_to
-            assigned_to_email = new_assigned_to.email
+            elif new_deadline_reminder != original_task.deadline_reminder:
+                task.deadline_reminder = new_deadline_reminder
+                task.is_notified = False
 
-            universal_mail_sender(
-                request,
-                task,
-                assigned_to_email,
-                templates['reassigned_task_template'],
-                priority=0,
-                queue='fast_queue',
-                previous_assigned_to_username=previous_assigned_to_username
-            )
+            if (new_assigned_to.username != original_task.assigned_to.username and
+                    check_deadline_or_deadline_reminder(
+                        new_deadline, new_deadline_reminder
+                    )):
+                task.assigned_to = new_assigned_to
+                assigned_to_email = new_assigned_to.email
 
-        form.save()
-        return redirect('tracker:detail', pk=task.id)
+                universal_mail_sender(
+                    request,
+                    task,
+                    assigned_to_email,
+                    templates['reassigned_task_template'],
+                    priority=0,
+                    queue='fast_queue',
+                    previous_assigned_to_username=original_task.assigned_to.username
+                )
+            try:
+                form.save()
+            except ValidationError as e:
+                form.add_error(None, e)
+                context = {
+                    'task': task,
+                    'form': form,
+                    'all_users': all_users
+                }
+                return render(request, 'tasks/create.html', context)
+            return redirect('tracker:detail', pk=task.id)
 
     context = {
         'task': task,
@@ -213,7 +236,7 @@ def delete_task(request, pk):
     username = request.user
     task = get_object_or_404(Task, pk=pk)
 
-    if check_rights_to_task(username, task) is False:
+    if not check_rights_to_task(username, task):
         return redirect('tracker:index')
 
     assigned_to_email = task.assigned_to.email
