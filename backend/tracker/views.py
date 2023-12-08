@@ -268,7 +268,9 @@ def edit_task(request, pk):
 
             if result:
                 context.update(result)
-                return render(request, 'tasks/create.html', context)
+                return render(
+                    request, 'tasks/create.html', context
+                )
 
             return redirect('tracker:detail', pk=task.id)
 

@@ -62,6 +62,7 @@ class ViewsTestCase(TestCase):
             'previous_status': '',
             'assigned_to': self.test_user.id,
             'deadline': '2100-01-01 00:00:00',
+            'deadline_reminder': '2099-12-31T00:00',
             'is_done': 'False',
             'done_by': '',
             'done_by_time': ''
@@ -77,6 +78,7 @@ class ViewsTestCase(TestCase):
             # будет равняться id пользователя по умолчанию.
             'assigned_to': self.test_not_author.id,
             'deadline': '2100-01-01 00:00:00',
+            'deadline_reminder': '2099-12-31T00:00',
             'is_done': 'False',
             'done_by': '',
             'done_by_time': ''
@@ -89,6 +91,7 @@ class ViewsTestCase(TestCase):
             'previous_status': 'Ожидает выполнения',
             'assigned_to': self.test_assigned_to_user.id,
             'deadline': '2100-01-01 00:00:00',
+            'deadline_reminder': '2099-01-01T01:00',
             'is_done': 'False',
             'done_by': '',
             'done_by_time': ''
@@ -239,7 +242,8 @@ class ViewsTestCase(TestCase):
             'Задача до и после редактирования должны различаться!'
         )
 
-        self.assertRedirects(edit_response, reverse('tracker:index'))
+        self.assertRedirects(edit_response, reverse('tracker:detail',
+                                                    args=[self.test_task.id]))
 
         self.assertEqual(
             response_with_context.context['task'],
@@ -282,7 +286,8 @@ class ViewsTestCase(TestCase):
             msg='Задача до и после редактирования должны различаться!'
         )
 
-        self.assertRedirects(edit_response, reverse('tracker:index'))
+        self.assertRedirects(edit_response, reverse('tracker:detail',
+                                                    args=[self.test_task.id]))
 
         self.assertEqual(
             response_with_context.context['task'],
@@ -310,7 +315,8 @@ class ViewsTestCase(TestCase):
             msg='Задача до и после редактирования должны различаться!'
         )
 
-        self.assertRedirects(edit_response, reverse('tracker:index'))
+        self.assertRedirects(edit_response, reverse('tracker:detail',
+                                                    args=[self.test_task.id]))
 
         self.assertEqual(
             response_with_context.context['task'],
