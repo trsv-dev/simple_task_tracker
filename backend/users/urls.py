@@ -2,7 +2,9 @@ from django.contrib.auth.views import (LoginView, LogoutView,
                                        PasswordResetView,
                                        PasswordResetDoneView,
                                        PasswordResetConfirmView,
-                                       PasswordResetCompleteView)
+                                       PasswordResetCompleteView,
+                                       PasswordChangeView,
+                                       PasswordChangeDoneView)
 from django.urls import path
 
 from users.views import RegisterView
@@ -24,6 +26,17 @@ urlpatterns = [
         'register/',
         RegisterView.as_view(template_name='users/register.html'),
         name='register'
+    ),
+    path(
+        'password_change/',
+        PasswordChangeView.as_view(template_name='users/password_change.html'),
+        name='password_change'
+    ),
+    path(
+        'password_change/done/',
+        PasswordChangeDoneView.as_view(
+            template_name='users/password_change_done.html'
+        )
     ),
     path(
         'password_reset/',

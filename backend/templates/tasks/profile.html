@@ -5,6 +5,7 @@
   <div class="container mt-4">
     <section class="user-profile text-center">
         <p>Профиль пользователя <strong> {{ username }} </strong></p>
+        <a class="btn btn-outline-danger my-4" href="{% url 'password_change' %}">Сменить пароль?</a>
         <p>Всего задач:<strong> {{ tasks.count }} </strong></p>
     </section>
 
