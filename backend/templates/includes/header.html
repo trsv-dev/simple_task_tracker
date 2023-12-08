@@ -20,7 +20,7 @@
         </a>
     </h1>
         <div style="text-align: center;">
-            {% if request.resolver_match.url_name != 'login' and request.resolver_match.url_name != 'register' %}
+            {% if request.resolver_match.url_name != 'login' and request.resolver_match.url_name != 'register' and request.resolver_match.url_name != 'password_reset' %}
                 {% if user.is_staff or user.is_admin %}
                     <a class="nav-link link-dark" href="{% url 'admin:index' %}" style="display: inline-block;">Админ-панель</a>
                 {% endif %}

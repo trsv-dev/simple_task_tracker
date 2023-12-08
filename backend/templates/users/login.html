@@ -20,6 +20,7 @@
           <input type="text" id="{{ form.username.id_for_label }}" class="form-control mb-4" placeholder="Имя пользователя" name="{{ form.username.name }}" required autofocus>
           <input type="password" id="{{ form.password.id_for_label }}" class="form-control mb-4" placeholder="Пароль" name="{{ form.password.name }}" required>
           <button class="btn btn-outline-success my-4" type="submit">Войти</button>
+          <a class="btn btn-outline-danger my-4" href="{% url 'password_reset' %}">Забыли пароль?</a>
         </form>
       </div>
     </div>
