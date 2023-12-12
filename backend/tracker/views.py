@@ -5,7 +5,9 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from django.core.paginator import Paginator
+from django.core.serializers import serialize
 from django.db import transaction
+from django.db.models import Model
 from django.shortcuts import render, redirect, get_object_or_404
 from django.utils import timezone
 from django.views.decorators.http import require_POST
@@ -293,21 +295,25 @@ def delete_task(request, pk):
     # Чтобы можно было удалить задачу, но передать в функцию
     # отправки почты данные о задаче - сохраняем ее "слепок".
 
-    task_data = {
-        'id': task.id,
-        'title': task.title,
-        'description': task.description,
-        'assigned_to': task.assigned_to,
-        'author': task.author,
-        'deadline': task.deadline
-    }
+    # task_data = {
+    #     'id': task.id,
+    #     'title': task.title,
+    #     'description': task.description,
+    #     'assigned_to': task.assigned_to,
+    #     'author': task.author,
+    #     'deadline': task.deadline
+    # }
+
+    # "Слепок" делаем с помощью deepcopy, которая временно сохранит данные
+    # экземпляра модели после того как экземпляр будет удалён.
+    saved_task_data = deepcopy(task)
 
     task.delete()
 
-    # Вместо экземпляра task передаем словарь task_data, сериализатор
-    # нормально воспримет словарь вместо task.
+    # Вместо экземпляра task передаем "слепок" saved_task_data, идентичный
+    # экземпляру task.
 
-    universal_mail_sender(request, task_data, assigned_to_email,
+    universal_mail_sender(request, saved_task_data, assigned_to_email,
                           templates['delete_task_template'])
 
     return redirect('tracker:index')
@@ -411,15 +417,12 @@ def delete_comment(request, pk):
 
 def universal_mail_sender(request, task, assigned_to_email,
                           template, priority=9, queue='slow_queue', **kwargs):
-    """
-    Универсальная функция отправки сообщений о событиях, связанных с задачами.
-    """
 
     username = request.user
-    task_instance = task
 
-    serializer = TaskSerializer(task_instance, context={'request': request})
+    serializer = TaskSerializer(task)
     serialized_data = serializer.data
+
     serialized_data['username'] = username.username
 
     if 'previous_assigned_to_username' in kwargs:
@@ -437,3 +440,36 @@ def universal_mail_sender(request, task, assigned_to_email,
         queue=queue,
         countdown=5
     )
+
+# Раскомментировать если используем сериализатор DRF
+
+# def universal_mail_sender(request, task, assigned_to_email,
+#                           template, priority=9, queue='slow_queue', **kwargs):
+#     """
+#     Универсальная функция отправки сообщений о событиях, связанных с задачами.
+#     """
+#
+#     username = request.user
+#     task_instance = task
+#     serializer = TaskSerializer(task_instance, context={'request': request})
+#
+#     serializer = TaskSerializer(task_instance, context={'request': request})
+#     serialized_data = serializer.data
+#
+#     serialized_data['username'] = username.username
+#
+#     if 'previous_assigned_to_username' in kwargs:
+#         serialized_data[
+#             'previous_assigned_to_username'
+#         ] = kwargs['previous_assigned_to_username']
+#
+#     send_email_message.apply_async(
+#         kwargs={
+#             'email': assigned_to_email,
+#             'template': template,
+#             'context': serialized_data,
+#         },
+#         priority=priority,
+#         queue=queue,
+#         countdown=5
+#     )

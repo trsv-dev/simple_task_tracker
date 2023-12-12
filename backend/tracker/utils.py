@@ -79,9 +79,13 @@ def send_email_about_closer_deadline(priority=9, queue='slow_queue'):
             assigned_to_email = task.assigned_to.email
             task_instance = task
 
-            serializer = TaskSerializer(
-                task_instance, context={'base_url': BASE_URL}
-            )
+            # Раскомментировать если используем сериализатор из DRF.
+
+            # serializer = TaskSerializer(
+            #     task_instance, context={'base_url': BASE_URL}
+            # )
+
+            serializer = TaskSerializer(task_instance)
 
             serialized_data = serializer.data
 
@@ -124,16 +128,25 @@ def notify_mentioned_users(request, comment_text, comment_task):
         # Получаем данные username из сериализатора, иначе Celery не пропустит
         # несериализованные данные.
         user_instance = user
-        serializer = UserSerializer(
-            user_instance, context={'request': request}
-        )
+
+        # serializer = UserSerializer(
+        #     user_instance, context={'request': request}
+        # )
+
+        serializer = UserSerializer(user_instance)
+
         username = serializer.data['username']
 
         # Получаем данные комментария из сериализатора,
         # иначе Celery не пропустит несериализованные данные.
-        serializer = TaskSerializer(
-            task_instance, context={'request': request}
-        )
+
+        # Раскомментировать если используем сериализатор из DRF.
+        # serializer = TaskSerializer(
+        #     task_instance, context={'request': request}
+        # )
+
+        serializer = TaskSerializer(task_instance)
+
         comment_task = serializer.data['title']
         task_link = serializer.data['link']
 
@@ -153,5 +166,7 @@ def notify_mentioned_users(request, comment_text, comment_task):
                 'template': templates['message_to_mentioned_user'],
                 'context': context
             },
+            priority=9,
+            queue='slow_queue',
             countdown=5
         )
