@@ -15,14 +15,18 @@
       {% if user.is_authenticated and task.is_done == False %}
         {% if user.is_staff or user == task.author or user == task.assigned_to %}
             {#    Кнопка удаления вынеседа в отдельный блок чтобы явно указать метод POST, который требуется в @require_POST #}
-            <form method="post" action="{% url 'tracker:delete' pk=task.id %}" style="display:inline;">
-                {% csrf_token %}
-                <button type="submit" class="btn btn-outline-danger">Удалить</button>
-            </form>
-            <a href="{% url 'tracker:edit' pk=task.id %}" class="btn btn-outline-primary">Редактировать</a>
-            <a href="{% url 'tracker:mark_as_done' pk=task.id %}" class="btn btn-outline-success">Выполнено</a>
+            {% if user == task.author %}
+                <form method="post" action="{% url 'tracker:delete' pk=task.id %}" style="display:inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-outline-danger">Удалить</button>
+                </form>
+                <a href="{% url 'tracker:edit' pk=task.id %}" class="btn btn-outline-primary">Редактировать</a>
+            {% endif %}
+            {% if user == task.assigned_to %}
+                <a href="{% url 'tracker:mark_as_done' pk=task.id %}" class="btn btn-outline-success">Выполнено</a>
+            {% endif %}
         {% endif %}
-      {% elif user.is_staff or user == task.author or user == task.assigned_to %}
+      {% elif user == task.assigned_to %}
           <form method="post" action="{% url 'tracker:mark_as_undone' pk=task.id %}" style="display:inline;">
               {% csrf_token %}
               <button type="submit" class="btn btn-outline-dark" style="margin-left: auto;">Отмена</button>

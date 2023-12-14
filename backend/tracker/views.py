@@ -5,7 +5,9 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from django.core.paginator import Paginator
+from django.core.serializers import serialize
 from django.db import transaction
+from django.db.models import Model
 from django.shortcuts import render, redirect, get_object_or_404
 from django.utils import timezone
 from django.views.decorators.http import require_POST
@@ -140,7 +142,9 @@ def profile(request, user):
     """Отображение профиля пользователя."""
 
     profile_user = get_object_or_404(User, username=user)
-    tasks = Task.objects.filter(assigned_to=profile_user).order_by('deadline')
+    tasks = Task.objects.filter(
+        assigned_to=profile_user, done_by=None
+    ).order_by('deadline')
 
     paginator = Paginator(tasks, TASKS_IN_PROFILE_PAGE)
     page_number = request.GET.get('page')
@@ -153,6 +157,27 @@ def profile(request, user):
     }
 
     return render(request, 'tasks/profile.html', context)
+
+
+def archive(request, user):
+    """Архив выполненных задач пользователя."""
+
+    profile_user = get_object_or_404(User, username=user)
+    archived_tasks = Task.objects.filter(
+        assigned_to=profile_user, done_by=profile_user
+    ).order_by('deadline')
+
+    paginator = Paginator(archived_tasks, TASKS_IN_PROFILE_PAGE)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    context = {
+        'username': profile_user,
+        'tasks': archived_tasks,
+        'page_obj': page_obj
+    }
+
+    return render(request, 'tasks/archive.html', context)
 
 
 def task_detail(request, pk):
@@ -293,21 +318,25 @@ def delete_task(request, pk):
     # Чтобы можно было удалить задачу, но передать в функцию
     # отправки почты данные о задаче - сохраняем ее "слепок".
 
-    task_data = {
-        'id': task.id,
-        'title': task.title,
-        'description': task.description,
-        'assigned_to': task.assigned_to,
-        'author': task.author,
-        'deadline': task.deadline
-    }
+    # task_data = {
+    #     'id': task.id,
+    #     'title': task.title,
+    #     'description': task.description,
+    #     'assigned_to': task.assigned_to,
+    #     'author': task.author,
+    #     'deadline': task.deadline
+    # }
+
+    # "Слепок" делаем с помощью deepcopy, которая временно сохранит данные
+    # экземпляра модели после того как экземпляр будет удалён.
+    saved_task_data = deepcopy(task)
 
     task.delete()
 
-    # Вместо экземпляра task передаем словарь task_data, сериализатор
-    # нормально воспримет словарь вместо task.
+    # Вместо экземпляра task передаем "слепок" saved_task_data, идентичный
+    # экземпляру task.
 
-    universal_mail_sender(request, task_data, assigned_to_email,
+    universal_mail_sender(request, saved_task_data, assigned_to_email,
                           templates['delete_task_template'])
 
     return redirect('tracker:index')
@@ -319,6 +348,7 @@ def mark_as_done(request, pk):
 
     username = request.user
     task = get_object_or_404(Task, pk=pk)
+    email = task.author.email
     task.previous_status = task.status
     task.is_done = True
     task.status = 'Выполнено'
@@ -326,6 +356,10 @@ def mark_as_done(request, pk):
     task.done_by_time = timezone.now()
     # Отменяем проверку даты и времени напоминания о дедлайне в модели.
     task.save(skip_deadline_reminder_check=True)
+
+    universal_mail_sender(request, task, email,
+                          templates['task_is_done_mail'])
+
     return redirect('tracker:index')
 
 
@@ -334,6 +368,7 @@ def mark_as_undone(request, pk):
     """Пометить задание как невыполненное."""
 
     task = get_object_or_404(Task, pk=pk)
+    email = task.author.email
     if task.is_done:
         task.is_done = False
         task.status = task.previous_status
@@ -341,6 +376,10 @@ def mark_as_undone(request, pk):
         task.done_by = None
         # Отменяем проверку даты и времени напоминания о дедлайне в модели.
         task.save(skip_deadline_reminder_check=True)
+
+        universal_mail_sender(request, task, email,
+                              templates['task_is_undone_mail'])
+
         return redirect('tracker:index')
 
 
@@ -411,15 +450,12 @@ def delete_comment(request, pk):
 
 def universal_mail_sender(request, task, assigned_to_email,
                           template, priority=9, queue='slow_queue', **kwargs):
-    """
-    Универсальная функция отправки сообщений о событиях, связанных с задачами.
-    """
 
     username = request.user
-    task_instance = task
 
-    serializer = TaskSerializer(task_instance, context={'request': request})
+    serializer = TaskSerializer(task)
     serialized_data = serializer.data
+
     serialized_data['username'] = username.username
 
     if 'previous_assigned_to_username' in kwargs:
@@ -437,3 +473,36 @@ def universal_mail_sender(request, task, assigned_to_email,
         queue=queue,
         countdown=5
     )
+
+# Раскомментировать если используем сериализатор DRF
+
+# def universal_mail_sender(request, task, assigned_to_email,
+#                           template, priority=9, queue='slow_queue', **kwargs):
+#     """
+#     Универсальная функция отправки сообщений о событиях, связанных с задачами.
+#     """
+#
+#     username = request.user
+#     task_instance = task
+#     serializer = TaskSerializer(task_instance, context={'request': request})
+#
+#     serializer = TaskSerializer(task_instance, context={'request': request})
+#     serialized_data = serializer.data
+#
+#     serialized_data['username'] = username.username
+#
+#     if 'previous_assigned_to_username' in kwargs:
+#         serialized_data[
+#             'previous_assigned_to_username'
+#         ] = kwargs['previous_assigned_to_username']
+#
+#     send_email_message.apply_async(
+#         kwargs={
+#             'email': assigned_to_email,
+#             'template': template,
+#             'context': serialized_data,
+#         },
+#         priority=priority,
+#         queue=queue,
+#         countdown=5
+#     )
