@@ -142,7 +142,9 @@ def profile(request, user):
     """Отображение профиля пользователя."""
 
     profile_user = get_object_or_404(User, username=user)
-    tasks = Task.objects.filter(assigned_to=profile_user).order_by('deadline')
+    tasks = Task.objects.filter(
+        assigned_to=profile_user, done_by=None
+    ).order_by('deadline')
 
     paginator = Paginator(tasks, TASKS_IN_PROFILE_PAGE)
     page_number = request.GET.get('page')
@@ -155,6 +157,27 @@ def profile(request, user):
     }
 
     return render(request, 'tasks/profile.html', context)
+
+
+def archive(request, user):
+    """Архив выполненных задач пользователя."""
+
+    profile_user = get_object_or_404(User, username=user)
+    archived_tasks = Task.objects.filter(
+        assigned_to=profile_user, done_by=profile_user
+    ).order_by('deadline')
+
+    paginator = Paginator(archived_tasks, TASKS_IN_PROFILE_PAGE)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    context = {
+        'username': profile_user,
+        'tasks': archived_tasks,
+        'page_obj': page_obj
+    }
+
+    return render(request, 'tasks/archive.html', context)
 
 
 def task_detail(request, pk):
@@ -325,6 +348,7 @@ def mark_as_done(request, pk):
 
     username = request.user
     task = get_object_or_404(Task, pk=pk)
+    email = task.author.email
     task.previous_status = task.status
     task.is_done = True
     task.status = 'Выполнено'
@@ -332,6 +356,10 @@ def mark_as_done(request, pk):
     task.done_by_time = timezone.now()
     # Отменяем проверку даты и времени напоминания о дедлайне в модели.
     task.save(skip_deadline_reminder_check=True)
+
+    universal_mail_sender(request, task, email,
+                          templates['task_is_done_mail'])
+
     return redirect('tracker:index')
 
 
@@ -340,6 +368,7 @@ def mark_as_undone(request, pk):
     """Пометить задание как невыполненное."""
 
     task = get_object_or_404(Task, pk=pk)
+    email = task.author.email
     if task.is_done:
         task.is_done = False
         task.status = task.previous_status
@@ -347,6 +376,10 @@ def mark_as_undone(request, pk):
         task.done_by = None
         # Отменяем проверку даты и времени напоминания о дедлайне в модели.
         task.save(skip_deadline_reminder_check=True)
+
+        universal_mail_sender(request, task, email,
+                              templates['task_is_undone_mail'])
+
         return redirect('tracker:index')
 
 

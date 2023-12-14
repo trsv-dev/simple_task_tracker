@@ -1,14 +1,13 @@
 {% include 'includes/header.html' %}
 {% load tracker_tags %}
 
-<title>Задачи пользователя {{ username }}</title>
+<title>Архив задач пользователя {{ username }}</title>
 
 {% block content %}
   <div class="container mt-4">
     <section class="user-profile text-center">
-        <p>Профиль пользователя <strong> {{ username }} </strong></p>
-        <a class="btn btn-outline-danger my-4" href="{% url 'password_change' %}">Сменить пароль?</a>
-        <p>Всего задач:<strong> {{ tasks.count }} </strong></p>
+        <p>Архив задач пользователя <strong> {{ username }} </strong></p>
+        <p>Всего выполненных задач:<strong> {{ tasks.count }} </strong></p>
     </section>
 
     <section class="task-list">
@@ -27,7 +26,7 @@
         {% endfor %}
       {% else %}
         <div class="text-center">
-            У вас нет незакрытых задач! 👍
+            Выполненных задач пока нет 🤔
         </div>
       {% endif %}
     </section>

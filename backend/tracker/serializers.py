@@ -33,6 +33,8 @@ class TaskSerializer:
         data['author'] = self.get_author()
         data['assigned_to'] = self.get_assigned_to()
         data['deadline'] = self.get_deadline(self.instance)
+        if data['done_by_time']:
+            data['done_by_time'] = self.get_done_by_time(self.instance)
 
         return data
 
@@ -67,6 +69,16 @@ class TaskSerializer:
             timezone.get_current_timezone())
 
         return local_deadline.strftime('%d %B %Y г. %H:%M')
+
+    def get_done_by_time(self, instance):
+        """Получение времени выполнения задачи в привычном формате."""
+
+        done_by_time = instance.done_by_time
+
+        local_done_by_time = done_by_time.astimezone(
+            timezone.get_current_timezone())
+
+        return local_done_by_time.strftime('%d %B %Y г. %H:%M')
 
 
 class UserSerializer:

@@ -25,7 +25,11 @@ templates = {
     'new_deadline_template':
         f'{TEMPLATES_DIR}/email_templates/new_deadline_mail.html',
     'message_to_mentioned_user':
-        f'{TEMPLATES_DIR}/email_templates/message_to_mentioned_user.html'
+        f'{TEMPLATES_DIR}/email_templates/message_to_mentioned_user.html',
+    'task_is_done_mail':
+        f'{TEMPLATES_DIR}/email_templates/task_is_done_mail.html',
+    'task_is_undone_mail':
+        f'{TEMPLATES_DIR}/email_templates/task_is_undone_mail.html'
 }
 
 
