@@ -3,13 +3,14 @@
 {% block content %}
 <div class="container">
   <div class="card">
-        {% if task.priority == 'Высокий' %}
-            <h5 class="card-header" style='background-color: #f8d4d4;'>{{ task.title }}</h5>
-        {% elif task.priority == 'Низкий' %}
-            <h5 class="card-header" style='background-color: #c6e0c6;'>{{ task.title }}</h5>
-        {% elif task.priority == 'Средний' %}
-            <h5 class="card-header" style='background-color: rgba(149,194,245,0.3);'>{{ task.title }}</h5>
-        {% endif %}
+        {% include 'includes/task_title_colors.html' %}
+{#        {% if task.priority == 'Высокий' %}#}
+{#            <h5 class="card-header" style='background-color: #f8d4d4;'>{{ task.title }}</h5>#}
+{#        {% elif task.priority == 'Низкий' %}#}
+{#            <h5 class="card-header" style='background-color: #c6e0c6;'>{{ task.title }}</h5>#}
+{#        {% elif task.priority == 'Средний' %}#}
+{#            <h5 class="card-header" style='background-color: rgba(149,194,245,0.3);'>{{ task.title }}</h5>#}
+{#        {% endif %}#}
     <div class="card-body">
       <p class="card-text">{% include 'tasks/detail.html' %}</p>
       {% if user.is_authenticated and task.is_done == False %}

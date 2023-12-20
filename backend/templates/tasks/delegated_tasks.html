@@ -1,0 +1,56 @@
+{% include 'includes/header.html' %}
+{% load tracker_tags %}
+
+<title>Задачи, поставленные другим пользователям</title>
+
+{% block content %}
+  <div class="container mt-4">
+    <section class="user-profile text-center">
+        <p>Всего поставленных задач:<strong> {{ delegated_tasks.count }} </strong></p>
+    </section>
+
+    <section class="task-list">
+      {% if delegated_tasks %}
+        {% for task in delegated_tasks %}
+        <div class="card">
+            {% include 'includes/task_title_colors.html' %}
+        <div class="card-body">
+          <div class="task-item">
+            {% include 'tasks/short_detail.html' %}
+            <br>
+<!--                {% if not forloop.last %}<hr>{% endif %}-->
+          </div>
+        </div>
+        </div>
+        {% endfor %}
+      {% else %}
+        <div class="text-center">
+            У вас поставленных другим задач! 👍
+        </div>
+      {% endif %}
+    </section>
+  </div>
+
+  <div class="pagination justify-content-center align-items-center mt-4">
+    <span class="step-links">
+    {% if page_obj %}
+        {% if page_obj.has_previous %}
+            <a href="?page=1">&laquo; первая</a>
+            <a href="?page={{ page_obj.previous_page_number }}">предыдущая</a>
+        {% endif %}
+
+        <span class="current">
+            {{ page_obj.number }} из {{ page_obj.paginator.num_pages }}
+        </span>
+
+        {% if page_obj.has_next %}
+            <a href="?page={{ page_obj.next_page_number }}">следующая</a>
+            <a href="?page={{ page_obj.paginator.num_pages }}">последняя &raquo;</a>
+        {% endif %}
+    {% endif %}
+
+    </span>
+</div>
+{% endblock %}
+
+{% include 'includes/footer.html' %}

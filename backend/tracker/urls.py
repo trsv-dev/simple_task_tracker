@@ -7,7 +7,14 @@ app_name = 'tracker'
 urlpatterns = [
     path('', views.index, name='index'),
     path('profile/<str:user>/', views.profile, name='profile'),
-    path('profile/<str:user>/archive/', views.archive, name='archive'),
+    path(
+        'profile/<str:user>/archive/',
+        views.user_archive, name='user_archive'
+    ),
+    path(
+        'profile/<str:user>/delegated_tasks/',
+        views.delegated_tasks,
+        name='delegated_tasks'),
     path('detail/<int:pk>/', views.task_detail, name='detail'),
     path('create/', views.create_task, name='create'),
     path('edit/<int:pk>/', views.edit_task, name='edit'),
@@ -33,5 +40,11 @@ urlpatterns = [
     path(
         'tasks/<int:pk>/mark_as_undone',
         views.mark_as_undone,
-        name='mark_as_undone'),
+        name='mark_as_undone'
+    ),
+    path(
+        'full_archive/',
+        views.full_archive_by_dates,
+        name='full_archive'
+    ),
 ]

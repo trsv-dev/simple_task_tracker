@@ -22,10 +22,11 @@
       </div>
 
       <div class="col-md-4">
-        <h4 class="card-title text-center" style='background-color: #e0e3f8;'>Выполненные</h4>
-        {% for task in tasks %}
+        <h4 class="card-title text-center" style='background-color: #e0e3f8;'>Выполненные за сутки</h4>
+        {% for task in completed_tasks %}
           {% if task.is_done or task.status == 'Выполнено' %}
-              {% include 'tasks/tasks.html' %}
+{#              {% include 'tasks/tasks.html' %}#}
+              {% include 'tasks/done_task_detail.html' %}
           {% endif %}
         {% endfor %}
       </div>

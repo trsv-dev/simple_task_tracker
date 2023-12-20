@@ -74,7 +74,8 @@
         <div class="form-group">
             <label for="id_deadline_reminder">Когда напомнить:</label><br>
             {% if not task %}
-                <small class="text-muted">Если не заполнять, то напоминание придет за сутки до дедлайна</small>
+                <small class="text-muted">Если не заполнять, то напоминание придет за сутки до дедлайна.</small>
+                <small class="text-muted">На отрезках менее суток лучше заполнять вручную</small>
             {% endif %}
             <input type="datetime-local" class="form-control" id="id_deadline_reminder" name="deadline_reminder" {% if task %}value="{{ task.deadline_reminder|date:'Y-m-d\TH:i' }}"{% elif form.deadline_reminder.value %}value="{{ form.deadline_reminder.value }}"{% endif %}>
         </div>

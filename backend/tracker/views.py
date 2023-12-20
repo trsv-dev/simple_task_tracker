@@ -7,7 +7,7 @@ from django.core.exceptions import ValidationError
 from django.core.paginator import Paginator
 from django.core.serializers import serialize
 from django.db import transaction
-from django.db.models import Model
+from django.db.models import Model, Count
 from django.shortcuts import render, redirect, get_object_or_404
 from django.utils import timezone
 from django.views.decorators.http import require_POST
@@ -134,7 +134,22 @@ def index(request):
     """Отображение главной страницы."""
 
     tasks = Task.objects.all()
-    context = {'tasks': tasks}
+    current_data = timezone.now()
+
+    # Отображаем завершенные за сутки задания.
+    delta = current_data - timedelta(hours=24)
+
+    completed_tasks = tasks.filter(
+        is_done=True,
+        done_by_time__gte=delta,
+        done_by_time__lte=current_data
+    )
+
+    context = {
+        'tasks': tasks,
+        'completed_tasks': completed_tasks
+    }
+
     return render(request, 'base.html', context)
 
 
@@ -159,7 +174,7 @@ def profile(request, user):
     return render(request, 'tasks/profile.html', context)
 
 
-def archive(request, user):
+def user_archive(request, user):
     """Архив выполненных задач пользователя."""
 
     profile_user = get_object_or_404(User, username=user)
@@ -178,6 +193,41 @@ def archive(request, user):
     }
 
     return render(request, 'tasks/archive.html', context)
+
+
+def delegated_tasks(request, user):
+    """Список задач, делегированных другим пользователям."""
+
+    username = get_object_or_404(User, username=user)
+    delegated_tasks = Task.objects.filter(author=username)
+
+    context = {
+        'username': username,
+        'delegated_tasks': delegated_tasks
+    }
+
+    return render(request, 'tasks/delegated_tasks.html', context)
+
+
+def full_archive_by_dates(request):
+    """Отображение всего архива выполненных задач по дням."""
+
+    full_archive = Task.objects.filter(is_done=True).order_by('-done_by_time')
+    # dates = Task.objects.values('done_by_time__date').annotate(count=Count('id'))
+
+    # tasks_by_date = {}
+    #
+    # for date in dates:
+    #     tasks_by_date[date['done_by_time__date']] = full_archive.filter(
+    #         done_by_time__date=date['done_by_time__date'])
+
+    context = {
+        'full_archive': full_archive,
+        # 'tasks_by_date': tasks_by_date,
+        # 'dates': dates
+    }
+
+    return render(request, 'tasks/full_archive.html', context)
 
 
 def task_detail(request, pk):

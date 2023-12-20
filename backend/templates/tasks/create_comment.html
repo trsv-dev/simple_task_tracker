@@ -3,7 +3,7 @@
 <div class="container">
   <div class="card">
     <div class="card-header">
-      <h5>Комментарии</h5>
+      <h6>Комментарии</h6>
     </div>
     <div class="card-body">
       {% if comments %}
@@ -44,7 +44,7 @@
 <div class="container mt-3">
   <div class="card">
     <div class="card-header">
-      <h5>Добавить комментарий</h5>
+      <h6>Добавить комментарий</h6>
     </div>
     <div class="card-body">
       <form method="post" action="{% url 'tracker:create_comment' task_pk=task.pk %}">
