@@ -7,43 +7,30 @@
   <div class="container mt-4">
     <section class="user-profile text-center">
         <p>Архив выполненных задач</p>
-{#        <p>Всего задач:<strong> {{ tasks.count }} </strong></p>#}
+        <p>Всего архивных задач:<strong> {{ full_archive.count }} </strong></p>
     </section>
-    {% for task in full_archive %}
+
+    <!-- Верхняя пагинация -->
+    {% include 'includes/paginator.html' %}
+
     <section class="task-list">
-        <div class="card">
-            {% include 'includes/task_title_colors.html' %}
-        <div class="card-body">
-          <div class="task-item">
-            {% include 'tasks/short_detail.html' %}
-            <br>
-<!--                {% if not forloop.last %}<hr>{% endif %}-->
-          </div>
-        </div>
-        </div>
-        {% endfor %}
+      {% for date, tasks in tasks_by_date.items %}
+        <br><div class="text-center mb-2"><b>{{ date }}</b></div><br>
+          {% for task in tasks %}
+            <div class="card" style="margin-bottom: 0;">
+              {% include 'includes/task_title_colors.html' %}
+              <div class="card-body">
+                <div class="task-item">
+                  {% include 'tasks/short_detail.html' %}
+                </div>
+              </div>
+            </div>
+          {% endfor %}
+      {% endfor %}
     </section>
   </div>
 
-  <div class="pagination justify-content-center align-items-center mt-4">
-    <span class="step-links">
-    {% if page_obj %}
-        {% if page_obj.has_previous %}
-            <a href="?page=1">&laquo; первая</a>
-            <a href="?page={{ page_obj.previous_page_number }}">предыдущая</a>
-        {% endif %}
-
-        <span class="current">
-            {{ page_obj.number }} из {{ page_obj.paginator.num_pages }}
-        </span>
-
-        {% if page_obj.has_next %}
-            <a href="?page={{ page_obj.next_page_number }}">следующая</a>
-            <a href="?page={{ page_obj.paginator.num_pages }}">последняя &raquo;</a>
-        {% endif %}
-    {% endif %}
-
-    </span>
-</div>
+<!-- Нижняя пагинация -->
+{% include 'includes/paginator.html' %}
 
 {% endblock %}

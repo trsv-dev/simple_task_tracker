@@ -8,7 +8,7 @@ urlpatterns = [
     path('', views.index, name='index'),
     path('profile/<str:user>/', views.profile, name='profile'),
     path(
-        'profile/<str:user>/archive/',
+        'profile/<str:user>/user_archive/',
         views.user_archive, name='user_archive'
     ),
     path(
