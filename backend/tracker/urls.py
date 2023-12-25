@@ -6,6 +6,11 @@ app_name = 'tracker'
 
 urlpatterns = [
     path('', views.index, name='index'),
+    path(
+        'profile/<str:user>/current_tasks/',
+        views.current_tasks,
+        name='current_tasks'
+    ),
     path('profile/<str:user>/', views.profile, name='profile'),
     path(
         'profile/<str:user>/user_archive/',

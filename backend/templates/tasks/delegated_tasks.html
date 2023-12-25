@@ -7,17 +7,19 @@
   <div class="container mt-4">
     <section class="user-profile text-center">
         <p>Задачи, поставленные вами другим пользователям</p>
-        <p>Всего поставленных задач:<strong> {{delegated_tasks.count }} </strong></p>
+        <p>Всего поставленных задач:<strong> {{delegated_tasks_quantity }} </strong></p>
     </section>
 
+    <!-- Верхняя пагинация -->
+    {% include 'includes/paginator.html' %}
 
     <section class="task-list">
-      {% for date, tasks in delegated_tasks_by_date.items %}
+      {% for date, tasks in tasks_by_date.items %}
         <br><div class="text-center mb-2"><b>{{ date }}</b></div><br>
 
           {% for task in tasks %}
             <div class="card" style="margin-bottom: 0;">
-              {% include 'includes/task_title_colors.html' %}
+              {% include 'includes/task_undone_title_colors.html' %}
               <div class="card-body">
                 <div class="task-item">
                   {% include 'tasks/short_detail.html' %}
@@ -29,6 +31,7 @@
     </section>
   </div>
 
+<!-- Нижняя пагинация -->
 {% include 'includes/paginator.html' %}
 
 {% endblock %}

@@ -5,9 +5,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from django.core.paginator import Paginator
-from django.core.serializers import serialize
 from django.db import transaction
-from django.db.models import Model, Count
 from django.shortcuts import render, redirect, get_object_or_404
 from django.utils import timezone
 from django.views.decorators.http import require_POST
@@ -164,6 +162,9 @@ def save_task_and_handle_form_errors(form, all_users, task=None):
 def index(request):
     """Отображение главной страницы."""
 
+    # if not request.user.is_authenticated:
+    #     return redirect('users:login')
+
     tasks = Task.objects.all()
     current_data = timezone.now()
 
@@ -187,6 +188,17 @@ def index(request):
 def profile(request, user):
     """Отображение профиля пользователя."""
 
+    user_profile = get_object_or_404(User, username=user)
+    context = {
+        'user_profile': user_profile
+    }
+
+    return render(request, 'tasks/profile.html', context)
+
+
+def current_tasks(request, user):
+    """Отображение текущих задач пользователя."""
+
     profile_user = get_object_or_404(User, username=user)
     tasks = Task.objects.filter(
         assigned_to=profile_user, done_by=None
@@ -202,24 +214,53 @@ def profile(request, user):
         'page_obj': page_obj
     }
 
-    return render(request, 'tasks/profile.html', context)
+    return render(request, 'tasks/current_tasks.html', context)
 
 
 def user_archive(request, user):
     """Архив выполненных задач пользователя."""
 
+    if not request.user.is_authenticated:
+        return redirect('users:login')
+
     profile_user = get_object_or_404(User, username=user)
+    # archived_tasks = Task.objects.filter(
+    #     assigned_to=profile_user, done_by=profile_user
+    # ).order_by('deadline')
+
     archived_tasks = Task.objects.filter(
         assigned_to=profile_user, done_by=profile_user
-    ).order_by('deadline')
+    ).order_by('-done_by_time__date')
 
-    paginator = Paginator(archived_tasks, TASKS_IN_PAGE)
-    page_number = request.GET.get('page')
+    print('archived_tasks', archived_tasks)
+
+    dates = archived_tasks.values('done_by_time__date').distinct()
+
+    print('dates', dates)
+
+    items_in_page = DAYS_IN_CALENDAR_PAGE
+    page_number = int(request.GET.get('page', 1))
+
+    current_dates = get_current_dates(dates, page_number, items_in_page)
+
+    print('current_dates', current_dates)
+
+    tasks_by_date = {}
+    for date in current_dates:
+        print('date', date)
+        tasks_by_date[date['done_by_time__date']] = archived_tasks.filter(
+            done_by_time__date=date['done_by_time__date']
+        )
+
+    print('tasks_by_date', tasks_by_date)
+
+    paginator = Paginator(dates, items_in_page)
     page_obj = paginator.get_page(page_number)
 
     context = {
         'username': profile_user,
-        'tasks': archived_tasks,
+        'archived_tasks_quantity': len(archived_tasks),
+        'tasks_by_date': tasks_by_date,
         'page_obj': page_obj
     }
 
@@ -239,21 +280,26 @@ def delegated_tasks(request, user):
         '-created__date'
     ).distinct()
 
-    delegated_tasks_by_date = {}
+    items_per_page = DAYS_IN_CALENDAR_PAGE
 
-    for date in dates:
-        delegated_tasks_by_date[date['created__date']] = (
-            delegated_tasks.filter(created__date=date['created__date'])
+    page_number = int(request.GET.get('page', 1))
+
+    current_dates = get_current_dates(dates, page_number, items_per_page)
+
+    tasks_by_date = {}
+    for date in current_dates:
+
+        tasks_by_date[date['created__date']] = delegated_tasks.filter(
+            created__date=date['created__date']
         )
 
-    paginator = Paginator(delegated_tasks, TASKS_IN_PAGE)
-    page_number = request.GET.get('page')
+    paginator = Paginator(dates, items_per_page)
     page_obj = paginator.get_page(page_number)
 
     context = {
         'username': username,
-        'delegated_tasks': delegated_tasks,
-        'delegated_tasks_by_date': delegated_tasks_by_date,
+        'delegated_tasks_quantity': len(delegated_tasks),
+        'tasks_by_date': tasks_by_date,
         'page_obj': page_obj
     }
 
@@ -266,7 +312,7 @@ def full_archive_by_dates(request):
     if not request.user.is_authenticated:
         return redirect('users:login')
 
-    full_archive = Task.objects.filter(is_done=True).order_by('-done_by_time')
+    full_archive = Task.objects.filter(is_done=True)#.order_by('-done_by_time')
 
     dates = full_archive.values('done_by_time__date').order_by(
         '-done_by_time__date'
@@ -278,10 +324,7 @@ def full_archive_by_dates(request):
     # При переходе с главной страницы request.GET.get('page')
     # возвращает 'None', поэтому подстраховываемся.
 
-    try:
-        page_number = int(request.GET.get('page'))
-    except (ValueError, TypeError):
-        page_number = 1
+    page_number = int(request.GET.get('page', 1))
 
     # Получаем список дат для текущей страницы.
     current_dates = get_current_dates(dates, page_number, items_per_page)
@@ -298,7 +341,7 @@ def full_archive_by_dates(request):
     page_obj = paginator.get_page(page_number)
 
     context = {
-        'full_archive': full_archive,
+        'full_archive_quantity': len(full_archive),
         'tasks_by_date': tasks_by_date,
         'page_obj': page_obj,
     }
@@ -440,18 +483,6 @@ def delete_task(request, pk):
         return redirect('tracker:index')
 
     assigned_to_email = task.assigned_to.email
-
-    # Чтобы можно было удалить задачу, но передать в функцию
-    # отправки почты данные о задаче - сохраняем ее "слепок".
-
-    # task_data = {
-    #     'id': task.id,
-    #     'title': task.title,
-    #     'description': task.description,
-    #     'assigned_to': task.assigned_to,
-    #     'author': task.author,
-    #     'deadline': task.deadline
-    # }
 
     # "Слепок" делаем с помощью deepcopy, которая временно сохранит данные
     # экземпляра модели после того как экземпляр будет удалён.
@@ -599,36 +630,3 @@ def universal_mail_sender(request, task, assigned_to_email,
         queue=queue,
         countdown=5
     )
-
-# Раскомментировать если используем сериализатор DRF
-
-# def universal_mail_sender(request, task, assigned_to_email,
-#                           template, priority=9, queue='slow_queue', **kwargs):
-#     """
-#     Универсальная функция отправки сообщений о событиях, связанных с задачами.
-#     """
-#
-#     username = request.user
-#     task_instance = task
-#     serializer = TaskSerializer(task_instance, context={'request': request})
-#
-#     serializer = TaskSerializer(task_instance, context={'request': request})
-#     serialized_data = serializer.data
-#
-#     serialized_data['username'] = username.username
-#
-#     if 'previous_assigned_to_username' in kwargs:
-#         serialized_data[
-#             'previous_assigned_to_username'
-#         ] = kwargs['previous_assigned_to_username']
-#
-#     send_email_message.apply_async(
-#         kwargs={
-#             'email': assigned_to_email,
-#             'template': template,
-#             'context': serialized_data,
-#         },
-#         priority=priority,
-#         queue=queue,
-#         countdown=5
-#     )

@@ -7,22 +7,27 @@
   <div class="container mt-4">
     <section class="user-profile text-center">
         <p>Архив задач пользователя <strong> {{ username }} </strong></p>
-        <p>Всего выполненных задач:<strong> {{ tasks.count }} </strong></p>
+        <p>Всего выполненных задач:<strong> {{ archived_tasks_quantity }} </strong></p>
     </section>
 
+    <!-- Верхняя пагинация -->
+    {% include 'includes/paginator.html' %}
+
     <section class="task-list">
-      {% if tasks %}
-        {% for task in tasks %}
-        <div class="card">
-            {% include 'includes/task_title_colors.html' %}
-        <div class="card-body">
-          <div class="task-item">
-            {% include 'tasks/short_detail.html' %}
-{#            <br>#}
-{#<!--                {% if not forloop.last %}<hr>{% endif %}-->#}
-          </div>
-        </div>
-        </div>
+      {% if tasks_by_date %}
+          {% for date, tasks in tasks_by_date.items %}
+            <br><div class="text-center mb-2"><b>{{ date }}</b></div><br>
+
+              {% for task in tasks %}
+                <div class="card" style="margin-bottom: 0;">
+                  {% include 'includes/task_title_colors.html' %}
+                  <div class="card-body">
+                    <div class="task-item">
+                      {% include 'tasks/short_detail.html' %}
+                    </div>
+                  </div>
+                </div>
+              {% endfor %}
         {% endfor %}
       {% else %}
         <div class="text-center">
@@ -32,6 +37,7 @@
     </section>
   </div>
 
+<!-- Нижняя пагинация -->
 {% include 'includes/paginator.html' %}
 
 {% endblock %}

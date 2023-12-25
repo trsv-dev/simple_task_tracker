@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+{% load tracker_tags %}
+
+<title>Задачи пользователя {{ username }}</title>
+
+{% block content %}
+  <div class="container mt-4">
+    <section class="user-profile text-center">
+        <p>Текущие задачи полльзователя <b>{{ username }}</b></p>
+        <p>Всего задач:<strong> {{ tasks.count }} </strong></p>
+    </section>
+
+    <section class="task-list">
+      {% if tasks %}
+        {% for task in page_obj %}
+        <div class="card">
+            {% include 'includes/task_title_colors.html' %}
+        <div class="card-body">
+          <div class="task-item">
+            {% include 'tasks/short_detail.html' %}
+{#            <br>#}
+<!--                {% if not forloop.last %}<hr>{% endif %}-->
+          </div>
+        </div>
+        </div>
+        {% endfor %}
+      {% else %}
+        <div class="text-center">
+            У вас нет незакрытых задач! 👍
+        </div>
+      {% endif %}
+    </section>
+  </div>
+
+{% include 'includes/paginator.html' %}
+
+{% endblock %}

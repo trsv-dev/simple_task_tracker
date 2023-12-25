@@ -26,10 +26,11 @@
                 {% endif %}
                 {% if user.is_authenticated %}
                     <a class="nav-link link-dark" href="{% url 'tracker:create' %}" style="display: inline-block;">Создать задачу</a>
-                    <a class="nav-link link-dark" href="{% url 'tracker:profile' user=user%}" style="display: inline-block;">Текущие</a>
+                    <a class="nav-link link-dark" href="{% url 'tracker:current_tasks' user=user%}" style="display: inline-block;">Текущие</a>
                     <a class="nav-link link-dark" href="{% url 'tracker:user_archive' user=user%}" style="display: inline-block;">Выполненные</a>
                     <a class="nav-link link-dark" href="{% url 'tracker:delegated_tasks' user=user%}" style="display: inline-block;">Поставленные</a>
                     <a class="nav-link link-dark" href="{% url 'tracker:full_archive'%}" style="display: inline-block;">Архив задач</a>
+                    <a class="nav-link link-dark" href="{% url 'tracker:profile' user=user%}" style="display: inline-block;">Профиль</a>
                     <a class="nav-link link-dark" href="{% url 'users:logout' %}" style="display: inline-block;">Выйти (вошли как {{ user.username }})</a>
                 {% else %}
                     <a class="nav-link link-dark" href="{% url 'users:login' %}" style="display: inline-block;">Войти</a> |
