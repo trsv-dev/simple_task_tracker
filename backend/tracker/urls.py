@@ -19,8 +19,14 @@ urlpatterns = [
     path(
         'profile/<str:user>/delegated_tasks/',
         views.delegated_tasks,
-        name='delegated_tasks'),
+        name='delegated_tasks'
+    ),
     path('detail/<int:pk>/', views.task_detail, name='detail'),
+    path(
+        'detail/<int:pk>/change_status/',
+        views.change_task_status,
+        name='change_task_status'
+    ),
     path('create/', views.create_task, name='create'),
     path('edit/<int:pk>/', views.edit_task, name='edit'),
     path('delete/<int:pk>/', views.delete_task, name='delete'),

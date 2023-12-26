@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 {% load tracker_tags %}
 
-<title>Задачи пользователя {{ username }}</title>
+{% block title %}Задачи пользователя {{ username }}{% endblock %}
 
 {% block content %}
   <div class="container mt-4">

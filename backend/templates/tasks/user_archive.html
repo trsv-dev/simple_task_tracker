@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 {% load tracker_tags %}
 
-<title>Архив задач пользователя {{ username }}</title>
+{% block title %}Архив задач пользователя {{ username }}{% endblock %}
 
 {% block content %}
   <div class="container mt-4">
@@ -11,7 +11,9 @@
     </section>
 
     <!-- Верхняя пагинация -->
-    {% include 'includes/paginator.html' %}
+    {% if page_obj.has_next or page_obj.has_previous%}
+      {% include 'includes/paginator.html' %}
+    {% endif %}
 
     <section class="task-list">
       {% if tasks_by_date %}
@@ -35,9 +37,11 @@
         </div>
       {% endif %}
     </section>
-  </div>
 
-<!-- Нижняя пагинация -->
-{% include 'includes/paginator.html' %}
+    <!-- Нижняя пагинация -->
+    {% if page_obj.has_next or page_obj.has_previous %}
+      {% include 'includes/paginator.html' %}
+    {% endif %}
+  </div>
 
 {% endblock %}

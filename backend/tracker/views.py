@@ -224,35 +224,23 @@ def user_archive(request, user):
         return redirect('users:login')
 
     profile_user = get_object_or_404(User, username=user)
-    # archived_tasks = Task.objects.filter(
-    #     assigned_to=profile_user, done_by=profile_user
-    # ).order_by('deadline')
 
     archived_tasks = Task.objects.filter(
         assigned_to=profile_user, done_by=profile_user
     ).order_by('-done_by_time__date')
 
-    print('archived_tasks', archived_tasks)
-
     dates = archived_tasks.values('done_by_time__date').distinct()
-
-    print('dates', dates)
 
     items_in_page = DAYS_IN_CALENDAR_PAGE
     page_number = int(request.GET.get('page', 1))
 
     current_dates = get_current_dates(dates, page_number, items_in_page)
 
-    print('current_dates', current_dates)
-
     tasks_by_date = {}
     for date in current_dates:
-        print('date', date)
         tasks_by_date[date['done_by_time__date']] = archived_tasks.filter(
             done_by_time__date=date['done_by_time__date']
         )
-
-    print('tasks_by_date', tasks_by_date)
 
     paginator = Paginator(dates, items_in_page)
     page_obj = paginator.get_page(page_number)
@@ -538,6 +526,25 @@ def mark_as_undone(request, pk):
                               templates['task_is_undone_mail'])
 
         return redirect('tracker:index')
+
+
+@login_required
+def change_task_status(request, pk):
+    """Изменение статуса задачи назначенным пользователем."""
+
+    task = get_object_or_404(Task, pk=pk)
+    username = request.user
+
+    if task.status == 'Ожидает выполнения' and task.assigned_to == username:
+        task.status = 'В процессе выполнения'
+        task.save(skip_deadline_reminder_check=True)
+
+    elif (task.status == 'В процессе выполнения' and
+          task.assigned_to == username):
+        task.status = 'Ожидает выполнения'
+        task.save(skip_deadline_reminder_check=True)
+
+    return redirect('tracker:detail', pk=pk)
 
 
 @login_required
