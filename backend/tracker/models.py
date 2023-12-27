@@ -259,4 +259,7 @@ class Comment(models.Model):
         verbose_name_plural = 'Комментарии'
 
     def __str__(self):
-        return f'{self.author} прокомментировал {self.task}'
+        if self.parent_comment:
+            return (f'{self.author} ответил на комментарий '
+                    f'"{self.parent_comment.text}"')
+        return f'{self.author} прокомментировал задачу "{self.task.title}"'
