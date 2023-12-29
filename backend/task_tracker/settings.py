@@ -23,6 +23,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
 
     'django_celery_beat',
+    'mptt',
 
     'tracker.apps.TrackerConfig',
     'users.apps.UsersConfig',

@@ -5,6 +5,8 @@ from django.core.exceptions import ValidationError
 from django.core.validators import RegexValidator, MinValueValidator
 from django.db import models
 from django.utils import timezone
+from mptt.fields import TreeForeignKey
+from mptt.models import MPTTModel
 
 User = get_user_model()
 
@@ -219,8 +221,8 @@ class TaskTag(models.Model):
         return f'задача - {self.task} и тег - {self.tag}'
 
 
-class Comment(models.Model):
-    """Класс комментариев к задаче."""
+class Comment(MPTTModel):
+    """Класс древовидных комментариев к задаче."""
 
     task = models.ForeignKey(
         Task,
@@ -238,7 +240,7 @@ class Comment(models.Model):
         verbose_name='Текст комментария',
         help_text='Введите текст комментария'
     )
-    parent_comment = models.ForeignKey(
+    parent = TreeForeignKey(
         'self',
         on_delete=models.CASCADE,
         null=True,
@@ -253,13 +255,17 @@ class Comment(models.Model):
         verbose_name='Дата публикации комментария'
     )
 
+    class MTTMeta:
+        order_insertion_by = ('-created',)
+
     class Meta:
         ordering = ['-created']
         verbose_name = 'Комментарий'
         verbose_name_plural = 'Комментарии'
 
     def __str__(self):
-        if self.parent_comment:
+        if self.parent:
             return (f'{self.author} ответил на комментарий '
-                    f'"{self.parent_comment.text}"')
-        return f'{self.author} прокомментировал задачу "{self.task.title}"'
+                    f'"{self.parent.text}"')
+        return (f'{self.author} прокомментировал задачу "{self.task.title}": '
+                f'{self.text}')

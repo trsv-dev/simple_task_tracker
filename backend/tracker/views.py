@@ -1,5 +1,6 @@
 from copy import deepcopy
 from datetime import datetime, timedelta
+from urllib.parse import quote
 
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
@@ -563,15 +564,17 @@ def create_comment(request, task_pk):
         comment = form.save(commit=False)
         comment.task = task
         comment.author = request.user
+        # Экранируем символы с помощью quote, т.к. в комментах может быть код.
+        # comment.text = quote(comment.text)
         form.save()
 
-        notify_mentioned_users(request, comment.text, comment.task)
+        notify_mentioned_users(request, quote(comment.text), comment.task)
 
-        # parent_comment_id = request.POST.get('parent_comment')
-        # if parent_comment_id:
-        #     parent_comment = get_object_or_404(Comment, pk=parent_comment_id)
-        #     comment.parent_comment = parent_comment
-        #     comment.save()
+        parent_id = request.POST.get('parent')
+        if parent_id:
+            parent = get_object_or_404(Comment, pk=parent_id)
+            comment.parent = parent
+            comment.save()
 
         return redirect('tracker:detail', pk=task.pk)
     return render(request, 'tasks/create_comment.html', context)

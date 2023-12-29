@@ -31,7 +31,7 @@ class TaskAdmin(admin.ModelAdmin):
 
 @admin.register(Comment)
 class CommentAdmin(admin.ModelAdmin):
-    list_display = ('id', 'task', 'author', 'id', 'text', 'created')
+    list_display = ('id', 'task', 'author', 'text', 'created')
     ordering = ('created',)
     search_fields = ('task__author__username', 'task__author__email', 'text')
 
