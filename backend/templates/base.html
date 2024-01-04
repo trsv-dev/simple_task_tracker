@@ -1,6 +1,8 @@
 {% load static %}
 {% include 'includes/header.html' %}
 
+<title>{% block title %}Трекер задач{% endblock %}</title>
+
 <body>
     {% block content %}
         {% include 'tasks/main.html' %}

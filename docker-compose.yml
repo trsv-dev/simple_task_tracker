@@ -21,7 +21,7 @@ services:
     container_name: backend
     build: ./backend/
     command: |
-      bash -c 'sleep 10 &&
+      bash -c 'sleep 15 &&
       python manage.py migrate &&
       python manage.py collectstatic --noinput &&
       gunicorn --bind 0:8000 task_tracker.wsgi'

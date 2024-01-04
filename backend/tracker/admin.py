@@ -23,14 +23,17 @@ class TaskAdmin(admin.ModelAdmin):
                     'created', 'deadline', 'deadline_reminder', 'is_notified',
                     'is_done', 'done_by', 'done_by_time')
     readonly_fields = ('previous_status',)
-    ordering = ('created',)
+    search_fields = ('author__username', 'author__email',
+                     'description', 'title')
+    ordering = ('-created',)
     inlines = (TagsInLine,)
 
 
 @admin.register(Comment)
 class CommentAdmin(admin.ModelAdmin):
-    list_display = ('task', 'author', 'id', 'text', 'created')
+    list_display = ('id', 'task', 'author', 'text', 'created')
     ordering = ('created',)
+    search_fields = ('task__author__username', 'task__author__email', 'text')
 
 
 @admin.register(TaskTag)

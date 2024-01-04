@@ -23,6 +23,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
 
     'django_celery_beat',
+    'mptt',
 
     'tracker.apps.TrackerConfig',
     'users.apps.UsersConfig',
@@ -81,7 +82,7 @@ DATABASES = {
 }
 
 # PostgreSQL settings (for production or locally in containers):
-###############################################################################
+# ##############################################################################
 
 # DATABASES = {
 #     'default': {
@@ -119,7 +120,8 @@ USE_TZ = True
 
 BASE_URL = os.getenv('BASE_URL', 'http://127.0.0.1:8000')
 
-TASKS_IN_PROFILE_PAGE = os.getenv('TASKS_IN_PROFILE_PAGE', 10)
+TASKS_IN_PAGE = os.getenv('TASKS_IN_PAGE', 10)
+DAYS_IN_CALENDAR_PAGE = int(os.getenv('DAYS_IN_CALENDAR_PAGE', 3))
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 

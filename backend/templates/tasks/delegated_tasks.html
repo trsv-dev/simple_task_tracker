@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+{% load tracker_tags %}
+
+{% block title %}Задачи, поставленные другим пользователям{% endblock %}
+
+{% block content %}
+  <div class="container mt-4">
+    <section class="user-profile text-center">
+        <p><b>Задачи, поставленные вами другим пользователям</b></p>
+        <p>Всего поставленных задач:<strong> {{ delegated_tasks_quantity }} </strong></p>
+
+        {% if undone_delegated_tasks_quantity %}
+            <p><a href="{% url 'tracker:undone_delegated_tasks' user=username %}">Всего невыполненных задач:<strong> {{ undone_delegated_tasks_quantity }} </strong></a></p>
+        {% else %}
+            <p>Все поставленные вами задачи выполнены</p>
+        {% endif %}
+    </section>
+
+    <!-- Верхняя пагинация -->
+    {% if page_obj.has_next or page_obj.has_previous%}
+      {% include 'includes/paginator.html' %}
+    {% endif %}
+
+    <section class="task-list">
+      {% for date, tasks in tasks_by_date.items %}
+        <br><div class="text-center mb-2"><b>{{ date }}</b></div><br>
+
+        {% for task in tasks %}
+          <div class="card" style="margin-bottom: 0;">
+            {% include 'includes/task_undone_title_colors.html' %}
+            <div class="card-body">
+              <div class="task-item">
+                {% include 'tasks/short_detail.html' %}
+              </div>
+            </div>
+          </div>
+        {% endfor %}
+      {% endfor %}
+    </section>
+
+    <!-- Нижняя пагинация -->
+    {% if page_obj.has_next or page_obj.has_previous %}
+      {% include 'includes/paginator.html' %}
+    {% endif %}
+  </div>
+
+{% endblock %}

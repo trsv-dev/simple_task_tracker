@@ -3,18 +3,14 @@
 {% block content %}
 <div class="container">
   <div class="card">
-        {% if task.priority == 'Высокий' %}
-            <h5 class="card-header" style='background-color: #f8d4d4;'>{{ task.title }}</h5>
-        {% elif task.priority == 'Низкий' %}
-            <h5 class="card-header" style='background-color: #c6e0c6;'>{{ task.title }}</h5>
-        {% elif task.priority == 'Средний' %}
-            <h5 class="card-header" style='background-color: rgba(149,194,245,0.3);'>{{ task.title }}</h5>
-        {% endif %}
+
+        {% include 'includes/task_title_colors.html' %}
+
     <div class="card-body">
       <p class="card-text">{% include 'tasks/detail.html' %}</p>
       {% if user.is_authenticated and task.is_done == False %}
         {% if user.is_staff or user == task.author or user == task.assigned_to %}
-            {#    Кнопка удаления вынеседа в отдельный блок чтобы явно указать метод POST, который требуется в @require_POST #}
+            {#    Кнопка удаления вынесена в отдельный блок чтобы явно указать метод POST, который требуется в @require_POST #}
             {% if user == task.author %}
                 <form method="post" action="{% url 'tracker:delete' pk=task.id %}" style="display:inline;">
                     {% csrf_token %}
@@ -24,6 +20,12 @@
             {% endif %}
             {% if user == task.assigned_to %}
                 <a href="{% url 'tracker:mark_as_done' pk=task.id %}" class="btn btn-outline-success">Выполнено</a>
+            {% endif %}
+            {% if user == task.assigned_to and task.status == 'Ожидает выполнения' %}
+                <a href="{% url 'tracker:change_task_status' pk=task.id %}" class="btn btn-outline-secondary">Взять в работу</a>
+            {% endif %}
+            {% if user == task.assigned_to and task.status != 'Ожидает выполнения' %}
+                <a href="{% url 'tracker:change_task_status' pk=task.id %}" class="btn btn-outline-secondary">Вернуть в ожидающие</a>
             {% endif %}
         {% endif %}
       {% elif user == task.assigned_to %}

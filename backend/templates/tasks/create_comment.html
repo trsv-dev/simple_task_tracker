@@ -1,69 +1,146 @@
 {% load tracker_tags %}
+{% load mptt_tags %}
+
+<style>
+  .nested-comments {
+    margin-top: 20px; /* Установите желаемый отступ между комментариями */
+    margin-left: 20px; /* Установите желаемый отступ для вложенных комментариев */
+  }
+
+  .comment {
+    margin-bottom: 20px; /* Установите желаемый отступ между комментариями */
+    position: relative;
+  }
+
+  .comment-reply {
+    margin-left: 20px; /* Отступ для показа вложенных ответов */
+  }
+
+  .reply-line {
+    position: absolute;
+    left: -5px; /* Отступ линии от левого края */
+    width: 1px;
+    height: 100%;
+    background-color: rgba(206, 212, 218, 0.36);
+  }
+</style>
+
+{% if user.is_authenticated %}
+
+{% endif %}
 
 <div class="container">
   <div class="card">
     <div class="card-header">
-      <h5>Комментарии</h5>
+      <h6>Комментарии</h6>
     </div>
     <div class="card-body">
+
       {% if comments %}
-        {% for comment in comments %}
-          <div class="comment">
-            <strong>{{ comment.author }}</strong>,  <span class="text-muted">{{ comment.created }}</span><br>
-            <p>{{ comment.text|markdown }}</p>
-            {% if user.is_authenticated and user == comment.author %}
-                <form method="post" action="{% url 'tracker:delete_comment' pk=comment.id %}" style="display:inline;">
-                    {% csrf_token %}
-                    <button type="submit" class="btn btn-outline-danger">Удалить</button>
+        {% recursetree comments %}
+
+          <div class="comment {% if not node.is_root_node %}nested-comment{% endif %}">
+
+            <div class="reply-line"></div> <!-- Линия для связи с родительским комментарием -->
+            <strong>{{ node.author }}</strong>, <span class="text-muted">{{ node.created }}</span><br>
+            <p>{{ node.text|markdown }}</p>
+
+            {% if user.is_authenticated %}
+              {% if user == node.author %}
+
+                <form method="post" action="{% url 'tracker:delete_comment' pk=node.id %}" style="display:inline;">
+                  {% csrf_token %}
+                  <button type="submit" class="btn btn-outline-danger">Удалить</button>
                 </form>
-              <button type="button" onclick="toggleEditForm({{ comment.pk }})" class="btn btn-outline-primary">Редактировать</button>
-              <div class="card-body" style="display: none;" id="editForm{{ comment.pk }}">
-                <form method="post" action="{% url 'tracker:edit_comment' pk=comment.pk %}">
+                <button type="button" onclick="toggleEditForm({{ node.pk }})" class="btn btn-outline-primary">Редактировать</button>
+
+              {% endif %}
+
+              <button type="button" onclick="toggleReplyForm({{ node.pk }})" class="btn btn-outline-success">Ответить</button>
+              <div class="card-body" style="display: none;" id="editForm{{ node.pk }}">
+                <form method="post" action="{% url 'tracker:edit_comment' pk=node.pk %}">
                   {% csrf_token %}
                   <div class="form-group">
-                    <textarea class="form-control" id="id_text" name="text" rows="3" required>{{ comment.text }}</textarea>
+                    <textarea class="form-control" id="id_text" name="text" rows="3" required>{{ node.text|markdown }}</textarea>
                   </div>
                   <div class="btn-group-toggle mt-2">
                     <button type="submit" class="btn btn-outline-primary">Отправить</button>
-                    <a href="{% url 'tracker:detail' pk=task.pk %}" class="btn btn-outline-secondary">Отмена</a>
+                    <a href="{% url 'tracker:detail' pk=node.task.pk %}" class="btn btn-outline-secondary">Отмена</a>
                   </div>
                 </form>
               </div>
+              <div class="card-body" style="display: none;" id="replyForm{{ node.pk }}">
+                <form method="post" action="{% url 'tracker:create_comment' task_pk=node.task.pk %}">
+                  {% csrf_token %}
+                  <input type="hidden" name="parent" value="{{ node.pk }}">
+                  <div class="form-group">
+                    <textarea class="form-control" id="id_text" name="text" rows="3" required></textarea>
+                  </div>
+                  <div class="btn-group-toggle mt-2">
+                    <button type="submit" class="btn btn-outline-success">Отправить ответ</button>
+                    <a href="{% url 'tracker:detail' pk=node.task.pk %}" class="btn btn-outline-secondary">Отмена</a>
+                  </div>
+                </form>
+              </div>
+
             {% endif %}
+
+            {% if not node.is_leaf_node %}
+
+              <div class="nested-comments">
+                <div class="comment-reply">
+
+                  {{ children }}
+
+                </div>
+              </div>
+
+            {% endif %}
+
           </div>
-          <hr>
-        {% endfor %}
+
+        {% endrecursetree %}
+
       {% else %}
+
         <p class="text-center">Комментариев нет</p>
+
       {% endif %}
+
     </div>
   </div>
 </div>
 
 {% if user.is_authenticated %}
-<div class="container mt-3">
-  <div class="card">
-    <div class="card-header">
-      <h5>Добавить комментарий</h5>
-    </div>
-    <div class="card-body">
-      <form method="post" action="{% url 'tracker:create_comment' task_pk=task.pk %}">
-        {% csrf_token %}
-        <div class="form-group">
-          <textarea class="form-control" id="id_text" name="text" rows="3" required>{{ form.text.value|default:'' }}</textarea>
+    <div class="container mt-3">
+      <div class="card">
+        <div class="card-header">
+          <h6>Добавить комментарий</h6>
         </div>
-        <div class="btn-group-toggle mt-2">
-          <button type="submit" class="btn btn-outline-primary">Отправить</button>
+        <div class="card-body">
+          <form method="post" action="{% url 'tracker:create_comment' task_pk=task.pk %}">
+            {% csrf_token %}
+            <div class="form-group">
+              <textarea class="form-control" id="id_text" name="text" rows="3" required>{{ form.text.value|default:'' }}</textarea>
+            </div>
+            <div class="btn-group-toggle mt-2">
+              <button type="submit" class="btn btn-outline-primary">Отправить</button>
+            </div>
+          </form>
         </div>
-      </form>
+      </div>
     </div>
-  </div>
-</div>
 {% endif %}
+
 
 <script>
   function toggleEditForm(commentId) {
     var editForm = document.getElementById('editForm' + commentId);
     editForm.style.display = (editForm.style.display === 'none' || editForm.style.display === '') ? 'block' : 'none';
+  }
+
+  function toggleReplyForm(commentId) {
+    var replyForm = document.getElementById('replyForm' + commentId);
+    replyForm.style.display = (replyForm.style.display === 'none' || replyForm.style.display === '') ? 'block' : 'none';
   }
 </script>

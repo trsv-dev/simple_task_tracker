@@ -70,11 +70,13 @@ def send_email_about_closer_deadline(priority=9, queue='slow_queue'):
     и отправка электронных писем о них. Пометка задач с уже
     отправленными сообщениями о дедлайне. При изменении
     дедлайна в дальнейшем в процессе редактирования задачи
-    отметка снимается.
+    отметка снимается. Если задание выполнено до наступления времени
+    напоминания - письмо не отправляется.
     """
 
     tasks_with_closer_deadlines = Task.objects.filter(
         deadline_reminder__lte=timezone.now() + timedelta(minutes=1),
+        is_done=False,
         is_notified=False
     )
 

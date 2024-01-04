@@ -1,58 +1,19 @@
 {% include 'includes/header.html' %}
 {% load tracker_tags %}
 
-<title>Задачи пользователя {{ username }}</title>
+<title>Профиль пользователя {{ user_profile }}</title>
 
 {% block content %}
   <div class="container mt-4">
     <section class="user-profile text-center">
-        <p>Профиль пользователя <strong> {{ username }} </strong></p>
+        <p>Профиль пользователя <strong> {{ user_profile }} </strong></p>
+        <p>Имя:<strong> {{ user_profile.first_name }} </strong></p>
+        <p>Фамилия:<strong> {{ user_profile.last_name }} </strong></p>
+        <p>Почта:<strong> {{ user_profile.email }} </strong></p>
+        <p>Дата регистрации:<strong> {{ user_profile.date_joined }} </strong></p>
         <a class="btn btn-outline-danger my-4" href="{% url 'password_change' %}">Сменить пароль?</a>
-        <p>Всего задач:<strong> {{ tasks.count }} </strong></p>
-    </section>
-
-    <section class="task-list">
-      {% if tasks %}
-        {% for task in page_obj %}
-        <div class="card">
-            {% include 'includes/task_title_colors.html' %}
-        <div class="card-body">
-          <div class="task-item">
-            {% include 'tasks/short_detail.html' %}
-            <br>
-<!--                {% if not forloop.last %}<hr>{% endif %}-->
-          </div>
-        </div>
-        </div>
-        {% endfor %}
-      {% else %}
-        <div class="text-center">
-            У вас нет незакрытых задач! 👍
-        </div>
-      {% endif %}
     </section>
   </div>
-
-  <div class="pagination justify-content-center align-items-center mt-4">
-    <span class="step-links">
-    {% if page_obj %}
-        {% if page_obj.has_previous %}
-            <a href="?page=1">&laquo; первая</a>
-            <a href="?page={{ page_obj.previous_page_number }}">предыдущая</a>
-        {% endif %}
-
-        <span class="current">
-            {{ page_obj.number }} из {{ page_obj.paginator.num_pages }}
-        </span>
-
-        {% if page_obj.has_next %}
-            <a href="?page={{ page_obj.next_page_number }}">следующая</a>
-            <a href="?page={{ page_obj.paginator.num_pages }}">последняя &raquo;</a>
-        {% endif %}
-    {% endif %}
-
-    </span>
-</div>
 {% endblock %}
 
 {% include 'includes/footer.html' %}
