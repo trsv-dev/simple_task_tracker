@@ -21,6 +21,11 @@ urlpatterns = [
         views.delegated_tasks,
         name='delegated_tasks'
     ),
+    path(
+        'profile/<str:user>/undone_delegated_tasks/',
+        views.get_undone_delegated_tasks,
+        name='undone_delegated_tasks'
+    ),
     path('detail/<int:pk>/', views.task_detail, name='detail'),
     path(
         'detail/<int:pk>/change_status/',

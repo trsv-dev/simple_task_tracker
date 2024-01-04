@@ -211,8 +211,9 @@ def current_tasks(request, user):
 
     context = {
         'username': profile_user,
-        'tasks': tasks,
-        'page_obj': page_obj
+        'current_tasks_quantity': len(tasks),
+        'page_obj': page_obj,
+        'current_time': timezone.now()
     }
 
     return render(request, 'tasks/current_tasks.html', context)
@@ -262,8 +263,10 @@ def delegated_tasks(request, user):
     if not request.user.is_authenticated:
         return redirect('users:login')
 
+    tasks = Task.objects.all()
     username = get_object_or_404(User, username=user)
-    delegated_tasks = Task.objects.filter(author=username)
+    delegated_tasks = tasks.filter(author=username)
+    undone_delegated_tasks = tasks.filter(author=username, is_done=False)
 
     dates = delegated_tasks.values('created__date').order_by(
         '-created__date'
@@ -288,11 +291,46 @@ def delegated_tasks(request, user):
     context = {
         'username': username,
         'delegated_tasks_quantity': len(delegated_tasks),
+        'undone_delegated_tasks_quantity': len(undone_delegated_tasks),
         'tasks_by_date': tasks_by_date,
-        'page_obj': page_obj
+        'page_obj': page_obj,
+        'current_time': timezone.now()
     }
 
     return render(request, 'tasks/delegated_tasks.html', context)
+
+
+def get_undone_delegated_tasks(request, user):
+    """Список невыполненных задач, делегированных другим пользователям."""
+
+    if not request.user.is_authenticated:
+        return redirect('users:login')
+
+    username = get_object_or_404(User, username=user)
+
+    undone_delegated_tasks = Task.objects.filter(
+        author=username, is_done=False
+    )
+
+    order_by = request.GET.get('order_by', 'created')
+
+    undone_delegated_tasks = undone_delegated_tasks.order_by(order_by)
+
+    page_number = request.GET.get('page')
+    paginator = Paginator(undone_delegated_tasks, TASKS_IN_PAGE)
+    page_obj = paginator.get_page(page_number)
+
+    context = {
+        'username': username,
+        'undone_delegated_tasks_quantity': len(undone_delegated_tasks),
+        'order_by': order_by,
+        'page_obj': page_obj,
+        'current_time': timezone.now()
+    }
+
+    return render(
+        request, 'tasks/undone_delegated_tasks.html', context
+    )
 
 
 def full_archive_by_dates(request):
@@ -345,14 +383,10 @@ def task_detail(request, pk):
     comments = Comment.objects.filter(task=task)
     form = CommentForm(request.POST)
 
-    # Задел на будущее (вложенные комментарии и ответы на них).
-    # parent_comments = comments.filter(parent_comment=None)
     context = {
         'task': task,
         'comments': comments,
-        # 'parent_comments': parent_comments,
         'form': form
-
     }
 
     return render(request, 'tasks/task_detail.html', context)

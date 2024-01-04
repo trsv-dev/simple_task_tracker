@@ -1,19 +1,53 @@
 {% if task.priority == 'Высокий' %}
     {% if not task.is_done %}
-        <h6 class="card-header" style='background-color: #f8d4d4;' title="Задача еще не выполнена">🔴 {{ task.title }}</h6>
+        {% if task.deadline and task.deadline < current_time %}
+            <h6 class="card-header" style='background-color: #f8d4d4;' title="Задача еще не выполнена и просрочена">🔵🔴 {{ task.title }}</h6>
+        {% else %}
+            <h6 class="card-header" style='background-color: #f8d4d4;' title="Задача еще не выполнена">🔴 {{ task.title }}</h6>
+        {% endif %}
     {% else %}
         <h6 class="card-header" style='background-color: #f8d4d4;'>{{ task.title }}</h6>
     {% endif %}
 {% elif task.priority == 'Низкий' %}
     {% if not task.is_done %}
-        <h6 class="card-header" style='background-color: #c6e0c6;' title="Задача еще не выполнена">🔴 {{ task.title }}</h6>
+        {% if task.deadline and task.deadline < current_time %}
+            <h6 class="card-header" style='background-color: #c6e0c6;' title="Задача еще не выполнена и просрочена">🔵🔴 {{ task.title }}</h6>
+        {% else %}
+            <h6 class="card-header" style='background-color: #c6e0c6;' title="Задача еще не выполнена">🔴 {{ task.title }}</h6>
+        {% endif %}
     {% else %}
         <h6 class="card-header" style='background-color: #c6e0c6;'>{{ task.title }}</h6>
     {% endif %}
 {% elif task.priority == 'Средний' %}
     {% if not task.is_done %}
-        <h6 class="card-header" style='background-color: rgba(149,194,245,0.3);' title="Задача еще не выполнена">🔴 {{ task.title }}</h6>
+        {% if task.deadline and task.deadline < current_time %}
+            <h6 class="card-header" style='background-color: rgba(149,194,245,0.3);' title="Задача еще не выполнена и просрочена">🔵🔴 {{ task.title }}</h6>
+        {% else %}
+            <h6 class="card-header" style='background-color: rgba(149,194,245,0.3);' title="Задача еще не выполнена">🔴 {{ task.title }}</h6>
+        {% endif %}
     {% else %}
         <h6 class="card-header" style='background-color: rgba(149,194,245,0.3)'>{{ task.title }}</h6>
     {% endif %}
 {% endif %}
+
+
+
+{#{% if task.priority == 'Высокий' %}#}
+{#    {% if not task.is_done %}#}
+{#        <h6 class="card-header" style='background-color: #f8d4d4;' title="Задача еще не выполнена">🔴 {{ task.title }}</h6>#}
+{#    {% else %}#}
+{#        <h6 class="card-header" style='background-color: #f8d4d4;'>{{ task.title }}</h6>#}
+{#    {% endif %}#}
+{#{% elif task.priority == 'Низкий' %}#}
+{#    {% if not task.is_done %}#}
+{#        <h6 class="card-header" style='background-color: #c6e0c6;' title="Задача еще не выполнена">🔴 {{ task.title }}</h6>#}
+{#    {% else %}#}
+{#        <h6 class="card-header" style='background-color: #c6e0c6;'>{{ task.title }}</h6>#}
+{#    {% endif %}#}
+{#{% elif task.priority == 'Средний' %}#}
+{#    {% if not task.is_done %}#}
+{#        <h6 class="card-header" style='background-color: rgba(149,194,245,0.3);' title="Задача еще не выполнена">🔴 {{ task.title }}</h6>#}
+{#    {% else %}#}
+{#        <h6 class="card-header" style='background-color: rgba(149,194,245,0.3)'>{{ task.title }}</h6>#}
+{#    {% endif %}#}
+{#{% endif %}#}

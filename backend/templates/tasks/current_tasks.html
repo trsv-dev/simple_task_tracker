@@ -7,14 +7,19 @@
   <div class="container mt-4">
     <section class="user-profile text-center">
         <p>Текущие задачи полльзователя <b>{{ username }}</b></p>
-        <p>Всего задач:<strong> {{ tasks.count }} </strong></p>
+        <p>Всего задач:<strong> {{ current_tasks_quantity }} </strong></p>
     </section>
 
+      <!-- Верхняя пагинация -->
+    {% if page_obj.has_next or page_obj.has_previous %}
+      {% include 'includes/paginator.html' %}
+    {% endif %}
+
     <section class="task-list">
-      {% if tasks %}
+      {% if page_obj %}
         {% for task in page_obj %}
         <div class="card">
-            {% include 'includes/task_title_colors.html' %}
+            {% include 'includes/task_undone_title_colors.html' %}
         <div class="card-body">
           <div class="task-item">
             {% include 'tasks/short_detail.html' %}
@@ -32,6 +37,9 @@
     </section>
   </div>
 
-{% include 'includes/paginator.html' %}
+<!-- Нижняя пагинация -->
+{% if page_obj.has_next or page_obj.has_previous %}
+  {% include 'includes/paginator.html' %}
+{% endif %}
 
 {% endblock %}

@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+{% load tracker_tags %}
+
+{% block title %}Задачи, поставленные другим пользователям, но еще не выполненные{% endblock %}
+
+{% block content %}
+
+  <div class="container mt-4">
+    <section class="user-profile text-center">
+        <p><b>Поставленные вами, но невыполненные задачи</b></p>
+        <p>Всего поставленных, но невыполненных задач:<strong> {{ undone_delegated_tasks_quantity }} </strong></p>
+
+    </section>
+
+    <form method="get" class="form-inline mb-3">
+      <label for="order_by" class="mr-2">Сортировать по:</label>
+      <select name="order_by" id="order_by" class="form-control mr-2" onchange="this.form.submit()">
+        <option value="created" {% if order_by == 'created' %}selected{% endif %}>Дате создания (сначала старые)</option>
+        <option value="-created" {% if order_by == '-created' %}selected{% endif %}>Дате создания (сначала новые)</option>
+        <option value="deadline" {% if order_by == 'deadline' %}selected{% endif %}>Дедлайну (сначала ближайшие)</option>
+        <option value="-deadline" {% if order_by == '-deadline' %}selected{% endif %}>Дедлайну (сначала дальние)</option>
+      </select>
+    </form>
+
+    <!-- Верхняя пагинация -->
+    {% if page_obj.has_next or page_obj.has_previous %}
+      {% include 'includes/paginator.html' %}
+    {% endif %}
+
+    {% for task in page_obj %}
+        <div class="card" style="margin-bottom: 0;">
+            {% include 'includes/task_undone_title_colors.html' %}
+            <div class="card-body">
+              <div class="task-item">
+                {% include 'tasks/short_detail.html' %}
+              </div>
+            </div>
+        </div>
+    {% endfor %}
+
+    <!-- Нижняя пагинация -->
+    {% if page_obj.has_next or page_obj.has_previous %}
+      {% include 'includes/paginator.html' %}
+    {% endif %}
+  </div>
+
+{% endblock %}

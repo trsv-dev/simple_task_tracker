@@ -111,25 +111,26 @@
   </div>
 </div>
 
-
-<div class="container mt-3">
-  <div class="card">
-    <div class="card-header">
-      <h6>Добавить комментарий</h6>
-    </div>
-    <div class="card-body">
-      <form method="post" action="{% url 'tracker:create_comment' task_pk=task.pk %}">
-        {% csrf_token %}
-        <div class="form-group">
-          <textarea class="form-control" id="id_text" name="text" rows="3" required>{{ form.text.value|default:'' }}</textarea>
+{% if user.is_authenticated %}
+    <div class="container mt-3">
+      <div class="card">
+        <div class="card-header">
+          <h6>Добавить комментарий</h6>
         </div>
-        <div class="btn-group-toggle mt-2">
-          <button type="submit" class="btn btn-outline-primary">Отправить</button>
+        <div class="card-body">
+          <form method="post" action="{% url 'tracker:create_comment' task_pk=task.pk %}">
+            {% csrf_token %}
+            <div class="form-group">
+              <textarea class="form-control" id="id_text" name="text" rows="3" required>{{ form.text.value|default:'' }}</textarea>
+            </div>
+            <div class="btn-group-toggle mt-2">
+              <button type="submit" class="btn btn-outline-primary">Отправить</button>
+            </div>
+          </form>
         </div>
-      </form>
+      </div>
     </div>
-  </div>
-</div>
+{% endif %}
 
 
 <script>
