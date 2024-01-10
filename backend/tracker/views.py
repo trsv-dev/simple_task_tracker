@@ -551,7 +551,7 @@ def mark_as_undone(request, pk):
     email = task.author.email
     if task.is_done:
         task.is_done = False
-        task.status = task.previous_status
+        task.status, task.previous_status = task.previous_status, task.status
         task.done_by_time = None
         task.done_by = None
         # Отменяем проверку даты и времени напоминания о дедлайне в модели.
@@ -569,14 +569,17 @@ def change_task_status(request, pk):
 
     task = get_object_or_404(Task, pk=pk)
     username = request.user
+    current_status = task.status
 
     if task.status == 'Ожидает выполнения' and task.assigned_to == username:
         task.status = 'В процессе выполнения'
+        task.previous_status = current_status
         task.save(skip_deadline_reminder_check=True)
 
     elif (task.status == 'В процессе выполнения' and
           task.assigned_to == username):
         task.status = 'Ожидает выполнения'
+        task.previous_status = current_status
         task.save(skip_deadline_reminder_check=True)
 
     return redirect('tracker:detail', pk=pk)

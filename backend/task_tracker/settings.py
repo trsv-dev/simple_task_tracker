@@ -146,18 +146,6 @@ CELERY_RESULT_BACKEND = os.getenv('CELERY_RESULT_BACKEND', 'redis://127.0.0.1:63
 
 CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = os.getenv('CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP', 'True') == 'True'
 
-# FLOWER_USER = os.getenv('FLOWER_USER', 'admin')
-# FLOWER_PASSWORD = os.getenv('FLOWER_PASSWORD', 'MySuperStrongPassword')
-# FLOWER_BASIC_AUTH = f'{FLOWER_USER}:{FLOWER_PASSWORD}'
-# FLOWER_UNAUTHENTICATED_API=os.getenv('FLOWER_UNAUTHENTICATED_API', 'True') == 'True'
-
-# CELERY_BEAT_SCHEDULE = {
-#     'Send_email_about_closer_deadline': {
-#         'task': 'tracker.utils.send_email_about_closer_deadline',
-#         'schedule': crontab(minute='*/30'),
-#     },
-# }
-
 CELERY_BROKER_TRANSPORT_OPTIONS = {
     'priority_steps': list(range(10)),
     'queue_order_strategy': 'priority',

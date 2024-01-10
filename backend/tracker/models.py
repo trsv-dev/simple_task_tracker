@@ -93,9 +93,11 @@ class Task(models.Model):
     )
     previous_status = models.CharField(
         max_length=120,
+        choices=STATUS,
         blank=True,
         null=True,
         verbose_name='Предыдущий статус',
+        help_text='Выберите предыдущий статус'
     )
     assigned_to = models.ForeignKey(
         User,
@@ -123,7 +125,9 @@ class Task(models.Model):
     deadline_reminder = models.DateTimeField(
         blank=True,
         null=True,
-        verbose_name='Когда напомнить о дедлайне'
+        verbose_name='Когда напомнить о дедлайне',
+        help_text='Если не заполнять, то напоминание придет за сутки до '
+                  'дедлайна. На отрезках менее суток лучше заполнять вручную'
     )
     is_notified = models.BooleanField(
         default=False,
