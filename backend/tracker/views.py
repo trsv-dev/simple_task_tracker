@@ -7,6 +7,7 @@ from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from django.core.paginator import Paginator
 from django.db import transaction
+from django.db.models import Q
 from django.shortcuts import render, redirect, get_object_or_404
 from django.utils import timezone
 from django.views.decorators.http import require_POST
@@ -86,10 +87,11 @@ def is_title_description_priority_status_changed(original_task, form):
     form_data = form.cleaned_data
 
     return (((form_data.get('status') != original_task.status or
-             form_data.get('priority') != original_task.priority) or
-            (form_data.get('title') != original_task.title or
-             form_data.get('description') != original_task.description)) and
-            form_data.get('assigned_to').username == original_task.assigned_to.username)
+              form_data.get('priority') != original_task.priority) or
+             (form_data.get('title') != original_task.title or
+              form_data.get('description') != original_task.description)) and
+            form_data.get(
+                'assigned_to').username == original_task.assigned_to.username)
 
 
 def is_deadline_deadline_reminder_user_changed(request, original_task,
@@ -280,7 +282,6 @@ def delegated_tasks(request, user):
 
     tasks_by_date = {}
     for date in current_dates:
-
         tasks_by_date[date['created__date']] = delegated_tasks.filter(
             created__date=date['created__date']
         )
@@ -339,7 +340,8 @@ def full_archive_by_dates(request):
     if not request.user.is_authenticated:
         return redirect('users:login')
 
-    full_archive = Task.objects.filter(is_done=True)#.order_by('-done_by_time')
+    full_archive = Task.objects.filter(
+        is_done=True)  # .order_by('-done_by_time')
 
     dates = full_archive.values('done_by_time__date').order_by(
         '-done_by_time__date'
@@ -351,7 +353,7 @@ def full_archive_by_dates(request):
     # При переходе с главной страницы request.GET.get('page')
     # возвращает 'None', поэтому подстраховываемся.
 
-    page_number = int(request.GET.get('page', 1))
+    page_number = request.GET.get('page')
 
     # Получаем список дат для текущей страницы.
     current_dates = get_current_dates(dates, page_number, items_per_page)
@@ -652,9 +654,36 @@ def delete_comment(request, pk):
     return redirect('tracker:detail', pk=task.pk)
 
 
+def task_search(request):
+    """Поиск по задачам."""
+
+    search_query = request.GET.get('query')
+
+    if not search_query:
+        context = {'no_results_message': 'Пустой поиск'}
+
+        return render(request, 'tasks/task_search.html', context)
+
+    search_results = Task.objects.filter(
+        Q(title__icontains=search_query) |
+        Q(description__icontains=search_query)
+    ).distinct()
+
+    page_number = int(request.GET.get('page', 1))
+    paginator = Paginator(search_results, TASKS_IN_PAGE)
+    page_obj = paginator.get_page(page_number)
+
+    context = {
+        'page_obj': page_obj,
+        'search_query': search_query,
+        'search_results': search_results
+    }
+
+    return render(request, 'tasks/task_search.html', context)
+
+
 def universal_mail_sender(request, task, assigned_to_email,
                           template, priority=9, queue='slow_queue', **kwargs):
-
     username = request.user
 
     serializer = TaskSerializer(task)

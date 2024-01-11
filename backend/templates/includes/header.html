@@ -38,6 +38,11 @@
                 {% endif %}
             {% endif %}
         </div>
+        <div style="text-align: right;">
+            <form action="{% url 'tracker:task_search' %}" method="get" class="form-inline">
+                <input id="searchInput" name="query" type="text" class="form-control" placeholder="Поиск по задачам...">
+            </form>
+        </div>
         <br>
 </div>
 {% endblock %}
