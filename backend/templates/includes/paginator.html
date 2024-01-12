@@ -2,9 +2,7 @@
     <span class="step-links">
     {% if page_obj %}
         {% if page_obj.has_previous %}
-{#            <a href="?page=1{% if search_query %}&query={{ search_query }}{% endif %}">&nbsp; &laquo; &nbsp;</a>#}
             <a href="?page=1&query={{ search_query }}">&nbsp; &laquo; &nbsp;</a>
-{#            <a href="?page={{ page_obj.previous_page_number }}{% if search_query %}&query={{ search_query }}{% endif %}">предыдущая</a>#}
             <a href="?page={{ page_obj.previous_page_number }}&query={{ search_query }}">предыдущая</a>
         {% endif %}
 
@@ -13,33 +11,9 @@
         </span>
 
         {% if page_obj.has_next %}
-{#            <a href="?page={{ page_obj.next_page_number }}{% if search_query %}&query={{ search_query }}{% endif %}">следующая</a>#}
             <a href="?page={{ page_obj.next_page_number }}&query={{ search_query }}">следующая</a>
             <a href="?page={{ page_obj.paginator.num_pages }}&query={{ search_query }}">&nbsp; &raquo; &nbsp;</a>
         {% endif %}
     {% endif %}
     </span>
 </div>
-
-
-
-{#<div class="pagination justify-content-center align-items-center mt-4">#}
-{#    <span class="step-links">#}
-{#    {% if page_obj %}#}
-{#        {% if page_obj.has_previous %}#}
-{#            <a href="?page=1">&nbsp; &laquo; &nbsp;</a>#}
-{#            <a href="?page={{ page_obj.previous_page_number }}">предыдущая</a>#}
-{#        {% endif %}#}
-{##}
-{#        <span class="current">#}
-{#            {{ page_obj.number }} из {{ page_obj.paginator.num_pages }}#}
-{#        </span>#}
-{##}
-{#        {% if page_obj.has_next %}#}
-{#            <a href="?page={{ page_obj.next_page_number }}">следующая</a>#}
-{#            <a href="?page={{ page_obj.paginator.num_pages }}">&nbsp; &raquo; &nbsp;</a>#}
-{#        {% endif %}#}
-{#    {% endif %}#}
-{##}
-{#    </span>#}
-{#</div>#}

@@ -664,11 +664,6 @@ def task_search(request):
 
         return render(request, 'tasks/task_search.html', context)
 
-    # search_results = Task.objects.filter(
-    #     Q(title__icontains=search_query) |
-    #     Q(description__icontains=search_query)
-    # ).distinct().order_by('title')
-
     search_results = Task.objects.filter(
         Q(title__icontains=search_query) |
         Q(description__icontains=search_query)
@@ -677,8 +672,6 @@ def task_search(request):
     page_number = int(request.GET.get('page', 1))
     paginator = Paginator(search_results, TASKS_IN_PAGE)
     page_obj = paginator.get_page(page_number)
-
-    print(search_results.order_by('title'))
 
     context = {
         'page_obj': page_obj,
