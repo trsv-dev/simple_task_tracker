@@ -7,6 +7,7 @@
   <div class="container mt-4">
     <section class="user-profile text-center">
         <p><b>Результаты поиска</b></p>
+        <p>по запросу "{{ search_query }}"</p>
     </section>
 
     <!-- Верхняя пагинация -->
@@ -15,8 +16,8 @@
     {% endif %}
 
     <section class="search-list">
-        {% if search_results %}
-            {% for task in search_results %}
+        {% if page_obj %}
+            {% for task in page_obj %}
               <div class="card" style="margin-bottom: 0;">
                 {% include 'includes/task_undone_title_colors.html' %}
                 <div class="card-body">

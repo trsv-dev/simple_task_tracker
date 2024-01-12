@@ -56,6 +56,7 @@ TEMPLATES = [
                 'django.contrib.messages.context_processors.messages',
 
                 'tracker.context_processors.year.year',
+                'tracker.context_processors.excluded_urls.excluded_urls',
             ],
         },
     },

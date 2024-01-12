@@ -353,7 +353,7 @@ def full_archive_by_dates(request):
     # При переходе с главной страницы request.GET.get('page')
     # возвращает 'None', поэтому подстраховываемся.
 
-    page_number = request.GET.get('page')
+    page_number = int(request.GET.get('page', 1))
 
     # Получаем список дат для текущей страницы.
     current_dates = get_current_dates(dates, page_number, items_per_page)
@@ -664,14 +664,21 @@ def task_search(request):
 
         return render(request, 'tasks/task_search.html', context)
 
+    # search_results = Task.objects.filter(
+    #     Q(title__icontains=search_query) |
+    #     Q(description__icontains=search_query)
+    # ).distinct().order_by('title')
+
     search_results = Task.objects.filter(
         Q(title__icontains=search_query) |
         Q(description__icontains=search_query)
-    ).distinct()
+    ).order_by('title')
 
     page_number = int(request.GET.get('page', 1))
     paginator = Paginator(search_results, TASKS_IN_PAGE)
     page_obj = paginator.get_page(page_number)
+
+    print(search_results.order_by('title'))
 
     context = {
         'page_obj': page_obj,
