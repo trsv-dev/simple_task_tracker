@@ -63,4 +63,9 @@ urlpatterns = [
         views.full_archive_by_dates,
         name='full_archive'
     ),
+    path(
+        'task_search/',
+        views.task_search,
+        name='task_search'
+    ),
 ]
