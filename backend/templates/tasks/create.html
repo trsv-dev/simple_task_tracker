@@ -19,7 +19,7 @@
             {% endfor %}
         </div>
     {% endif %}
-    <form method="post" {% if task %}action="{% url 'tracker:edit' pk=task.pk %}"{% else %}action="{% url 'tracker:create' %}"{% endif %}>
+    <form method="post" enctype="multipart/form-data" {% if task %}action="{% url 'tracker:edit' pk=task.pk %}"{% else %}action="{% url 'tracker:create' %}"{% endif %}>
         {% csrf_token %}
 
         {% if task %}
@@ -33,6 +33,12 @@
         <div class="form-group">
             <label for="id_description">Описание:</label>
             <textarea class="form-control" id="id_description" name="description" rows="6" required>{% if task %}{{ task.description }}{% elif form.description.value %}{{ form.description.value }}{% endif %}</textarea>
+        </div>
+
+        <div class="form-group">
+            <label for="id_image">Изображение:</label><br>
+            <input type="file" class="form-control-file" id="id_image" name="image" accept="image/*">
+
         </div>
 
         <div class="form-group">

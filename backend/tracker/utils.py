@@ -2,6 +2,7 @@ import re
 import socket
 from datetime import timedelta
 from smtplib import SMTPException
+from urllib.parse import unquote, unquote_plus
 
 from celery import shared_task, current_task
 from django.core.mail import send_mail
@@ -116,40 +117,53 @@ def send_email_about_closer_deadline(priority=9, queue='slow_queue'):
             task.save(skip_deadline_reminder_check=True)
 
 
-def notify_mentioned_users(request, comment_text, comment_task):
+def search_mentioned_users(comment_text):
+    """Поиск в тексте комментария упомянутых через '@' пользователей."""
+
+    comment_text = unquote_plus(comment_text)
+    # Создаем множество пользователей сервера
+    all_usernames_list = set(user.username for user in User.objects.all())
+    # Регулярное выражение для поиска всех пользователей, упомянутых после '@'
+    username_search_pattern = re.compile(r'@(\w+)')
+
+    # Находим все совпадения (чтобы отследить упоминания в верхнем регистре
+    # текст переводим в нижний регистр)
+    matches = username_search_pattern.finditer(comment_text.lower())
+    # Делаем из них список
+    mentioned_usernames = [match.group(1) for match in matches]
+    # Получаем множество найденных в тексте упоминаний
+    mentioned_usernames_set = set(mentioned_usernames)
+    # Находим и возвращаем пересечение множеств списка пользователей сервера и
+    # найденных в тексте пользователей, упомянутых через '@' и
+    # сущностей, в которых используется '@' (например, декораторы).
+    # Получаем список отфильтрованных таким образом пользователей.
+
+    return list(all_usernames_list & mentioned_usernames_set)
+
+
+def notify_mentioned_users(request, comment_text,
+                           list_of_mentioned_users, comment_task):
     """
     Если в комментарии пользователя указали через @username
     присылает уведомление на электронную почту об упоминании.
     """
 
-    search_pattern = re.compile(r'@(\w+)')
-    mentioned_usernames = search_pattern.findall(comment_text)
-
+    comment_text = unquote_plus(comment_text)
     task_instance = comment_task
 
-    for username in mentioned_usernames:
+    for username in list_of_mentioned_users:
         user = get_object_or_404(User, username=username)
         user_email = user.email
 
         # Получаем данные username из сериализатора, иначе Celery не пропустит
         # несериализованные данные.
         user_instance = user
-
-        # serializer = UserSerializer(
-        #     user_instance, context={'request': request}
-        # )
-
         serializer = UserSerializer(user_instance)
 
         username = serializer.data['username']
 
         # Получаем данные комментария из сериализатора,
         # иначе Celery не пропустит несериализованные данные.
-
-        # Раскомментировать если используем сериализатор из DRF.
-        # serializer = TaskSerializer(
-        #     task_instance, context={'request': request}
-        # )
 
         serializer = TaskSerializer(task_instance)
 

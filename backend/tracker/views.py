@@ -1,6 +1,6 @@
 from copy import deepcopy
 from datetime import datetime, timedelta
-from urllib.parse import quote
+from urllib.parse import quote_plus
 
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
@@ -16,7 +16,8 @@ from task_tracker.settings import TASKS_IN_PAGE, DAYS_IN_CALENDAR_PAGE
 from tracker.forms import TaskCreateForm, CommentForm
 from tracker.models import Task, Comment
 from tracker.serializers import TaskSerializer
-from tracker.utils import send_email_message, notify_mentioned_users, templates
+from tracker.utils import (send_email_message, notify_mentioned_users,
+                           templates, search_mentioned_users)
 
 
 def check_rights_to_task(username, task):
@@ -400,7 +401,7 @@ def create_task(request):
 
     username = request.user
     all_users = User.objects.all()
-    form = TaskCreateForm(request.POST or None)
+    form = TaskCreateForm(request.POST or None, request.FILES or None)
     deadline_reminder_str = request.POST.get('deadline_reminder')
 
     context = {
@@ -459,7 +460,9 @@ def edit_task(request, pk):
     if not check_rights_to_task(username, task):
         return redirect('tracker:index')
 
-    form = TaskCreateForm(request.POST or None, instance=task)
+    form = TaskCreateForm(
+        request.POST or None, request.FILES or None, instance=task
+    )
 
     context = {
         'task': task,
@@ -603,11 +606,16 @@ def create_comment(request, task_pk):
         comment = form.save(commit=False)
         comment.task = task
         comment.author = request.user
-        # Экранируем символы с помощью quote, т.к. в комментах может быть код.
-        # comment.text = quote(comment.text)
+        # Экранируем символы с помощью quote_plus, т.к. в комментах может
+        # быть код.
+        comment_text = quote_plus(comment.text)
         form.save()
 
-        notify_mentioned_users(request, quote(comment.text), comment.task)
+        list_of_mentioned_users = search_mentioned_users(comment_text)
+
+        if len(list_of_mentioned_users) > 0:
+            notify_mentioned_users(request, comment_text,
+                                   list_of_mentioned_users, comment.task)
 
         parent_id = request.POST.get('parent')
         if parent_id:

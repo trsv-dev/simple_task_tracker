@@ -1,6 +1,9 @@
 {% extends 'base.html' %}
 
+{% block title %}Детали задачи{% endblock %}
+
 {% block content %}
+
 <div class="container">
   <div class="card">
 
@@ -31,7 +34,7 @@
       {% elif user == task.assigned_to %}
           <form method="post" action="{% url 'tracker:mark_as_undone' pk=task.id %}" style="display:inline;">
               {% csrf_token %}
-              <button type="submit" class="btn btn-outline-dark" style="margin-left: auto;">Отмена</button>
+              <button type="submit" class="btn btn-outline-dark" style="margin-left: auto;">Отмена выполнения</button>
           </form>
       {% endif %}
         <a href="{% url 'tracker:index'%}" class="btn btn-outline-dark">Назад</a>

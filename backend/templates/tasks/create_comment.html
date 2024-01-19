@@ -42,7 +42,11 @@
           <div class="comment {% if not node.is_root_node %}nested-comment{% endif %}">
 
             <div class="reply-line"></div> <!-- Линия для связи с родительским комментарием -->
-            <strong>{{ node.author }}</strong>, <span class="text-muted">{{ node.created }}</span><br>
+            {% if node.author == node.task.author %}
+                <strong>{{ node.author }} (автор)</strong>, <span class="text-muted">{{ node.created }}</span><br>
+            {% else %}
+                <strong>{{ node.author }}</strong>, <span class="text-muted">{{ node.created }}</span><br>
+            {% endif %}
             <p>{{ node.text|markdown }}</p>
 
             {% if user.is_authenticated %}

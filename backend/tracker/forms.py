@@ -9,7 +9,8 @@ class TaskCreateForm(forms.ModelForm):
     class Meta:
         model = Task
         fields = ('title', 'description', 'priority',
-                  'status', 'deadline', 'deadline_reminder', 'assigned_to')
+                  'status', 'deadline', 'deadline_reminder', 'assigned_to',
+                  'image')
 
         labels = {
             'title': 'Название',
@@ -19,6 +20,7 @@ class TaskCreateForm(forms.ModelForm):
             'deadline': 'Дедлайн',
             'deadline_reminder': 'Когда напомнить о дедлайне',
             'assigned_to': 'Ответственный',
+            'image': 'Изображение',
         }
 
 
