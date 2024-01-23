@@ -9,6 +9,7 @@ from django.core.paginator import Paginator
 from django.db import transaction
 from django.db.models import Q
 from django.shortcuts import render, redirect, get_object_or_404
+from django.urls import reverse
 from django.utils import timezone
 from django.views.decorators.http import require_POST
 
@@ -379,17 +380,33 @@ def full_archive_by_dates(request):
     return render(request, 'tasks/full_archive.html', context)
 
 
+def get_profile(username):
+    """Получение ссылки на профиль пользователя."""
+    
+    return reverse('tracker:profile', kwargs={'user': username})
+
+
 def task_detail(request, pk):
     """Отображение деталей задачи."""
 
     task = get_object_or_404(Task, pk=pk)
     comments = Comment.objects.filter(task=task)
     form = CommentForm(request.POST)
+    comment_texts = [comment.text for comment in comments]
+
+    # Из списка списков делаем плоский список пользователей.
+    list_of_mentioned_users = sum([search_mentioned_users(comment_text) for
+                                   comment_text in comment_texts], [])
+    # Создаем словарь: ключ - имя пользователя, значение - ссылка на профиль.
+    usernames_profiles_links = {
+        username: get_profile(username) for username in list_of_mentioned_users
+    }
 
     context = {
         'task': task,
         'comments': comments,
-        'form': form
+        'form': form,
+        'usernames_profiles_links': usernames_profiles_links
     }
 
     return render(request, 'tasks/task_detail.html', context)

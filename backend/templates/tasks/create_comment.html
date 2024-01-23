@@ -1,5 +1,6 @@
 {% load tracker_tags %}
 {% load mptt_tags %}
+{% load mark_mentioned_users %}
 
 <style>
   .nested-comments {
@@ -47,7 +48,9 @@
             {% else %}
                 <strong>{{ node.author }}</strong>, <span class="text-muted">{{ node.created }}</span><br>
             {% endif %}
-            <p>{{ node.text|markdown }}</p>
+
+{#            <p>{{ node.text|markdown|mentioned_users_replace:list_of_mentioned_users|safe }}</p>#}
+            <p>{{ node.text|markdown|mentioned_users_replace:usernames_profiles_links|safe }}</p>
 
             {% if user.is_authenticated %}
               {% if user == node.author %}
