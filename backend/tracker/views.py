@@ -1,6 +1,6 @@
 from copy import deepcopy
 from datetime import datetime, timedelta
-from urllib.parse import quote
+from urllib.parse import quote_plus
 
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
@@ -9,6 +9,7 @@ from django.core.paginator import Paginator
 from django.db import transaction
 from django.db.models import Q
 from django.shortcuts import render, redirect, get_object_or_404
+from django.urls import reverse
 from django.utils import timezone
 from django.views.decorators.http import require_POST
 
@@ -16,7 +17,8 @@ from task_tracker.settings import TASKS_IN_PAGE, DAYS_IN_CALENDAR_PAGE
 from tracker.forms import TaskCreateForm, CommentForm
 from tracker.models import Task, Comment
 from tracker.serializers import TaskSerializer
-from tracker.utils import send_email_message, notify_mentioned_users, templates
+from tracker.utils import (send_email_message, notify_mentioned_users,
+                           templates, search_mentioned_users)
 
 
 def check_rights_to_task(username, task):
@@ -378,17 +380,33 @@ def full_archive_by_dates(request):
     return render(request, 'tasks/full_archive.html', context)
 
 
+def get_profile(username):
+    """Получение ссылки на профиль пользователя."""
+    
+    return reverse('tracker:profile', kwargs={'user': username})
+
+
 def task_detail(request, pk):
     """Отображение деталей задачи."""
 
     task = get_object_or_404(Task, pk=pk)
     comments = Comment.objects.filter(task=task)
     form = CommentForm(request.POST)
+    comment_texts = [comment.text for comment in comments]
+
+    # Из списка списков делаем плоский список пользователей.
+    list_of_mentioned_users = sum([search_mentioned_users(comment_text) for
+                                   comment_text in comment_texts], [])
+    # Создаем словарь: ключ - имя пользователя, значение - ссылка на профиль.
+    usernames_profiles_links = {
+        username: get_profile(username) for username in list_of_mentioned_users
+    }
 
     context = {
         'task': task,
         'comments': comments,
-        'form': form
+        'form': form,
+        'usernames_profiles_links': usernames_profiles_links
     }
 
     return render(request, 'tasks/task_detail.html', context)
@@ -400,7 +418,7 @@ def create_task(request):
 
     username = request.user
     all_users = User.objects.all()
-    form = TaskCreateForm(request.POST or None)
+    form = TaskCreateForm(request.POST or None, request.FILES or None)
     deadline_reminder_str = request.POST.get('deadline_reminder')
 
     context = {
@@ -456,10 +474,16 @@ def edit_task(request, pk):
     task = get_object_or_404(Task, pk=pk)
     original_task = deepcopy(task)
 
+    if 'delete_image' in request.POST:
+        task.image.delete()
+        task.image = None
+
     if not check_rights_to_task(username, task):
         return redirect('tracker:index')
 
-    form = TaskCreateForm(request.POST or None, instance=task)
+    form = TaskCreateForm(
+        request.POST or None, request.FILES or None, instance=task
+    )
 
     context = {
         'task': task,
@@ -603,11 +627,16 @@ def create_comment(request, task_pk):
         comment = form.save(commit=False)
         comment.task = task
         comment.author = request.user
-        # Экранируем символы с помощью quote, т.к. в комментах может быть код.
-        # comment.text = quote(comment.text)
+        # Экранируем символы с помощью quote_plus, т.к. в комментах может
+        # быть код.
+        comment_text = quote_plus(comment.text)
         form.save()
 
-        notify_mentioned_users(request, quote(comment.text), comment.task)
+        list_of_mentioned_users = search_mentioned_users(comment_text)
+
+        if len(list_of_mentioned_users) > 0:
+            notify_mentioned_users(request, comment_text,
+                                   list_of_mentioned_users, comment.task)
 
         parent_id = request.POST.get('parent')
         if parent_id:

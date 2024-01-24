@@ -1,0 +1,10 @@
+<a href="{% url 'tracker:detail' pk=task.id %}" style="text-decoration: none; color: inherit; display: block;">
+    <div class="card" style="margin-bottom: 0;">
+        {% include 'includes/task_undone_title_colors.html' %}
+        <div class="card-body">
+          <div class="task-item">
+            {% include 'tasks/short_detail.html' %}
+          </div>
+        </div>
+    </div>
+</a>

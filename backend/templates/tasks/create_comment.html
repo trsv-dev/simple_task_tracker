@@ -1,5 +1,6 @@
 {% load tracker_tags %}
 {% load mptt_tags %}
+{% load mark_mentioned_users %}
 
 <style>
   .nested-comments {
@@ -42,8 +43,14 @@
           <div class="comment {% if not node.is_root_node %}nested-comment{% endif %}">
 
             <div class="reply-line"></div> <!-- Линия для связи с родительским комментарием -->
-            <strong>{{ node.author }}</strong>, <span class="text-muted">{{ node.created }}</span><br>
-            <p>{{ node.text|markdown }}</p>
+            {% if node.author == node.task.author %}
+                <strong>{{ node.author }} (автор)</strong>, <span class="text-muted">{{ node.created }}</span><br>
+            {% else %}
+                <strong>{{ node.author }}</strong>, <span class="text-muted">{{ node.created }}</span><br>
+            {% endif %}
+
+{#            <p>{{ node.text|markdown|mentioned_users_replace:list_of_mentioned_users|safe }}</p>#}
+            <p>{{ node.text|markdown|mentioned_users_replace:usernames_profiles_links|safe }}</p>
 
             {% if user.is_authenticated %}
               {% if user == node.author %}
@@ -61,7 +68,7 @@
                 <form method="post" action="{% url 'tracker:edit_comment' pk=node.pk %}">
                   {% csrf_token %}
                   <div class="form-group">
-                    <textarea class="form-control" id="id_text" name="text" rows="3" required>{{ node.text|markdown }}</textarea>
+                    <textarea class="form-control" id="id_text" name="text" rows="3" required>{{ node.text }}</textarea>
                   </div>
                   <div class="btn-group-toggle mt-2">
                     <button type="submit" class="btn btn-outline-primary">Отправить</button>
@@ -116,6 +123,7 @@
       <div class="card">
         <div class="card-header">
           <h6>Добавить комментарий</h6>
+          <small class="text-muted">разрешен упрощенный markdown-синтаксис</small>
         </div>
         <div class="card-body">
           <form method="post" action="{% url 'tracker:create_comment' task_pk=task.pk %}">

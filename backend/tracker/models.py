@@ -154,6 +154,13 @@ class Task(models.Model):
         verbose_name='Время выполнения',
         help_text='Время, когда задача была отмечена выполненной'
     )
+    image = models.ImageField(
+        null=True,
+        blank=True,
+        upload_to='tasks/',
+        verbose_name='Изображение',
+        help_text='Добавьте изображение'
+    )
     tags = models.ManyToManyField(
         Tags,
         blank=True,

@@ -1,13 +1,17 @@
 {% extends 'base.html' %}
 
+{% block title %}Детали задачи{% endblock %}
+
 {% block content %}
+
 <div class="container">
   <div class="card">
 
         {% include 'includes/task_title_colors.html' %}
 
     <div class="card-body">
-      <p class="card-text">{% include 'tasks/detail.html' %}</p>
+{#      <p class="card-text">{% include 'tasks/detail.html' %}</p>#}
+      {% include 'tasks/detail.html' %}
       {% if user.is_authenticated and task.is_done == False %}
         {% if user.is_staff or user == task.author or user == task.assigned_to %}
             {#    Кнопка удаления вынесена в отдельный блок чтобы явно указать метод POST, который требуется в @require_POST #}
@@ -31,7 +35,7 @@
       {% elif user == task.assigned_to %}
           <form method="post" action="{% url 'tracker:mark_as_undone' pk=task.id %}" style="display:inline;">
               {% csrf_token %}
-              <button type="submit" class="btn btn-outline-dark" style="margin-left: auto;">Отмена</button>
+              <button type="submit" class="btn btn-outline-dark" style="margin-left: auto;">Отмена выполнения</button>
           </form>
       {% endif %}
         <a href="{% url 'tracker:index'%}" class="btn btn-outline-dark">Назад</a>

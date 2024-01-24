@@ -2,7 +2,7 @@
   <div class="container">
     <div class="row">
       <div class="col-md-4">
-        <h4 class="card-title text-center" style='background-color: #8dade8;'>Ожидающие</h4>
+        <h4 class="card-title text-center" style='background-color: rgba(176,181,187,0.36);'>Ожидающие</h4>
           {% for task in tasks %}
             {% if not task.is_done and task.status == "Ожидает выполнения" %}
                 {% include 'tasks/tasks.html' %}
@@ -11,7 +11,7 @@
       </div>
 
       <div class="col-md-4">
-        <h4 class="card-title text-center" style='background-color: #c8d0ff;'>Выполняющиеся</h4>
+        <h4 class="card-title text-center" style='background-color: rgb(200,208,255);'>В процессе</h4>
         {% for task in tasks %}
           {% if not task.is_done and task.status == "В процессе выполнения" %}
               {% include 'tasks/tasks.html' %}
@@ -20,7 +20,7 @@
       </div>
 
       <div class="col-md-4">
-        <h4 class="card-title text-center" style='background-color: #e0e3f8;'>Выполненные за сутки</h4>
+        <h4 class="card-title text-center" style='background-color: rgb(167,220,248);'>Выполненные за сутки</h4>
         {% for task in completed_tasks %}
           {% if task.is_done or task.status == 'Выполнено' %}
 {#              {% include 'tasks/tasks.html' %}#}

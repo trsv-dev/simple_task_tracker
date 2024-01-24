@@ -1,14 +1,22 @@
 {% load static %}
 {% load tracker_tags %}
-
-{% block title %}Детали задачи{% endblock %}
+{% load thumbnail %}
 
 <link rel="stylesheet" href="{% static 'css/default.min.css' %}">
+<link rel="stylesheet" href="{% static 'css/tracker.css' %}">
 <script src="{% static 'js/highlight.min.js' %}"></script>
 
-<script>hljs.highlightAll();</script>
+{% thumbnail task.image "150x100" crop="center" upscale=True as im %}
+    <div id="overlay" class="overlay" onclick="closeImageOverlay()">
+        <img src="{{ task.image.url }}" alt="Изображение задачи">
+    </div>
+    <a href="javascript:void(0);" onclick="openImageOverlay()">
+        <img src="{{ im.url }}" width="{{ im.width }}" height="{{ im.height }}" alt="Изображение задачи">
+    </a>
+{% endthumbnail %}
 
 <p><b>Описание:</b> {{ task.description|markdown }}</p>
+<hr>
 <p><b>Автор:</b> {{ task.author }}</p>
 <p><b>Приоритет:</b> {{ task.priority }}</p>
 <p><b>Статус:</b> {{ task.status }}</p>
@@ -16,5 +24,19 @@
 <p><b>Время создания:</b> {{ task.created }}</p>
 <p><b>Дедлайн:</b> {{ task.deadline }}</p>
 {% if task.is_done %}
-  <p><b>Пометил(а) выполненным:</b> {{ task.done_by }} ({{ task.done_by_time }})</p>
+    <p><b>Пометил(а) выполненным:</b> {{ task.done_by }} ({{ task.done_by_time }})</p>
 {% endif %}
+
+<script>
+    function openImageOverlay() {
+        document.getElementById('overlay').style.display = 'block';
+    }
+
+    function closeImageOverlay() {
+        document.getElementById('overlay').style.display = 'none';
+    }
+</script>
+
+<script>
+    hljs.highlightAll();
+</script>

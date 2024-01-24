@@ -24,6 +24,7 @@ INSTALLED_APPS = [
 
     'django_celery_beat',
     'mptt',
+    'sorl.thumbnail',
 
     'tracker.apps.TrackerConfig',
     'users.apps.UsersConfig',
@@ -69,6 +70,10 @@ STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'collected_static'
 
 STATICFILES_DIRS = [BASE_DIR / 'static']
+
+MEDIA_URL = '/media/'
+
+MEDIA_ROOT = BASE_DIR / 'media'
 
 WSGI_APPLICATION = 'task_tracker.wsgi.application'
 
