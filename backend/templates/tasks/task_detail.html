@@ -10,7 +10,8 @@
         {% include 'includes/task_title_colors.html' %}
 
     <div class="card-body">
-      <p class="card-text">{% include 'tasks/detail.html' %}</p>
+{#      <p class="card-text">{% include 'tasks/detail.html' %}</p>#}
+      {% include 'tasks/detail.html' %}
       {% if user.is_authenticated and task.is_done == False %}
         {% if user.is_staff or user == task.author or user == task.assigned_to %}
             {#    Кнопка удаления вынесена в отдельный блок чтобы явно указать метод POST, который требуется в @require_POST #}

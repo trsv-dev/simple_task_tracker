@@ -35,11 +35,25 @@
             <textarea class="form-control" id="id_description" name="description" rows="6" required>{% if task %}{{ task.description }}{% elif form.description.value %}{{ form.description.value }}{% endif %}</textarea>
         </div>
 
-        <div class="form-group">
-            <label for="id_image">Изображение:</label><br>
-            <input type="file" class="form-control-file" id="id_image" name="image" accept="image/*">
+        {% if task and task.image %}
+            <div class="form-group">
+                <input type="checkbox" id="delete_image" name="delete_image"> <label for="delete_image">Удалить существующее изображение</label>
+            </div>
+            <div class="form-group">
+                <label for="id_image">Выбрать новое изображение:</label><br>
+                <input type="file" class="form-control-file" id="id_image" name="image" accept="image/*">
+            </div>
+        {% else %}
+            <div class="form-group">
+                <label for="id_image">Изображение:</label><br>
+                <input type="file" class="form-control-file" id="id_image" name="image" accept="image/*">
+            </div>
+        {% endif %}
 
-        </div>
+{#        <div class="form-group">#}
+{#            <label for="id_image">Изображение:</label><br>#}
+{#            <input type="file" class="form-control-file" id="id_image" name="image" accept="image/*">#}
+{#        </div>#}
 
         <div class="form-group">
             <label for="priority">Приоритет:</label>

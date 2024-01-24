@@ -18,16 +18,7 @@
     <section class="task-list">
       {% if page_obj %}
         {% for task in page_obj %}
-        <div class="card">
-            {% include 'includes/task_undone_title_colors.html' %}
-        <div class="card-body">
-          <div class="task-item">
-            {% include 'tasks/short_detail.html' %}
-{#            <br>#}
-<!--                {% if not forloop.last %}<hr>{% endif %}-->
-          </div>
-        </div>
-        </div>
+            {% include 'includes/task_flat_card.html' %}
         {% endfor %}
       {% else %}
         <div class="text-center">

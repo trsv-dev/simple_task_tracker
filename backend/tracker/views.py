@@ -474,6 +474,10 @@ def edit_task(request, pk):
     task = get_object_or_404(Task, pk=pk)
     original_task = deepcopy(task)
 
+    if 'delete_image' in request.POST:
+        task.image.delete()
+        task.image = None
+
     if not check_rights_to_task(username, task):
         return redirect('tracker:index')
 
