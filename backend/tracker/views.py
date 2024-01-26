@@ -382,7 +382,7 @@ def full_archive_by_dates(request):
 
 def get_profile(username):
     """Получение ссылки на профиль пользователя."""
-    
+
     return reverse('tracker:profile', kwargs={'user': username})
 
 
@@ -686,7 +686,10 @@ def delete_comment(request, pk):
 def task_search(request):
     """Поиск по задачам."""
 
-    search_query = request.GET.get('query')
+    # Не делал форму поиска, т.к. с формой поиска не смог добиться нужного
+    # внешнего вида поля поиска в шаблоне. Обошелся прямым запросом из
+    # шаблона к вьюхе.
+    search_query = request.GET.get('query', '')
 
     if not search_query:
         context = {'no_results_message': 'Пустой поиск'}

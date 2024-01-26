@@ -1,9 +1,13 @@
+{% load static %}
+{% load thumbnail %}
+
 <!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="{% static 'css/tracker.css' %}">
     <title>{% if task %}Редактировать{% else %}Создать{% endif %} задачу</title>
 </head>
 <body>
@@ -19,6 +23,7 @@
             {% endfor %}
         </div>
     {% endif %}
+
     <form method="post" enctype="multipart/form-data" {% if task %}action="{% url 'tracker:edit' pk=task.pk %}"{% else %}action="{% url 'tracker:create' %}"{% endif %}>
         {% csrf_token %}
 
@@ -27,15 +32,29 @@
         {% endif %}
         <div class="form-group">
             <label for="id_title">Название:</label>
-            <input type="text" class="form-control" id="id_title" name="title" {% if task %}value="{{ task.title }}"{% elif form.title.value %}value="{{ form.title.value }}"{% endif %} required>
+            <input type="text" class="form-control" id="id_title" name="title" placeholder="Введите название задачи" {% if task %}value="{{ task.title }}"{% elif form.title.value %}value="{{ form.title.value }}"{% endif %} required>
         </div>
 
         <div class="form-group">
             <label for="id_description">Описание:</label>
-            <textarea class="form-control" id="id_description" name="description" rows="6" required>{% if task %}{{ task.description }}{% elif form.description.value %}{{ form.description.value }}{% endif %}</textarea>
+            <textarea class="form-control" id="id_description" name="description" rows="6" placeholder="Опишите задачу. Можно использовать упрощенный markdown-синтаксис" required>{% if task %}{{ task.description }}{% elif form.description.value %}{{ form.description.value }}{% endif %}</textarea>
         </div>
 
         {% if task and task.image %}
+
+            <label for="id_image">Изображение:</label>
+
+            <div class="form-group">
+                {% thumbnail task.image "200x150" crop="center" upscale=True as im %}
+                    <div id="overlay" class="overlay" onclick="closeImageOverlay()">
+                        <img src="{{ task.image.url }}" alt="Изображение задачи">
+                    </div>
+                    <a href="javascript:void(0);" onclick="openImageOverlay()">
+                        <img src="{{ im.url }}" width="{{ im.width }}" height="{{ im.height }}" alt="Изображение задачи">
+                    </a>
+                {% endthumbnail %}
+            </div>
+
             <div class="form-group">
                 <input type="checkbox" id="delete_image" name="delete_image"> <label for="delete_image">Удалить существующее изображение</label>
             </div>
@@ -121,5 +140,16 @@
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
 <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+<script>
+    function openImageOverlay() {
+        document.getElementById('overlay').style.display = 'block';
+    }
+
+    function closeImageOverlay() {
+        document.getElementById('overlay').style.display = 'none';
+    }
+</script>
+
 </body>
 </html>

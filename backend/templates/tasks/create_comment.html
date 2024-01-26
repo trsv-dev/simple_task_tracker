@@ -81,7 +81,7 @@
                   {% csrf_token %}
                   <input type="hidden" name="parent" value="{{ node.pk }}">
                   <div class="form-group">
-                    <textarea class="form-control" id="id_text" name="text" rows="3" required></textarea>
+                    <textarea class="form-control" id="id_text" name="text" rows="3" required placeholder="Разрешен упрощенный markdown-синтаксис"></textarea>
                   </div>
                   <div class="btn-group-toggle mt-2">
                     <button type="submit" class="btn btn-outline-success">Отправить ответ</button>
@@ -123,13 +123,12 @@
       <div class="card">
         <div class="card-header">
           <h6>Добавить комментарий</h6>
-          <small class="text-muted">разрешен упрощенный markdown-синтаксис</small>
         </div>
         <div class="card-body">
           <form method="post" action="{% url 'tracker:create_comment' task_pk=task.pk %}">
             {% csrf_token %}
             <div class="form-group">
-              <textarea class="form-control" id="id_text" name="text" rows="3" required>{{ form.text.value|default:'' }}</textarea>
+              <textarea class="form-control" id="id_text" name="text" rows="3" placeholder="Разрешен упрощенный markdown-синтаксис" required>{{ form.text.value|default:'' }}</textarea>
             </div>
             <div class="btn-group-toggle mt-2">
               <button type="submit" class="btn btn-outline-primary">Отправить</button>
