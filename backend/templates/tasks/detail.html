@@ -6,7 +6,7 @@
 <link rel="stylesheet" href="{% static 'css/tracker.css' %}">
 <script src="{% static 'js/highlight.min.js' %}"></script>
 
-{% thumbnail task.image "150x100" crop="center" upscale=True as im %}
+{% thumbnail task.image "200x150" crop="center" upscale=True as im %}
     <div id="overlay" class="overlay" onclick="closeImageOverlay()">
         <img src="{{ task.image.url }}" alt="Изображение задачи">
     </div>

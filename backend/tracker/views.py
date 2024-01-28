@@ -382,7 +382,7 @@ def full_archive_by_dates(request):
 
 def get_profile(username):
     """Получение ссылки на профиль пользователя."""
-    
+
     return reverse('tracker:profile', kwargs={'user': username})
 
 
@@ -393,6 +393,11 @@ def task_detail(request, pk):
     comments = Comment.objects.filter(task=task)
     form = CommentForm(request.POST)
     comment_texts = [comment.text for comment in comments]
+    comments_with_expired_editing_time = []
+
+    for comment in comments:
+        if timezone.now() > (comment.created + timedelta(minutes=30)):
+            comments_with_expired_editing_time.append(comment)
 
     # Из списка списков делаем плоский список пользователей.
     list_of_mentioned_users = sum([search_mentioned_users(comment_text) for
@@ -405,6 +410,8 @@ def task_detail(request, pk):
     context = {
         'task': task,
         'comments': comments,
+        'comments_with_expired_editing_time':
+            comments_with_expired_editing_time,
         'form': form,
         'usernames_profiles_links': usernames_profiles_links
     }
@@ -686,7 +693,10 @@ def delete_comment(request, pk):
 def task_search(request):
     """Поиск по задачам."""
 
-    search_query = request.GET.get('query')
+    # Не делал форму поиска, т.к. с формой поиска не смог добиться нужного
+    # внешнего вида поля поиска в шаблоне. Обошелся прямым запросом из
+    # шаблона к вьюхе.
+    search_query = request.GET.get('query', '')
 
     if not search_query:
         context = {'no_results_message': 'Пустой поиск'}
