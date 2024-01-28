@@ -53,7 +53,7 @@
             <p>{{ node.text|markdown|mentioned_users_replace:usernames_profiles_links|safe }}</p>
 
             {% if user.is_authenticated %}
-              {% if user == node.author %}
+              {% if user == node.author and node not in comments_with_expired_editing_time %}
 
                 <form method="post" action="{% url 'tracker:delete_comment' pk=node.id %}" style="display:inline;">
                   {% csrf_token %}

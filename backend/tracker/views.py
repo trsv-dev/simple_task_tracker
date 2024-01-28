@@ -393,6 +393,11 @@ def task_detail(request, pk):
     comments = Comment.objects.filter(task=task)
     form = CommentForm(request.POST)
     comment_texts = [comment.text for comment in comments]
+    comments_with_expired_editing_time = []
+
+    for comment in comments:
+        if timezone.now() > (comment.created + timedelta(minutes=30)):
+            comments_with_expired_editing_time.append(comment)
 
     # Из списка списков делаем плоский список пользователей.
     list_of_mentioned_users = sum([search_mentioned_users(comment_text) for
@@ -405,6 +410,8 @@ def task_detail(request, pk):
     context = {
         'task': task,
         'comments': comments,
+        'comments_with_expired_editing_time':
+            comments_with_expired_editing_time,
         'form': form,
         'usernames_profiles_links': usernames_profiles_links
     }
