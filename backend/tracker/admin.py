@@ -1,23 +1,16 @@
-from copy import deepcopy
-from pprint import pprint
-
 from django.http import HttpResponseRedirect, HttpResponseBadRequest
-from django.shortcuts import render
-from django.utils import timezone
 
 from django.contrib import admin, messages
 from django.core.exceptions import ValidationError
-from django.utils.html import format_html
 from django_celery_beat.models import (IntervalSchedule, CrontabSchedule,
                                        SolarSchedule, ClockedSchedule,
                                        PeriodicTask)
 
 from tracker.models import Task, Tags, TaskTag, Comment, DONE, PENDING, \
-    IN_PROGRESS
+    IN_PROGRESS, TaskImage, CommentImage
 from tracker.validators import validate_done_status, validate_done_time, \
     validate_required_fields
 
-# from tracker.validators import validate_done_fields
 
 admin.site.site_header = "Трекер задач"
 admin.site.site_title = "Панель администрирования"
@@ -31,8 +24,14 @@ admin.site.unregister(IntervalSchedule)
 admin.site.unregister(CrontabSchedule)
 
 
-# class TagsInLine(admin.TabularInline):
-#     model = Task.tags.through
+class TaskImageInline(admin.TabularInline):
+    model = TaskImage
+    extra = 1
+
+
+class CommentImageInline(admin.TabularInline):
+    model = CommentImage
+    extra = 1
 
 
 @admin.register(Task)
@@ -61,7 +60,7 @@ class TaskAdmin(admin.ModelAdmin):
     fieldsets = (
         ('Информация о задаче', {
             'fields': (
-                'author', 'title', 'description', 'image',
+                'author', 'title', 'description',
                 'priority', 'status', 'previous_status', 'assigned_to',
                 'created', 'deadline', 'deadline_reminder', 'is_notified',
             ),
@@ -77,6 +76,8 @@ class TaskAdmin(admin.ModelAdmin):
             # 'classes': ('errornote'),
         }),
     )
+
+    inlines = (TaskImageInline, )
 
     # readonly_fields = ('get_image',)
     readonly_fields = ('created',)
@@ -126,7 +127,7 @@ class TaskAdmin(admin.ModelAdmin):
             return (
                 ('Информация о задаче', {
                     'fields': (
-                        'author', 'title', 'description', 'image',
+                        'author', 'title', 'description',
                         'priority', 'status', 'assigned_to',
                         'created', 'deadline', 'deadline_reminder',
                         'is_notified',
@@ -221,6 +222,8 @@ class CommentAdmin(admin.ModelAdmin):
     list_display = ('id', 'get_task', 'author', 'get_text', 'created')
     ordering = ('created',)
     search_fields = ('task__author__username', 'task__author__email', 'text')
+
+    inlines = (CommentImageInline,)
 
     def get_text(self, obj):
         """Обрезаем длинные комментарии."""

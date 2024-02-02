@@ -14,8 +14,9 @@ from django.utils import timezone
 from django.views.decorators.http import require_POST
 
 from task_tracker.settings import TASKS_IN_PAGE, DAYS_IN_CALENDAR_PAGE
-from tracker.forms import TaskCreateForm, CommentForm
-from tracker.models import Task, Comment
+from tracker.forms import TaskCreateForm, CommentForm, TaskImageForm, \
+    CommentImageForm
+from tracker.models import Task, Comment, TaskImage, CommentImage
 from tracker.serializers import TaskSerializer
 from tracker.utils import (send_email_message, notify_mentioned_users,
                            templates, search_mentioned_users)
@@ -390,10 +391,24 @@ def task_detail(request, pk):
     """Отображение деталей задачи."""
 
     task = get_object_or_404(Task, pk=pk)
-    comments = Comment.objects.filter(task=task)
-    form = CommentForm(request.POST)
+    # comments = Comment.objects.filter(task=task)
+    comments = task.comments.all()
+    comment_form = CommentForm(request.POST or None)
     comment_texts = [comment.text for comment in comments]
     comments_with_expired_editing_time = []
+    images_in_task = task.images.all()
+
+    images_in_comments = [comment.images.all() for comment in comments if
+                          comment.images.exists()]
+
+    # for comment_image in images_in_comments:
+    #     print(comment_image)
+    #     print(type(comment_image))
+    #     for image in comment_image:
+    #         print(type(image))
+    #         print(image.image)
+
+    highlighted_comment_id = int(request.GET.get('highlighted_comment_id', 0))
 
     for comment in comments:
         if timezone.now() > (comment.created + timedelta(minutes=30)):
@@ -412,8 +427,11 @@ def task_detail(request, pk):
         'comments': comments,
         'comments_with_expired_editing_time':
             comments_with_expired_editing_time,
-        'form': form,
-        'usernames_profiles_links': usernames_profiles_links
+        'comment_form': comment_form,
+        'usernames_profiles_links': usernames_profiles_links,
+        'images_in_task': images_in_task,
+        'images_in_comments': images_in_comments,
+        'highlighted_comment_id': highlighted_comment_id
     }
 
     return render(request, 'tasks/task_detail.html', context)
@@ -425,17 +443,22 @@ def create_task(request):
 
     username = request.user
     all_users = User.objects.all()
-    form = TaskCreateForm(request.POST or None, request.FILES or None)
+    # form = TaskCreateForm(request.POST or None)
+    task_form = TaskCreateForm(request.POST or None)
+    # form2 = TaskImage(request.POST or None, request.FILES or None)
+    image_form = TaskImageForm(request.POST or None, request.FILES or None)
     deadline_reminder_str = request.POST.get('deadline_reminder')
+    images = request.FILES.getlist('image')
 
     context = {
-        'form': form,
+        'task_form': task_form,
+        'image_form': image_form,
         'current_user': username,
         'all_users': all_users,
     }
 
-    if form.is_valid():
-        task = form.save(commit=False)
+    if task_form.is_valid():
+        task = task_form.save(commit=False)
         task.author = username
 
         # Если поле даты/времени напоминания о дедлайне не было заполнено,
@@ -456,7 +479,10 @@ def create_task(request):
             )
             task.deadline_reminder = deadline_reminder_dt
 
-        result = save_task_and_handle_form_errors(form, all_users)
+        result = save_task_and_handle_form_errors(task_form, all_users)
+
+        for image in images:
+            TaskImage.objects.create(task=task, image=image)
 
         if result:
             context.update(result)
@@ -479,11 +505,8 @@ def edit_task(request, pk):
     username = request.user
     all_users = User.objects.all()
     task = get_object_or_404(Task, pk=pk)
+    images = request.FILES.getlist('image')
     original_task = deepcopy(task)
-
-    if 'delete_image' in request.POST:
-        task.image.delete()
-        task.image = None
 
     if not check_rights_to_task(username, task):
         return redirect('tracker:index')
@@ -491,6 +514,13 @@ def edit_task(request, pk):
     form = TaskCreateForm(
         request.POST or None, request.FILES or None, instance=task
     )
+
+    if 'delete_image' in request.POST:
+        task.images.all().delete()
+
+    if images:
+        for image in images:
+            TaskImage.objects.create(task=task, image=image)
 
     context = {
         'task': task,
@@ -622,33 +652,46 @@ def change_task_status(request, pk):
 def create_comment(request, task_pk):
     """Создание комментария."""
 
-    form = CommentForm(request.POST or None)
+    comment_form = CommentForm(request.POST or None)
+    image_form = CommentImageForm(request.POST or None, request.FILES or None)
     task = get_object_or_404(Task, pk=task_pk)
 
     context = {
-        'form': form,
+        'comment_form': comment_form,
+        'image_form': image_form,
         'task': task
     }
 
-    if form.is_valid():
-        comment = form.save(commit=False)
+    if comment_form.is_valid():
+        comment = comment_form.save(commit=False)
         comment.task = task
         comment.author = request.user
         # Экранируем символы с помощью quote_plus, т.к. в комментах может
         # быть код.
         comment_text = quote_plus(comment.text)
-        form.save()
+        # comment_form.save()
+        comment.save()
 
+        highlighted_comment_id = comment.pk
         list_of_mentioned_users = search_mentioned_users(comment_text)
 
         if len(list_of_mentioned_users) > 0:
             notify_mentioned_users(request, comment_text,
-                                   list_of_mentioned_users, comment.task)
+                                   highlighted_comment_id,
+                                   list_of_mentioned_users,
+                                   comment.task)
 
         parent_id = request.POST.get('parent')
+        images = request.FILES.getlist('image')
+
+        if images:
+            for image in images:
+                CommentImage.objects.create(comment=comment, image=image)
+
         if parent_id:
             parent = get_object_or_404(Comment, pk=parent_id)
             comment.parent = parent
+
             comment.save()
 
         return redirect('tracker:detail', pk=task.pk)

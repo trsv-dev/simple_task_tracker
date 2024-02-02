@@ -154,13 +154,6 @@ class Task(models.Model):
         verbose_name='Время выполнения',
         help_text='Время, когда задача была отмечена выполненной'
     )
-    image = models.ImageField(
-        null=True,
-        blank=True,
-        upload_to='tasks/',
-        verbose_name='Изображение',
-        help_text='Добавьте изображение'
-    )
     tags = models.ManyToManyField(
         Tags,
         blank=True,
@@ -206,6 +199,38 @@ class Task(models.Model):
         return self.title
 
 
+class BaseImage(models.Model):
+    """Базовая абстрактная модель изображений."""
+
+    image = models.ImageField(
+        null=True,
+        blank=True,
+        upload_to='images',
+        verbose_name='Изображение',
+        help_text='Добавьте изображение'
+    )
+
+    class Meta:
+        abstract = True
+
+
+class TaskImage(BaseImage):
+    """Модель изображений к задачам."""
+
+    task = models.ForeignKey(
+        'Task',
+        related_name='images',
+        on_delete=models.CASCADE
+    )
+
+    class Meta:
+        verbose_name = 'Изображение'
+        verbose_name_plural = 'Изображения'
+
+    def __str__(self):
+        return f'Изображение для задачи "{self.task.title}"'
+
+
 class TaskTag(models.Model):
     """
     Модель 'многие ко многим' для сопоставления
@@ -232,12 +257,30 @@ class TaskTag(models.Model):
         return f'задача - {self.task} и тег - {self.tag}'
 
 
+class CommentImage(BaseImage):
+    """Модель изображений к комментариям."""
+
+    comment = models.ForeignKey(
+        'Comment',
+        related_name='images',
+        on_delete=models.CASCADE
+    )
+
+    class Meta:
+        verbose_name = 'Изображение'
+        verbose_name_plural = 'Изображения'
+
+    def __str__(self):
+        return f'Изображение для комментария "{self.comment.text[:30]}"'
+
+
 class Comment(MPTTModel):
     """Класс древовидных комментариев к задаче."""
 
     task = models.ForeignKey(
         Task,
         on_delete=models.CASCADE,
+        related_name='comments',
         verbose_name='Задача',
         help_text='Комментарий к задаче'
     )

@@ -141,7 +141,7 @@ def search_mentioned_users(comment_text):
     return list(all_usernames_list & mentioned_usernames_set)
 
 
-def notify_mentioned_users(request, comment_text,
+def notify_mentioned_users(request, comment_text, highlighted_comment_id,
                            list_of_mentioned_users, comment_task):
     """
     Если в комментарии пользователя указали через @username
@@ -174,6 +174,7 @@ def notify_mentioned_users(request, comment_text,
 
         context = {
             'username': username,
+            'highlighted_comment_id': highlighted_comment_id,
             'comment_text': comment_text,
             'comment_task': comment_task,
             'comment_author': comment_author,

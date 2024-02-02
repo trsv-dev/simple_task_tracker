@@ -50,6 +50,7 @@ class TaskSerializer:
 
     def serialize_user(self, user):
         """Сериализация данных о пользователе."""
+
         return {'id': user.id, 'username': user.username, 'email': user.email}
 
     def get_link(self, instance):

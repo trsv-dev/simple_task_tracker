@@ -59,7 +59,8 @@
 
         <br>
 
-        {% if request.resolver_match.url_name not in excluded_urls %}
+{#        {% if request.resolver_match.url_name not in excluded_urls and tasks %}#}
+        {% if request.resolver_match.url_name not in excluded_urls and user.is_authenticated %}
             <form action="{% url 'tracker:task_search' %}" method="get" class="form-inline">
                 {% csrf_token %}
                 <input id="searchInput" name="query" type="text" class="form-control" placeholder="Поиск по задачам..." value="{{ search_query }}">

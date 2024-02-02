@@ -21,9 +21,9 @@
                 {% include 'includes/task_flat_card.html' %}
             {% endfor %}
         {% elif no_results_message %}
-            <br>{{ no_results_message }}
+            <br><p class="text-center">{{ no_results_message }}</p>
         {% else %}
-            <br><p>Ничего не найдено</p>
+            <br><p class="text-center">Ничего не найдено</p>
         {% endif %}
     </section>
 
