@@ -9,8 +9,7 @@ from django_celery_beat.models import (IntervalSchedule, CrontabSchedule,
 from tracker.models import Task, Tags, TaskTag, Comment, DONE, PENDING, \
     IN_PROGRESS, TaskImage, CommentImage
 from tracker.validators import validate_done_status, validate_done_time, \
-    validate_required_fields
-
+    validate_required_fields, validate_deadline_reminder
 
 admin.site.site_header = "Трекер задач"
 admin.site.site_title = "Панель администрирования"
@@ -151,6 +150,7 @@ class TaskAdmin(admin.ModelAdmin):
 
             validate_done_status(obj, self.need_to_clear_done_fields)
             validate_done_time(obj)
+            validate_deadline_reminder(obj)
             validate_required_fields(required_fields)
 
             # Если редактируем объект, а не создаем новый
@@ -205,6 +205,12 @@ class TaskAdmin(admin.ModelAdmin):
         """
         Переопределяем метод для обработки ответа после создания задачи.
         """
+
+        try:
+            obj.save()
+        except ValidationError:
+            return HttpResponseRedirect(request.path_info)
+
         if "_addanother" in request.POST or post_url_continue:
             return super().response_add(request, obj, post_url_continue)
 

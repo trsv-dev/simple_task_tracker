@@ -185,6 +185,10 @@ class Task(models.Model):
                 raise ValidationError(
                     'Напоминание о дедлайне не может быть в прошлом!'
                 )
+            elif self.deadline < timezone.now():
+                raise ValidationError(
+                    'Дедлайн не может быть в прошлом! (тестовое сообщение)'
+                )
         super().save(*args, **kwargs)
 
     def add_only_unique_tags(self, tags_list):

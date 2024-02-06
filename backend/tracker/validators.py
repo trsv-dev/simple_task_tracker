@@ -63,3 +63,19 @@ def validate_required_fields(required_fields):
                               'даты/времени)! Пользователь и дата, '
                               'выбранные без галочки на отметке '
                               '"Выполнено" будут сброшены')
+
+
+def validate_deadline_reminder(obj):
+    """
+    Валидатор админки.
+    Проверяем что напоминание о дедлайне соответствует требованиям.
+    """
+
+    if obj.deadline_reminder < timezone.now():
+        raise ValidationError(
+            'Напоминание о дедлайне не может быть в прошлом!'
+        )
+    elif obj.deadline_reminder > obj.deadline:
+        raise ValidationError(
+            'Напоминание о дедлайне не может быть позже дедлайна!'
+        )

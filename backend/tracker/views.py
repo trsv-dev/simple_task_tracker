@@ -140,26 +140,26 @@ def is_deadline_deadline_reminder_user_changed(request, original_task,
         )
 
 
-def save_task_and_handle_form_errors(form, all_users, task=None):
+def save_task_and_handle_form_errors(task_form, all_users, task=None):
     """
     Попытка сохранить задачу и вывод ошибок для дальнейшего
     отображения в форме при неудачном сохранении.
     """
 
     try:
-        form.save()
+        task_form.save()
         return None
     except ValidationError as e:
-        form.add_error(None, e)
+        task_form.add_error(None, e)
         if task:
             context = {
-                'form': form,
+                'task_form': task_form,
                 'all_users': all_users
             }
         else:
             context = {
                 'task': task,
-                'form': form,
+                'task_form': task_form,
                 'all_users': all_users
             }
         return context
@@ -481,12 +481,12 @@ def create_task(request):
 
         result = save_task_and_handle_form_errors(task_form, all_users)
 
-        for image in images:
-            TaskImage.objects.create(task=task, image=image)
-
         if result:
             context.update(result)
             return render(request, 'tasks/create.html', context)
+
+        for image in images:
+            TaskImage.objects.create(task=task, image=image)
 
         assigned_to_email = task.assigned_to.email
 
@@ -666,6 +666,8 @@ def create_comment(request, task_pk):
         comment = comment_form.save(commit=False)
         comment.task = task
         comment.author = request.user
+        images = request.FILES.getlist('image')
+
         # Экранируем символы с помощью quote_plus, т.к. в комментах может
         # быть код.
         comment_text = quote_plus(comment.text)
@@ -682,7 +684,6 @@ def create_comment(request, task_pk):
                                    comment.task)
 
         parent_id = request.POST.get('parent')
-        images = request.FILES.getlist('image')
 
         if images:
             for image in images:
