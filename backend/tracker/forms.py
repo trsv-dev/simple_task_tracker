@@ -3,16 +3,16 @@ from django import forms
 from tracker.models import Task, Comment, TaskImage, CommentImage
 
 
-class TaskImageForm(forms.ModelForm):
-    """Форма прикрепления изображения к задаче."""
-
-    class Meta:
-        model = TaskImage
-        fields = ('image',)
-
-        labels = {
-            'image': 'Изображение'
-        }
+# class TaskImageForm(forms.ModelForm):
+#     """Форма прикрепления изображения к задаче."""
+#
+#     class Meta:
+#         model = TaskImage
+#         fields = ('image',)
+#
+#         labels = {
+#             'image': 'Изображение'
+#         }
 
 
 class TaskCreateForm(forms.ModelForm):

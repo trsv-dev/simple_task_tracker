@@ -14,8 +14,7 @@ from django.utils import timezone
 from django.views.decorators.http import require_POST
 
 from task_tracker.settings import TASKS_IN_PAGE, DAYS_IN_CALENDAR_PAGE
-from tracker.forms import TaskCreateForm, CommentForm, TaskImageForm, \
-    CommentImageForm
+from tracker.forms import TaskCreateForm, CommentForm, CommentImageForm
 from tracker.models import Task, Comment, TaskImage, CommentImage
 from tracker.serializers import TaskSerializer
 from tracker.utils import (send_email_message, notify_mentioned_users,
@@ -81,10 +80,12 @@ def check_deadline_or_deadline_reminder(new_deadline, new_deadline_reminder):
     )
 
 
-def is_title_description_priority_status_changed(original_task, form):
+def is_title_description_priority_status_changed(request, original_task, form):
     """
     Проверяем что изменения есть только в заголовке, описании,
-    приоритете и статусе.
+    приоритете и статусе. Если заголовок, приоритет, статус, описание, картинки
+    отличаются от начальных, а уведомление уже приходило или дата уведомления
+    валидна и пользователь не менялся - возвращаем True.
     """
 
     form_data = form.cleaned_data
@@ -92,8 +93,13 @@ def is_title_description_priority_status_changed(original_task, form):
     return (((form_data.get('status') != original_task.status or
               form_data.get('priority') != original_task.priority) or
              (form_data.get('title') != original_task.title or
-              form_data.get('description') != original_task.description)) and
-            form_data.get(
+              form_data.get('description') != original_task.description) or
+             request.FILES.getlist('image')) and
+            (original_task.is_notified or
+            form_data.get('deadline') >
+             form_data.get('deadline_reminder') >
+             timezone.now())
+            and form_data.get(
                 'assigned_to').username == original_task.assigned_to.username)
 
 
@@ -140,7 +146,7 @@ def is_deadline_deadline_reminder_user_changed(request, original_task,
         )
 
 
-def save_task_and_handle_form_errors(task_form, all_users, task=None):
+def save_task_and_handle_form_errors(request, task_form, all_users, task=None):
     """
     Попытка сохранить задачу и вывод ошибок для дальнейшего
     отображения в форме при неудачном сохранении.
@@ -148,6 +154,8 @@ def save_task_and_handle_form_errors(task_form, all_users, task=None):
 
     try:
         task_form.save()
+        handle_images(request, task)
+
         return None
     except ValidationError as e:
         task_form.add_error(None, e)
@@ -437,28 +445,36 @@ def task_detail(request, pk):
     return render(request, 'tasks/task_detail.html', context)
 
 
+def handle_images(request, task):
+    """Обработка изображений. Операции с изображениями."""
+
+    images = request.FILES.getlist('image')
+
+    if 'delete_image' in request.POST:
+        task.images.all().delete()
+
+    if images:
+        for image in images:
+            TaskImage.objects.create(task=task, image=image)
+
+
 @login_required
 def create_task(request):
     """Создание задачи."""
 
     username = request.user
     all_users = User.objects.all()
-    # form = TaskCreateForm(request.POST or None)
-    task_form = TaskCreateForm(request.POST or None)
-    # form2 = TaskImage(request.POST or None, request.FILES or None)
-    image_form = TaskImageForm(request.POST or None, request.FILES or None)
+    form = TaskCreateForm(request.POST or None, request.FILES or None)
     deadline_reminder_str = request.POST.get('deadline_reminder')
-    images = request.FILES.getlist('image')
 
     context = {
-        'task_form': task_form,
-        'image_form': image_form,
+        'form': form,
         'current_user': username,
         'all_users': all_users,
     }
 
-    if task_form.is_valid():
-        task = task_form.save(commit=False)
+    if form.is_valid():
+        task = form.save(commit=False)
         task.author = username
 
         # Если поле даты/времени напоминания о дедлайне не было заполнено,
@@ -479,14 +495,15 @@ def create_task(request):
             )
             task.deadline_reminder = deadline_reminder_dt
 
-        result = save_task_and_handle_form_errors(task_form, all_users)
+        # Т.к. task уже есть (task = form.save(commit=False)) то передаем
+        # форму, чтобы попытаться ее сохранить и task, с которым мы свяжем
+        # изображения в случае успешного сохранения form.
+        result = save_task_and_handle_form_errors(request, form,
+                                                  all_users, task)
 
         if result:
             context.update(result)
             return render(request, 'tasks/create.html', context)
-
-        for image in images:
-            TaskImage.objects.create(task=task, image=image)
 
         assigned_to_email = task.assigned_to.email
 
@@ -505,7 +522,6 @@ def edit_task(request, pk):
     username = request.user
     all_users = User.objects.all()
     task = get_object_or_404(Task, pk=pk)
-    images = request.FILES.getlist('image')
     original_task = deepcopy(task)
 
     if not check_rights_to_task(username, task):
@@ -514,13 +530,6 @@ def edit_task(request, pk):
     form = TaskCreateForm(
         request.POST or None, request.FILES or None, instance=task
     )
-
-    if 'delete_image' in request.POST:
-        task.images.all().delete()
-
-    if images:
-        for image in images:
-            TaskImage.objects.create(task=task, image=image)
 
     context = {
         'task': task,
@@ -534,8 +543,11 @@ def edit_task(request, pk):
         new_deadline = form.cleaned_data.get('deadline')
         new_deadline_reminder = form.cleaned_data.get('deadline_reminder')
 
-        if is_title_description_priority_status_changed(original_task, form):
+        if is_title_description_priority_status_changed(request,
+                                                        original_task, form):
+
             task.save(skip_deadline_reminder_check=True)
+            handle_images(request, task)
             return redirect('tracker:detail', pk=task.id)
 
         else:
@@ -544,7 +556,8 @@ def edit_task(request, pk):
                                                        new_deadline_reminder,
                                                        new_assigned_to)
 
-            result = save_task_and_handle_form_errors(form, all_users, task)
+            result = save_task_and_handle_form_errors(request, form,
+                                                      all_users, task)
 
             if result:
                 context.update(result)

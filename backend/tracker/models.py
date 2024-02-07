@@ -177,17 +177,24 @@ class Task(models.Model):
         if not skip_deadline_reminder_check:
             if not temp_deadline_reminder:
                 self.deadline_reminder = self.deadline - timedelta(hours=24)
-            elif self.deadline_reminder > self.deadline:
+            if self.deadline_reminder > self.deadline:
                 raise ValidationError(
                     'Напоминание о дедлайне не может быть позже дедлайна!'
                 )
-            elif self.deadline_reminder < timezone.now():
+            if (self.deadline_reminder < timezone.now()
+                    and not self.is_notified):
+                raise ValidationError(
+                    'Это задача, по которой еще не приходило напоминание '
+                    'пользователю. Если сделать дату напоминания в прошлом, '
+                    'то уведомление не придёт!'
+                )
+            if self.deadline_reminder < timezone.now():
                 raise ValidationError(
                     'Напоминание о дедлайне не может быть в прошлом!'
                 )
-            elif self.deadline < timezone.now():
+            if self.deadline < timezone.now():
                 raise ValidationError(
-                    'Дедлайн не может быть в прошлом! (тестовое сообщение)'
+                    'Дедлайн не может быть в прошлом!'
                 )
         super().save(*args, **kwargs)
 

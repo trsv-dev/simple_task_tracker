@@ -40,7 +40,7 @@
             <textarea class="form-control" id="id_description" name="description" rows="6" placeholder="Опишите задачу. Можно использовать упрощенный markdown-синтаксис" required>{% if task %}{{ task.description }}{% elif form.description.value %}{{ form.description.value }}{% endif %}</textarea>
         </div>
 
-        {% if task and task.images.all %}
+        {% if task and task.images %}
 
             <label for="id_image">Изображение:</label>
 
@@ -127,7 +127,7 @@
             {% else %}
                 <a href="{% url 'tracker:index' %}" class="btn btn-outline-secondary">Отмена</a>
             {% endif %}
-            {#    Кнопка удаления вынеседа в отдельный блок чтобы явно указать метод POST, который требуется в @require_POST #}
+            {#    Кнопка удаления вынесена в отдельный блок чтобы явно указать метод POST, который требуется в @require_POST #}
             {% if task %}
                 <button type="submit" formaction="{% url 'tracker:delete' pk=task.id %}" class="btn btn-outline-danger">Удалить</button>
             {% endif %}
