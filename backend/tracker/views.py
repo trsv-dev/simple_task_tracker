@@ -154,7 +154,7 @@ def save_task_and_handle_form_errors(request, task_form, all_users, task=None):
 
     try:
         task_form.save()
-        handle_images(request, task)
+        handle_images(request, task, Task)
 
         return None
     except ValidationError as e:
@@ -445,17 +445,25 @@ def task_detail(request, pk):
     return render(request, 'tasks/task_detail.html', context)
 
 
-def handle_images(request, task):
+def handle_images(request, object, model):
     """Обработка изображений. Операции с изображениями."""
 
     images = request.FILES.getlist('image')
 
     if 'delete_image' in request.POST:
-        task.images.all().delete()
+        object.images.all().delete()
 
-    if images:
-        for image in images:
-            TaskImage.objects.create(task=task, image=image)
+    if model == Task:
+        # Создаем список "связок" задачи и изображений.
+        task_images = [TaskImage(task=object, image=image) for image in images]
+        # Создаем объекты TaskImage одним запросом.
+        TaskImage.objects.bulk_create(task_images)
+
+    if model == Comment:
+        comment_images = [
+            CommentImage(comment=object, image=image) for image in images
+        ]
+        CommentImage.objects.bulk_create(comment_images)
 
 
 @login_required
@@ -547,7 +555,7 @@ def edit_task(request, pk):
                                                         original_task, form):
 
             task.save(skip_deadline_reminder_check=True)
-            handle_images(request, task)
+            handle_images(request, task, Task)
             return redirect('tracker:detail', pk=task.id)
 
         else:
@@ -679,13 +687,13 @@ def create_comment(request, task_pk):
         comment = comment_form.save(commit=False)
         comment.task = task
         comment.author = request.user
-        images = request.FILES.getlist('image')
 
         # Экранируем символы с помощью quote_plus, т.к. в комментах может
         # быть код.
         comment_text = quote_plus(comment.text)
         # comment_form.save()
         comment.save()
+        handle_images(request, comment, Comment)
 
         highlighted_comment_id = comment.pk
         list_of_mentioned_users = search_mentioned_users(comment_text)
@@ -697,10 +705,6 @@ def create_comment(request, task_pk):
                                    comment.task)
 
         parent_id = request.POST.get('parent')
-
-        if images:
-            for image in images:
-                CommentImage.objects.create(comment=comment, image=image)
 
         if parent_id:
             parent = get_object_or_404(Comment, pk=parent_id)
@@ -726,6 +730,7 @@ def edit_comment(request, pk):
 
     if form.is_valid():
         form.save()
+        handle_images(request, comment, Comment)
 
     return redirect('tracker:detail', pk=task.pk)
 

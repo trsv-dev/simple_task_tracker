@@ -98,7 +98,7 @@
             {% if user.is_authenticated %}
               {% if user == node.author and node not in comments_with_expired_editing_time %}
                 <div class="card-body" style="display: none;" id="editForm{{ node.pk }}">
-                  <form method="post" action="{% url 'tracker:edit_comment' pk=node.pk %}">
+                  <form method="post" action="{% url 'tracker:edit_comment' pk=node.pk %}" enctype="multipart/form-data">
                     {% csrf_token %}
                     <div class="form-group">
                       <textarea class="form-control" id="id_text" name="text" rows="3" required>{{ node.text }}</textarea>
@@ -106,13 +106,24 @@
                     <div class="btn-group-toggle mt-2">
                       <button type="submit" class="btn btn-outline-primary btn-sm">Отправить</button>
                       <a href="{% url 'tracker:detail' pk=node.task.pk %}" class="btn btn-outline-secondary btn-sm">Отмена</a>
+                      <input type="file" multiple class="form-control-file" id="id_image" name="image" accept="image/*">
+
+                      {% if node.images.all %}
+
+                        <div class="form-group">
+                            <input type="checkbox" id="delete_image" name="delete_image">
+                            <label for="delete_image">Удалить существующие изображения</label>
+                        </div>
+
+                      {% endif %}
+
                     </div>
                   </form>
                 </div>
               {% endif %}
 
               <div class="card-body" style="display: none;" id="replyForm{{ node.pk }}">
-                <form method="post" action="{% url 'tracker:create_comment' task_pk=node.task.pk %}">
+                <form method="post" action="{% url 'tracker:create_comment' task_pk=node.task.pk %}" enctype="multipart/form-data">
                   {% csrf_token %}
                   <input type="hidden" name="parent" value="{{ node.pk }}">
                   <div class="form-group">
@@ -121,6 +132,7 @@
                   <div class="btn-group-toggle mt-2">
                     <button type="submit" class="btn btn-outline-success btn-sm">Отправить ответ</button>
                     <a href="{% url 'tracker:detail' pk=node.task.pk %}" class="btn btn-outline-secondary btn-sm">Отмена</a>
+                    <input type="file" multiple class="form-control-file" id="id_image" name="image" accept="image/*">
                   </div>
                 </form>
               </div>
