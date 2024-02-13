@@ -1,13 +1,12 @@
-from django.http import HttpResponseRedirect, HttpResponseBadRequest
-
 from django.contrib import admin, messages
 from django.core.exceptions import ValidationError
+from django.http import HttpResponseRedirect, HttpResponseBadRequest
 from django_celery_beat.models import (IntervalSchedule, CrontabSchedule,
                                        SolarSchedule, ClockedSchedule,
                                        PeriodicTask)
 
-from tracker.models import Task, Tags, TaskTag, Comment, DONE, PENDING, \
-    IN_PROGRESS, TaskImage, CommentImage
+from tracker.models import Task, DONE, PENDING, \
+    IN_PROGRESS, TaskImage
 from tracker.validators import validate_done_status, validate_done_time, \
     validate_required_fields, validate_deadline_reminder
 
@@ -25,11 +24,6 @@ admin.site.unregister(CrontabSchedule)
 
 class TaskImageInline(admin.TabularInline):
     model = TaskImage
-    extra = 1
-
-
-class CommentImageInline(admin.TabularInline):
-    model = CommentImage
     extra = 1
 
 
@@ -222,28 +216,6 @@ class TaskAdmin(admin.ModelAdmin):
         # В противном случае, перенаправляем на страницу списка объектов.
         return super().response_add(request, obj, post_url_continue)
 
-
-@admin.register(Comment)
-class CommentAdmin(admin.ModelAdmin):
-    list_display = ('id', 'get_task', 'author', 'get_text', 'created')
-    ordering = ('created',)
-    search_fields = ('task__author__username', 'task__author__email', 'text')
-
-    inlines = (CommentImageInline,)
-
-    def get_text(self, obj):
-        """Обрезаем длинные комментарии."""
-
-        return obj.text[:50] + ('...' if len(obj.text) > 50 else '')
-
-    def get_task(self, obj):
-        """Обрезаем длинные заголовки задачи."""
-
-        return (obj.task.title[:50] +
-                ('...' if len(obj.task.title) > 50 else ''))
-
-    get_text.short_description = 'текст'
-    get_task.short_description = 'задача'
 
 # @admin.register(TaskTag)
 # class TaskTagsAdmin(admin.ModelAdmin):

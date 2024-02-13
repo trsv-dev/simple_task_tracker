@@ -1,6 +1,6 @@
 from django import forms
 
-from tracker.models import Task, Comment, TaskImage, CommentImage
+from tracker.models import Task
 
 
 # class TaskImageForm(forms.ModelForm):
@@ -32,28 +32,4 @@ class TaskCreateForm(forms.ModelForm):
             'deadline': 'Дедлайн',
             'deadline_reminder': 'Когда напомнить о дедлайне',
             'assigned_to': 'Ответственный',
-        }
-
-
-class CommentForm(forms.ModelForm):
-    """Форма создания комментария."""
-
-    class Meta:
-        model = Comment
-        fields = ('text',)
-
-    labels = {
-        'text': 'Текст'
-    }
-
-
-class CommentImageForm(forms.ModelForm):
-    """Форма прикрепления изображения к комментарию."""
-
-    class Meta:
-        model = CommentImage
-        fields = ('image',)
-
-        labels = {
-            'image': 'Изображение'
         }

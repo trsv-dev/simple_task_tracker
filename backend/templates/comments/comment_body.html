@@ -5,7 +5,7 @@
     </div>
     <div class="card-body">
 {#      <form method="post" action="{% url 'tracker:create_comment' task_pk=task.pk %}">#}
-      <form method="post" enctype="multipart/form-data" action="{% url 'tracker:create_comment' task_pk=task.pk %}">
+      <form method="post" enctype="multipart/form-data" action="{% url 'comments:create_comment' task_pk=task.pk %}">
         {% csrf_token %}
         <div class="form-group">
           <textarea class="form-control" id="id_text" name="text" rows="3" placeholder="Разрешен упрощенный markdown-синтаксис и упоминания через @username" required>{{ form.text.value|default:'' }}</textarea>

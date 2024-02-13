@@ -1,7 +1,7 @@
 from copy import deepcopy
 from datetime import datetime, timedelta
-from urllib.parse import quote_plus
 
+from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
@@ -13,12 +13,13 @@ from django.urls import reverse
 from django.utils import timezone
 from django.views.decorators.http import require_POST
 
-from task_tracker.settings import TASKS_IN_PAGE, DAYS_IN_CALENDAR_PAGE
-from tracker.forms import TaskCreateForm, CommentForm, CommentImageForm
-from tracker.models import Task, Comment, TaskImage, CommentImage
-from tracker.serializers import TaskSerializer
-from tracker.utils import (send_email_message, notify_mentioned_users,
-                           templates, search_mentioned_users)
+from comments.forms import CommentForm
+from comments.models import Comment
+from images.views import handle_images
+from tracker.forms import TaskCreateForm
+from tracker.models import Task
+from tracker.utils import (templates, search_mentioned_users,
+                           universal_mail_sender)
 
 
 def check_rights_to_task(username, task):
@@ -179,7 +180,8 @@ def index(request):
     # if not request.user.is_authenticated:
     #     return redirect('users:login')
 
-    tasks = Task.objects.all()
+    # tasks = Task.objects.all()
+    tasks = Task.objects.select_related('author')
     current_data = timezone.now()
 
     # Отображаем завершенные за сутки задания.
@@ -214,11 +216,15 @@ def current_tasks(request, user):
     """Отображение текущих задач пользователя."""
 
     profile_user = get_object_or_404(User, username=user)
+    # tasks = Task.objects.filter(
+    #     assigned_to=profile_user, done_by=None
+    # ).order_by('deadline')
+
     tasks = Task.objects.filter(
         assigned_to=profile_user, done_by=None
-    ).order_by('deadline')
+    ).order_by('deadline').select_related('author')
 
-    paginator = Paginator(tasks, TASKS_IN_PAGE)
+    paginator = Paginator(tasks, settings.TASKS_IN_PAGE)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
 
@@ -242,11 +248,11 @@ def user_archive(request, user):
 
     archived_tasks = Task.objects.filter(
         assigned_to=profile_user, done_by=profile_user
-    ).order_by('-done_by_time__date')
+    ).order_by('-done_by_time__date').select_related('author')
 
     dates = archived_tasks.values('done_by_time__date').distinct()
 
-    items_in_page = DAYS_IN_CALENDAR_PAGE
+    items_in_page = settings.DAYS_IN_CALENDAR_PAGE
     page_number = int(request.GET.get('page', 1))
 
     current_dates = get_current_dates(dates, page_number, items_in_page)
@@ -276,7 +282,7 @@ def delegated_tasks(request, user):
     if not request.user.is_authenticated:
         return redirect('users:login')
 
-    tasks = Task.objects.all()
+    tasks = Task.objects.select_related('author').all()
     username = get_object_or_404(User, username=user)
     delegated_tasks = tasks.filter(author=username)
     undone_delegated_tasks = tasks.filter(author=username, is_done=False)
@@ -285,7 +291,7 @@ def delegated_tasks(request, user):
         '-created__date'
     ).distinct()
 
-    items_per_page = DAYS_IN_CALENDAR_PAGE
+    items_per_page = settings.DAYS_IN_CALENDAR_PAGE
 
     page_number = int(request.GET.get('page', 1))
 
@@ -322,14 +328,14 @@ def get_undone_delegated_tasks(request, user):
 
     undone_delegated_tasks = Task.objects.filter(
         author=username, is_done=False
-    )
+    ).select_related('author')
 
     order_by = request.GET.get('order_by', 'created')
 
     undone_delegated_tasks = undone_delegated_tasks.order_by(order_by)
 
     page_number = request.GET.get('page')
-    paginator = Paginator(undone_delegated_tasks, TASKS_IN_PAGE)
+    paginator = Paginator(undone_delegated_tasks, settings.TASKS_IN_PAGE)
     page_obj = paginator.get_page(page_number)
 
     context = {
@@ -358,7 +364,7 @@ def full_archive_by_dates(request):
         '-done_by_time__date'
     ).distinct()
 
-    items_per_page = DAYS_IN_CALENDAR_PAGE
+    items_per_page = settings.DAYS_IN_CALENDAR_PAGE
 
     # Получаем номер текущей страницы из запроса пользователя.
     # При переходе с главной страницы request.GET.get('page')
@@ -395,26 +401,24 @@ def get_profile(username):
     return reverse('tracker:profile', kwargs={'user': username})
 
 
+def get_all_usernames_list():
+    return [user.username for user in User.objects.all()]
+
+
 def task_detail(request, pk):
     """Отображение деталей задачи."""
 
     task = get_object_or_404(Task, pk=pk)
     # comments = Comment.objects.filter(task=task)
-    comments = task.comments.all()
+    # comments = task.comments.all()
+    comments = task.comments.select_related('author').prefetch_related('images')
+
     comment_form = CommentForm(request.POST or None)
     comment_texts = [comment.text for comment in comments]
     comments_with_expired_editing_time = []
     images_in_task = task.images.all()
 
-    images_in_comments = [comment.images.all() for comment in comments if
-                          comment.images.exists()]
-
-    # for comment_image in images_in_comments:
-    #     print(comment_image)
-    #     print(type(comment_image))
-    #     for image in comment_image:
-    #         print(type(image))
-    #         print(image.image)
+    images_in_comments = [comment.images.all() for comment in comments]
 
     highlighted_comment_id = int(request.GET.get('highlighted_comment_id', 0))
 
@@ -422,9 +426,11 @@ def task_detail(request, pk):
         if timezone.now() > (comment.created + timedelta(minutes=30)):
             comments_with_expired_editing_time.append(comment)
 
+    all_usernames_list = get_all_usernames_list()
     # Из списка списков делаем плоский список пользователей.
-    list_of_mentioned_users = sum([search_mentioned_users(comment_text) for
-                                   comment_text in comment_texts], [])
+    list_of_mentioned_users = sum([search_mentioned_users(
+        comment_text, all_usernames_list
+    ) for comment_text in comment_texts], [])
     # Создаем словарь: ключ - имя пользователя, значение - ссылка на профиль.
     usernames_profiles_links = {
         username: get_profile(username) for username in list_of_mentioned_users
@@ -443,27 +449,6 @@ def task_detail(request, pk):
     }
 
     return render(request, 'tasks/task_detail.html', context)
-
-
-def handle_images(request, object, model):
-    """Обработка изображений. Операции с изображениями."""
-
-    images = request.FILES.getlist('image')
-
-    if 'delete_image' in request.POST:
-        object.images.all().delete()
-
-    if model == Task:
-        # Создаем список "связок" задачи и изображений.
-        task_images = [TaskImage(task=object, image=image) for image in images]
-        # Создаем объекты TaskImage одним запросом.
-        TaskImage.objects.bulk_create(task_images)
-
-    if model == Comment:
-        comment_images = [
-            CommentImage(comment=object, image=image) for image in images
-        ]
-        CommentImage.objects.bulk_create(comment_images)
 
 
 @login_required
@@ -529,6 +514,7 @@ def edit_task(request, pk):
 
     username = request.user
     all_users = User.objects.all()
+    # all_users = User.objects.prefetch_related('tasks').all()
     task = get_object_or_404(Task, pk=pk)
     original_task = deepcopy(task)
 
@@ -669,89 +655,6 @@ def change_task_status(request, pk):
     return redirect('tracker:detail', pk=pk)
 
 
-@login_required
-def create_comment(request, task_pk):
-    """Создание комментария."""
-
-    comment_form = CommentForm(request.POST or None)
-    image_form = CommentImageForm(request.POST or None, request.FILES or None)
-    task = get_object_or_404(Task, pk=task_pk)
-
-    context = {
-        'comment_form': comment_form,
-        'image_form': image_form,
-        'task': task
-    }
-
-    if comment_form.is_valid():
-        comment = comment_form.save(commit=False)
-        comment.task = task
-        comment.author = request.user
-
-        # Экранируем символы с помощью quote_plus, т.к. в комментах может
-        # быть код.
-        comment_text = quote_plus(comment.text)
-        # comment_form.save()
-        comment.save()
-        handle_images(request, comment, Comment)
-
-        highlighted_comment_id = comment.pk
-        list_of_mentioned_users = search_mentioned_users(comment_text)
-
-        if len(list_of_mentioned_users) > 0:
-            notify_mentioned_users(request, comment_text,
-                                   highlighted_comment_id,
-                                   list_of_mentioned_users,
-                                   comment.task)
-
-        parent_id = request.POST.get('parent')
-
-        if parent_id:
-            parent = get_object_or_404(Comment, pk=parent_id)
-            comment.parent = parent
-
-            comment.save()
-
-        return redirect('tracker:detail', pk=task.pk)
-    return render(request, 'tasks/create_comment.html', context)
-
-
-@login_required
-def edit_comment(request, pk):
-    """Редактирование комментария."""
-
-    comment = get_object_or_404(Comment, pk=pk)
-    task = comment.task
-    user = request.user
-    form = CommentForm(request.POST or None, instance=comment)
-
-    if user != comment.author:
-        return redirect('tracker:detail', pk=task.pk)
-
-    if form.is_valid():
-        form.save()
-        handle_images(request, comment, Comment)
-
-    return redirect('tracker:detail', pk=task.pk)
-
-
-@login_required
-@require_POST
-def delete_comment(request, pk):
-    """Удаление комментария."""
-
-    comment = get_object_or_404(Comment, pk=pk)
-    user = request.user
-    task = comment.task
-
-    if user != comment.author:
-        return redirect('tracker:detail', pk=task.pk)
-
-    comment.delete()
-
-    return redirect('tracker:detail', pk=task.pk)
-
-
 def task_search(request):
     """Поиск по задачам."""
 
@@ -768,10 +671,10 @@ def task_search(request):
     search_results = Task.objects.filter(
         Q(title__icontains=search_query) |
         Q(description__icontains=search_query)
-    ).order_by('title')
+    ).order_by('title').select_related('author')
 
     page_number = int(request.GET.get('page', 1))
-    paginator = Paginator(search_results, TASKS_IN_PAGE)
+    paginator = Paginator(search_results, settings.TASKS_IN_PAGE)
     page_obj = paginator.get_page(page_number)
 
     context = {
@@ -781,29 +684,3 @@ def task_search(request):
     }
 
     return render(request, 'tasks/task_search.html', context)
-
-
-def universal_mail_sender(request, task, assigned_to_email,
-                          template, priority=9, queue='slow_queue', **kwargs):
-    username = request.user
-
-    serializer = TaskSerializer(task)
-    serialized_data = serializer.data
-
-    serialized_data['username'] = username.username
-
-    if 'previous_assigned_to_username' in kwargs:
-        serialized_data[
-            'previous_assigned_to_username'
-        ] = kwargs['previous_assigned_to_username']
-
-    send_email_message.apply_async(
-        kwargs={
-            'email': assigned_to_email,
-            'template': template,
-            'context': serialized_data,
-        },
-        priority=priority,
-        queue=queue,
-        countdown=5
-    )

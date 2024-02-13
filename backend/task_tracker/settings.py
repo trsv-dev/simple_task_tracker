@@ -25,9 +25,12 @@ INSTALLED_APPS = [
     'django_celery_beat',
     'mptt',
     'sorl.thumbnail',
+    'debug_toolbar',
 
     'tracker.apps.TrackerConfig',
     'users.apps.UsersConfig',
+    'images.apps.ImagesConfig',
+    'comments.apps.CommentsConfig',
 ]
 
 MIDDLEWARE = [
@@ -38,6 +41,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'debug_toolbar.middleware.DebugToolbarMiddleware',
 ]
 
 ROOT_URLCONF = 'task_tracker.urls'
@@ -165,3 +169,21 @@ CELERY_BEAT_SCHEDULE = {
         'options': {'queue': 'slow_queue'}
     },
 }
+
+
+LOGGING = {
+    'version': 1,
+    'handlers': {
+        'console': {'class': 'logging.StreamHandler'}
+    },
+    'loggers': {
+        'django.db.backends': {
+            'handlers': ['console'],
+            'level': 'DEBUG'
+        }
+    }
+}
+
+INTERNAL_IPS = [
+    '127.0.0.1',
+]

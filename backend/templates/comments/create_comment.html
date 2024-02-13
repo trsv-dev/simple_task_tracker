@@ -59,7 +59,6 @@
             {% else %}
               <strong>{{ node.author }}</strong>, <span class="text-muted">{{ node.created }}</span><br>
             {% endif %}
-
             <div class="form-group">
                 {% for image_object in node.images.all %}
                      {% thumbnail image_object.image "200x150" crop="center" upscale=True as im %}
@@ -83,7 +82,7 @@
                     </button>
                     <div class="dropdown-menu">
                       {% if user == node.author and node not in comments_with_expired_editing_time %}
-                        <form method="post" action="{% url 'tracker:delete_comment' pk=node.id %}" style="display:inline;">
+                        <form method="post" action="{% url 'comments:delete_comment' pk=node.id %}" style="display:inline;">
                           {% csrf_token %}
                           <button type="submit" class="dropdown-item">Удалить</button>
                         </form>
@@ -98,7 +97,7 @@
             {% if user.is_authenticated %}
               {% if user == node.author and node not in comments_with_expired_editing_time %}
                 <div class="card-body" style="display: none;" id="editForm{{ node.pk }}">
-                  <form method="post" action="{% url 'tracker:edit_comment' pk=node.pk %}" enctype="multipart/form-data">
+                  <form method="post" action="{% url 'comments:edit_comment' pk=node.pk %}" enctype="multipart/form-data">
                     {% csrf_token %}
                     <div class="form-group">
                       <textarea class="form-control" id="id_text" name="text" rows="3" required>{{ node.text }}</textarea>
@@ -123,7 +122,7 @@
               {% endif %}
 
               <div class="card-body" style="display: none;" id="replyForm{{ node.pk }}">
-                <form method="post" action="{% url 'tracker:create_comment' task_pk=node.task.pk %}" enctype="multipart/form-data">
+                <form method="post" action="{% url 'comments:create_comment' task_pk=node.task.pk %}" enctype="multipart/form-data">
                   {% csrf_token %}
                   <input type="hidden" name="parent" value="{{ node.pk }}">
                   <div class="form-group">
@@ -162,7 +161,7 @@
 
 {% if user.is_authenticated %}
 
-    {% include 'tasks/comment_body.html' %}
+    {% include 'tasks/../comments/comment_body.html' %}
 
 {% endif %}
 
