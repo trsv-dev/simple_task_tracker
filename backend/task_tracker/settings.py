@@ -170,20 +170,29 @@ CELERY_BEAT_SCHEDULE = {
     },
 }
 
-
-LOGGING = {
-    'version': 1,
-    'handlers': {
-        'console': {'class': 'logging.StreamHandler'}
-    },
-    'loggers': {
-        'django.db.backends': {
-            'handlers': ['console'],
-            'level': 'DEBUG'
-        }
-    }
-}
+# CACHES = {
+#     'default': {
+#         'BACKEND': 'django.core.cache.backends.redis.RedisCache',
+#         'LOCATION': os.getenv('CELERY_BROKER_URL', 'redis://127.0.0.1:6379/0'),
+#         'OPTIONS': {
+#             'db': '1',
+#         },
+#     }
+# }
 
 INTERNAL_IPS = [
     '127.0.0.1',
 ]
+
+# LOGGING = {
+#     'version': 1,
+#     'handlers': {
+#         'console': {'class': 'logging.StreamHandler'}
+#     },
+#     'loggers': {
+#         'django.db.backends': {
+#             'handlers': ['console'],
+#             'level': 'DEBUG'
+#         }
+#     }
+# }

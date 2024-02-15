@@ -9,10 +9,12 @@ from comments.models import Comment
 from images.views import handle_images
 from tracker.models import Task
 from tracker.utils import search_mentioned_users, notify_mentioned_users
-from tracker.views import get_all_usernames_list
+from tracker.views import get_all_usernames_list, \
+    save_task_and_handle_form_errors
 
 
 @login_required
+# @cache_page(20)
 def create_comment(request, task_pk):
     """Создание комментария."""
 
@@ -26,6 +28,8 @@ def create_comment(request, task_pk):
         'task': task
     }
 
+    print(f'Context before update - {context}')
+
     if comment_form.is_valid():
         comment = comment_form.save(commit=False)
         comment.task = task
@@ -35,8 +39,19 @@ def create_comment(request, task_pk):
         # быть код.
         comment_text = quote_plus(comment.text)
         # comment_form.save()
-        comment.save()
-        handle_images(request, comment, Comment)
+        # comment.save()
+        # handle_images(request, comment, Comment)
+
+        result = save_task_and_handle_form_errors(request, form=comment_form,
+                                                  object=comment, model=Comment)
+        if result:
+            context.update(result)
+
+            print(f'Context after update - {context}')
+
+            return redirect('tracker:detail', pk=task.pk)
+            # return render(request, 'tasks/task_detail.html', context)
+            # return render(request, 'comments/create_comment.html', context)
 
         highlighted_comment_id = comment.pk
         all_usernames_list = get_all_usernames_list()

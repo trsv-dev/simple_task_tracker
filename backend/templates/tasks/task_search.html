@@ -14,7 +14,7 @@
     {% if page_obj.has_next or page_obj.has_previous%}
       {% include 'includes/paginator.html' %}
     {% endif %}
-
+    <br>
     <section class="search-list">
         {% if page_obj %}
             {% for task in page_obj %}

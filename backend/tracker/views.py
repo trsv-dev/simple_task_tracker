@@ -14,7 +14,6 @@ from django.utils import timezone
 from django.views.decorators.http import require_POST
 
 from comments.forms import CommentForm
-from comments.models import Comment
 from images.views import handle_images
 from tracker.forms import TaskCreateForm
 from tracker.models import Task
@@ -48,7 +47,8 @@ def get_current_dates(dates, page_number, items_per_page):
     return current_dates
 
 
-def get_tasks_by_date(full_archive, current_dates, date_field: str):
+def get_tasks_by_date(queryset, current_dates,
+                      date_field: str, attribute: str):
     """
     Получаем словарь из дней и задач по дням для конкретной
     страницы пагинатора.
@@ -59,9 +59,10 @@ def get_tasks_by_date(full_archive, current_dates, date_field: str):
 
     tasks_by_date = {}
     for date in current_dates:
-        tasks_by_date[date[date_field]] = full_archive.filter(
-            done_by_time__date=date[date_field]
-        )
+        tasks_by_date[date[date_field]] = [
+            task for task in queryset
+            if getattr(task, attribute).date() == date[date_field]
+        ]
 
     return tasks_by_date
 
@@ -147,28 +148,52 @@ def is_deadline_deadline_reminder_user_changed(request, original_task,
         )
 
 
-def save_task_and_handle_form_errors(request, task_form, all_users, task=None):
+@transaction.atomic
+def save_transaction(request, form, object=None, model=None,
+                     skip_deadline_reminder_check=None):
+    """Транзакция сохранения задачи и обработки изображений."""
+
+    if 'delete_image' in request.POST:
+        object.images.all().delete()
+
+    if skip_deadline_reminder_check:
+        handle_images(request, object, model)
+        object.save(skip_deadline_reminder_check=True)
+    else:
+        form.save()
+        handle_images(request, object, model)
+
+
+def save_task_and_handle_form_errors(request, form, all_users=None,
+                                     object=None,
+                                     model=None,
+                                     skip_deadline_reminder_check=None):
     """
     Попытка сохранить задачу и вывод ошибок для дальнейшего
     отображения в форме при неудачном сохранении.
     """
 
     try:
-        task_form.save()
-        handle_images(request, task, Task)
+        if skip_deadline_reminder_check:
+            save_transaction(request, form, object, model,
+                             skip_deadline_reminder_check)
+
+        else:
+            save_transaction(request, form, object, model,
+                             skip_deadline_reminder_check=None)
 
         return None
     except ValidationError as e:
-        task_form.add_error(None, e)
-        if task:
+        form.add_error(None, e)
+        if object:
             context = {
-                'task_form': task_form,
+                'task_form': form,
                 'all_users': all_users
             }
         else:
             context = {
-                'task': task,
-                'task_form': task_form,
+                'task': object,
+                'task_form': form,
                 'all_users': all_users
             }
         return context
@@ -180,8 +205,8 @@ def index(request):
     # if not request.user.is_authenticated:
     #     return redirect('users:login')
 
-    # tasks = Task.objects.all()
-    tasks = Task.objects.select_related('author')
+    tasks = Task.objects.select_related('author').all()
+
     current_data = timezone.now()
 
     # Отображаем завершенные за сутки задания.
@@ -257,11 +282,10 @@ def user_archive(request, user):
 
     current_dates = get_current_dates(dates, page_number, items_in_page)
 
-    tasks_by_date = {}
-    for date in current_dates:
-        tasks_by_date[date['done_by_time__date']] = archived_tasks.filter(
-            done_by_time__date=date['done_by_time__date']
-        )
+    tasks_by_date = get_tasks_by_date(
+        archived_tasks, current_dates,
+        'done_by_time__date', 'done_by_time'
+    )
 
     paginator = Paginator(dates, items_in_page)
     page_obj = paginator.get_page(page_number)
@@ -282,14 +306,15 @@ def delegated_tasks(request, user):
     if not request.user.is_authenticated:
         return redirect('users:login')
 
-    tasks = Task.objects.select_related('author').all()
+    # tasks = Task.objects.all()
     username = get_object_or_404(User, username=user)
-    delegated_tasks = tasks.filter(author=username)
-    undone_delegated_tasks = tasks.filter(author=username, is_done=False)
+    delegated_tasks = Task.objects.filter(
+        author=username).select_related('author')
+    undone_delegated_tasks = delegated_tasks.filter(
+        author=username, is_done=False).select_related('author')
 
-    dates = delegated_tasks.values('created__date').order_by(
-        '-created__date'
-    ).distinct()
+    dates = delegated_tasks.select_related(
+        'author').values('created__date').order_by('-created__date').distinct()
 
     items_per_page = settings.DAYS_IN_CALENDAR_PAGE
 
@@ -297,11 +322,10 @@ def delegated_tasks(request, user):
 
     current_dates = get_current_dates(dates, page_number, items_per_page)
 
-    tasks_by_date = {}
-    for date in current_dates:
-        tasks_by_date[date['created__date']] = delegated_tasks.filter(
-            created__date=date['created__date']
-        )
+    tasks_by_date = get_tasks_by_date(
+        delegated_tasks, current_dates,
+        'created__date', 'created'
+    )
 
     paginator = Paginator(dates, items_per_page)
     page_obj = paginator.get_page(page_number)
@@ -312,7 +336,8 @@ def delegated_tasks(request, user):
         'undone_delegated_tasks_quantity': len(undone_delegated_tasks),
         'tasks_by_date': tasks_by_date,
         'page_obj': page_obj,
-        'current_time': timezone.now()
+        'current_time': timezone.now(),
+        'search_query': request.GET.get('query', '')
     }
 
     return render(request, 'tasks/delegated_tasks.html', context)
@@ -357,8 +382,7 @@ def full_archive_by_dates(request):
     if not request.user.is_authenticated:
         return redirect('users:login')
 
-    full_archive = Task.objects.filter(
-        is_done=True)  # .order_by('-done_by_time')
+    full_archive = Task.objects.filter(is_done=True).select_related('author')
 
     dates = full_archive.values('done_by_time__date').order_by(
         '-done_by_time__date'
@@ -379,7 +403,8 @@ def full_archive_by_dates(request):
     # выполненные в этот день.
 
     tasks_by_date = get_tasks_by_date(
-        full_archive, current_dates, 'done_by_time__date'
+        full_archive, current_dates,
+        'done_by_time__date', 'done_by_time'
     )
 
     # Создаем объект Paginator для навигации по страницам
@@ -405,12 +430,14 @@ def get_all_usernames_list():
     return [user.username for user in User.objects.all()]
 
 
+# @cache_page(20)
 def task_detail(request, pk):
     """Отображение деталей задачи."""
 
-    task = get_object_or_404(Task, pk=pk)
-    # comments = Comment.objects.filter(task=task)
-    # comments = task.comments.all()
+    task = get_object_or_404(Task.objects.select_related('author',
+                                                         'assigned_to',
+                                                         'done_by'), pk=pk)
+
     comments = task.comments.select_related('author').prefetch_related('images')
 
     comment_form = CommentForm(request.POST or None)
@@ -492,7 +519,7 @@ def create_task(request):
         # форму, чтобы попытаться ее сохранить и task, с которым мы свяжем
         # изображения в случае успешного сохранения form.
         result = save_task_and_handle_form_errors(request, form,
-                                                  all_users, task)
+                                                  all_users, task, Task)
 
         if result:
             context.update(result)
@@ -515,7 +542,12 @@ def edit_task(request, pk):
     username = request.user
     all_users = User.objects.all()
     # all_users = User.objects.prefetch_related('tasks').all()
-    task = get_object_or_404(Task, pk=pk)
+    task = get_object_or_404(
+        Task.objects
+        .select_related('author', 'assigned_to')
+        .prefetch_related('images'),
+        pk=pk
+    )
     original_task = deepcopy(task)
 
     if not check_rights_to_task(username, task):
@@ -528,8 +560,10 @@ def edit_task(request, pk):
     context = {
         'task': task,
         'form': form,
-        'all_users': all_users
+        'all_users': all_users,
     }
+
+    print(f'Task context before update - {context}')
 
     if form.is_valid():
         task = form.save(commit=False)
@@ -540,8 +574,19 @@ def edit_task(request, pk):
         if is_title_description_priority_status_changed(request,
                                                         original_task, form):
 
-            task.save(skip_deadline_reminder_check=True)
-            handle_images(request, task, Task)
+            skip_deadline_reminder_check = True
+            result = save_task_and_handle_form_errors(
+                request, form, all_users,
+                task, Task, skip_deadline_reminder_check
+            )
+
+            if result:
+                context.update(result)
+
+                print(f'Task context after update - {context}')
+
+                return render(request, 'tasks/create.html', context)
+
             return redirect('tracker:detail', pk=task.id)
 
         else:
@@ -551,13 +596,12 @@ def edit_task(request, pk):
                                                        new_assigned_to)
 
             result = save_task_and_handle_form_errors(request, form,
-                                                      all_users, task)
+                                                      all_users, task, Task)
 
             if result:
+                print(context)
                 context.update(result)
-                return render(
-                    request, 'tasks/create.html', context
-                )
+                return render(request, 'tasks/create.html', context)
 
             return redirect('tracker:detail', pk=task.id)
 

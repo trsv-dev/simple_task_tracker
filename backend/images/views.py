@@ -1,3 +1,5 @@
+from django.core.exceptions import ValidationError
+
 from comments.models import Comment, CommentImage
 from tracker.models import Task, TaskImage
 
@@ -6,9 +8,19 @@ def handle_images(request, object, model):
     """Обработка изображений. Операции с изображениями."""
 
     images = request.FILES.getlist('image')
+    images_count = object.images.count()
+    max_images_count = 5
 
-    if 'delete_image' in request.POST:
-        object.images.all().delete()
+    if len(request.FILES.getlist('image')) > max_images_count:
+        raise ValidationError(f'Максимальное количество изображений - '
+                              f'{max_images_count}, а вы пытаетесь загрузить '
+                              f'{len(images)}.')
+
+    if images_count + len(images) > max_images_count:
+        raise ValidationError(f'Максимальное количество изображений - '
+                              f'{max_images_count}. Изображений в задаче уже '
+                              f'{images_count}, а вы пытаетесь загрузить еще '
+                              f'{len(images)}.')
 
     if model == Task:
         # Создаем список "связок" задачи и изображений.
