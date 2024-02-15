@@ -12,7 +12,7 @@
         {% if undone_delegated_tasks_quantity %}
             <p><a href="{% url 'tracker:undone_delegated_tasks' user=username %}">Всего невыполненных задач:<strong> {{ undone_delegated_tasks_quantity }} </strong></a></p>
         {% else %}
-            <p>Все поставленные вами задачи выполнены</p>
+            <p>Задач нет или все поставленные вами задачи выполнены</p>
         {% endif %}
     </section>
 

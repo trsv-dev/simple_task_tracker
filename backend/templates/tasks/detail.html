@@ -6,34 +6,49 @@
 <link rel="stylesheet" href="{% static 'css/tracker.css' %}">
 <script src="{% static 'js/highlight.min.js' %}"></script>
 
-{% thumbnail task.image "200x150" crop="center" upscale=True as im %}
-    <div id="overlay" class="overlay" onclick="closeImageOverlay()">
-        <img src="{{ task.image.url }}" alt="Изображение задачи">
-    </div>
-    <a href="javascript:void(0);" onclick="openImageOverlay()">
-        <img src="{{ im.url }}" width="{{ im.width }}" height="{{ im.height }}" alt="Изображение задачи">
-    </a>
-{% endthumbnail %}
+{% for TaskImage_object in images_in_task %}
+    {% thumbnail TaskImage_object.image "200x150" crop="center" upscale=True as im %}
+        <div id="overlay_{{ TaskImage_object.id }}" class="overlay" onclick="closeImageOverlay('{{ TaskImage_object.id }}')">
+            <img src="{{ TaskImage_object.image.url }}" alt="Изображение задачи">
+        </div>
+        <a href="javascript:void(0);" onclick="openImageOverlay('{{ TaskImage_object.id }}')">
+            <img src="{{ im.url }}" width="{{ im.width }}" height="{{ im.height }}" alt="Изображение задачи">
+        </a>
+    {% endthumbnail %}
+{% endfor %}
+
 
 <p><b>Описание:</b> {{ task.description|markdown }}</p>
 <hr>
-<p><b>Автор:</b> {{ task.author }}</p>
-<p><b>Приоритет:</b> {{ task.priority }}</p>
-<p><b>Статус:</b> {{ task.status }}</p>
-<p><b>Ответственный:</b> {{ task.assigned_to }}</p>
-<p><b>Время создания:</b> {{ task.created }}</p>
-<p><b>Дедлайн:</b> {{ task.deadline }}</p>
-{% if task.is_done %}
-    <p><b>Пометил(а) выполненным:</b> {{ task.done_by }} ({{ task.done_by_time }})</p>
-{% endif %}
+
+<p>
+    <a class="btn btn-outline-secondary" data-toggle="collapse" href="#collapseTaskDetails" role="button" aria-expanded="false" aria-controls="collapseTaskDetails">
+        Данные задачи
+    </a>
+    <button class="btn btn-outline-success" data-toggle="collapse" href="#collapseTaskActions" role="button" aria-expanded="false" aria-controls="collapseTaskActions">
+        Действия с задачей
+    </button>
+</p>
+
+<div class="collapse" id="collapseTaskDetails">
+    <p><b>Автор:</b> {{ task.author }}</p>
+    <p><b>Приоритет:</b> {{ task.priority }}</p>
+    <p><b>Статус:</b> {{ task.status }}</p>
+    <p><b>Ответственный:</b> {{ task.assigned_to }}</p>
+    <p><b>Время создания:</b> {{ task.created }}</p>
+    <p><b>Дедлайн:</b> {{ task.deadline }}</p>
+    {% if task.is_done %}
+        <p><b>Пометил(а) выполненным:</b> {{ task.done_by }} ({{ task.done_by_time }})</p>
+    {% endif %}
+</div>
 
 <script>
-    function openImageOverlay() {
-        document.getElementById('overlay').style.display = 'block';
+    function openImageOverlay(imageId) {
+        document.getElementById('overlay_' + imageId).style.display = 'block';
     }
 
-    function closeImageOverlay() {
-        document.getElementById('overlay').style.display = 'none';
+    function closeImageOverlay(imageId) {
+        document.getElementById('overlay_' + imageId).style.display = 'none';
     }
 </script>
 

@@ -2,15 +2,15 @@ import re
 import socket
 from datetime import timedelta
 from smtplib import SMTPException
-from urllib.parse import unquote, unquote_plus
+from urllib.parse import unquote_plus
 
-from celery import shared_task, current_task
+from celery import shared_task
 from django.core.mail import send_mail
 from django.shortcuts import get_object_or_404
 from django.template.loader import render_to_string
 from django.utils import timezone
 
-from task_tracker.settings import EMAIL_HOST_USER, TEMPLATES_DIR, BASE_URL
+from task_tracker.settings import EMAIL_HOST_USER, TEMPLATES_DIR
 from tracker.models import Task, User
 from tracker.serializers import TaskSerializer, UserSerializer
 
@@ -117,12 +117,12 @@ def send_email_about_closer_deadline(priority=9, queue='slow_queue'):
             task.save(skip_deadline_reminder_check=True)
 
 
-def search_mentioned_users(comment_text):
+def search_mentioned_users(comment_text, all_usernames_list):
     """Поиск в тексте комментария упомянутых через '@' пользователей."""
 
     comment_text = unquote_plus(comment_text)
     # Создаем множество пользователей сервера
-    all_usernames_list = set(user.username for user in User.objects.all())
+    # all_usernames_list = set([user.username for user in User.objects.all()])
     # Регулярное выражение для поиска всех пользователей, упомянутых после '@'
     username_search_pattern = re.compile(r'@(\w+)')
 
@@ -133,15 +133,16 @@ def search_mentioned_users(comment_text):
     mentioned_usernames = [match.group(1) for match in matches]
     # Получаем множество найденных в тексте упоминаний
     mentioned_usernames_set = set(mentioned_usernames)
+    all_usernames_set = set(all_usernames_list)
     # Находим и возвращаем пересечение множеств списка пользователей сервера и
     # найденных в тексте пользователей, упомянутых через '@' и
     # сущностей, в которых используется '@' (например, декораторы).
     # Получаем список отфильтрованных таким образом пользователей.
 
-    return list(all_usernames_list & mentioned_usernames_set)
+    return list(all_usernames_set & mentioned_usernames_set)
 
 
-def notify_mentioned_users(request, comment_text,
+def notify_mentioned_users(request, comment_text, highlighted_comment_id,
                            list_of_mentioned_users, comment_task):
     """
     Если в комментарии пользователя указали через @username
@@ -174,6 +175,7 @@ def notify_mentioned_users(request, comment_text,
 
         context = {
             'username': username,
+            'highlighted_comment_id': highlighted_comment_id,
             'comment_text': comment_text,
             'comment_task': comment_task,
             'comment_author': comment_author,
@@ -190,3 +192,29 @@ def notify_mentioned_users(request, comment_text,
             queue='slow_queue',
             countdown=5
         )
+
+
+def universal_mail_sender(request, task, assigned_to_email,
+                          template, priority=9, queue='slow_queue', **kwargs):
+    username = request.user
+
+    serializer = TaskSerializer(task)
+    serialized_data = serializer.data
+
+    serialized_data['username'] = username.username
+
+    if 'previous_assigned_to_username' in kwargs:
+        serialized_data[
+            'previous_assigned_to_username'
+        ] = kwargs['previous_assigned_to_username']
+
+    send_email_message.apply_async(
+        kwargs={
+            'email': assigned_to_email,
+            'template': template,
+            'context': serialized_data,
+        },
+        priority=priority,
+        queue=queue,
+        countdown=5
+    )

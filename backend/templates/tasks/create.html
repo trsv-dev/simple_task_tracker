@@ -6,7 +6,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+{#    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">#}
+    <link rel="stylesheet" href="{% static 'css/bootstrap_4.5.2.min.css' %}">
     <link rel="stylesheet" href="{% static 'css/tracker.css' %}">
     <title>{% if task %}Редактировать{% else %}Создать{% endif %} задачу</title>
 </head>
@@ -23,7 +24,6 @@
             {% endfor %}
         </div>
     {% endif %}
-
     <form method="post" enctype="multipart/form-data" {% if task %}action="{% url 'tracker:edit' pk=task.pk %}"{% else %}action="{% url 'tracker:create' %}"{% endif %}>
         {% csrf_token %}
 
@@ -40,39 +40,38 @@
             <textarea class="form-control" id="id_description" name="description" rows="6" placeholder="Опишите задачу. Можно использовать упрощенный markdown-синтаксис" required>{% if task %}{{ task.description }}{% elif form.description.value %}{{ form.description.value }}{% endif %}</textarea>
         </div>
 
-        {% if task and task.image %}
+        {% if task and task.images %}
 
             <label for="id_image">Изображение:</label>
 
             <div class="form-group">
-                {% thumbnail task.image "200x150" crop="center" upscale=True as im %}
-                    <div id="overlay" class="overlay" onclick="closeImageOverlay()">
-                        <img src="{{ task.image.url }}" alt="Изображение задачи">
-                    </div>
-                    <a href="javascript:void(0);" onclick="openImageOverlay()">
-                        <img src="{{ im.url }}" width="{{ im.width }}" height="{{ im.height }}" alt="Изображение задачи">
-                    </a>
-                {% endthumbnail %}
+                {% for TaskImage_object in task.images.all %}
+                    {% thumbnail TaskImage_object.image "200x150" crop="center" upscale=True as im %}
+                        <div id="overlay_{{ TaskImage_object.id }}" class="overlay" onclick="closeImageOverlay('{{ TaskImage_object.id }}')">
+                            <img src="{{ TaskImage_object.image.url }}" alt="Изображение задачи">
+                        </div>
+                        <a href="javascript:void(0);" onclick="openImageOverlay('{{ TaskImage_object.id }}')">
+                            <img src="{{ im.url }}" width="{{ im.width }}" height="{{ im.height }}" alt="Изображение задачи">
+                        </a>
+                    {% endthumbnail %}
+                {% endfor %}
             </div>
 
             <div class="form-group">
-                <input type="checkbox" id="delete_image" name="delete_image"> <label for="delete_image">Удалить существующее изображение</label>
+                <input type="checkbox" id="delete_image" name="delete_image"> <label for="delete_image">Удалить существующие изображения</label>
             </div>
             <div class="form-group">
-                <label for="id_image">Выбрать новое изображение:</label><br>
-                <input type="file" class="form-control-file" id="id_image" name="image" accept="image/*">
+                <label for="id_image">Выбрать новые изображения:</label><br>
+                <input type="file" multiple class="form-control-file" id="id_image" name="image" accept="image/* ">
             </div>
+
         {% else %}
             <div class="form-group">
-                <label for="id_image">Изображение:</label><br>
-                <input type="file" class="form-control-file" id="id_image" name="image" accept="image/*">
+                <label for="id_image">Изображение:</label>
+                <small class="text-muted">Можно выбрать сразу несколько.</small><br>
+                <input type="file" multiple class="form-control-file" id="id_image" name="image" accept="image/*">
             </div>
         {% endif %}
-
-{#        <div class="form-group">#}
-{#            <label for="id_image">Изображение:</label><br>#}
-{#            <input type="file" class="form-control-file" id="id_image" name="image" accept="image/*">#}
-{#        </div>#}
 
         <div class="form-group">
             <label for="priority">Приоритет:</label>
@@ -128,26 +127,27 @@
             {% else %}
                 <a href="{% url 'tracker:index' %}" class="btn btn-outline-secondary">Отмена</a>
             {% endif %}
-            {#    Кнопка удаления вынеседа в отдельный блок чтобы явно указать метод POST, который требуется в @require_POST #}
+            {#    Кнопка удаления вынесена в отдельный блок чтобы явно указать метод POST, который требуется в @require_POST #}
             {% if task %}
                 <button type="submit" formaction="{% url 'tracker:delete' pk=task.id %}" class="btn btn-outline-danger">Удалить</button>
             {% endif %}
         </div>
     </form>
 </div>
+
 {% include 'includes/footer.html' %}
 
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
-<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+<script src="/static/js/jquery.min.js"></script>
+<script src="/static/js/popper.min.js"></script>
+<script src="/static/js/bootstrap.min.js"></script>
 
 <script>
-    function openImageOverlay() {
-        document.getElementById('overlay').style.display = 'block';
+    function openImageOverlay(imageId) {
+        document.getElementById('overlay_' + imageId).style.display = 'block';
     }
 
-    function closeImageOverlay() {
-        document.getElementById('overlay').style.display = 'none';
+    function closeImageOverlay(imageId) {
+        document.getElementById('overlay_' + imageId).style.display = 'none';
     }
 </script>
 

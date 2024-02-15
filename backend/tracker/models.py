@@ -5,8 +5,8 @@ from django.core.exceptions import ValidationError
 from django.core.validators import RegexValidator, MinValueValidator
 from django.db import models
 from django.utils import timezone
-from mptt.fields import TreeForeignKey
-from mptt.models import MPTTModel
+
+from images.models import BaseImage
 
 User = get_user_model()
 
@@ -154,13 +154,6 @@ class Task(models.Model):
         verbose_name='Время выполнения',
         help_text='Время, когда задача была отмечена выполненной'
     )
-    image = models.ImageField(
-        null=True,
-        blank=True,
-        upload_to='tasks/',
-        verbose_name='Изображение',
-        help_text='Добавьте изображение'
-    )
     tags = models.ManyToManyField(
         Tags,
         blank=True,
@@ -184,13 +177,24 @@ class Task(models.Model):
         if not skip_deadline_reminder_check:
             if not temp_deadline_reminder:
                 self.deadline_reminder = self.deadline - timedelta(hours=24)
-            elif self.deadline_reminder > self.deadline:
+            if self.deadline_reminder > self.deadline:
                 raise ValidationError(
                     'Напоминание о дедлайне не может быть позже дедлайна!'
                 )
-            elif self.deadline_reminder < timezone.now():
+            if (self.deadline_reminder < timezone.now()
+                    and not self.is_notified):
+                raise ValidationError(
+                    'Это задача, по которой еще не приходило напоминание '
+                    'пользователю. Если сделать дату напоминания в прошлом, '
+                    'то уведомление не придёт!'
+                )
+            if self.deadline_reminder < timezone.now():
                 raise ValidationError(
                     'Напоминание о дедлайне не может быть в прошлом!'
+                )
+            if self.deadline < timezone.now():
+                raise ValidationError(
+                    'Дедлайн не может быть в прошлом!'
                 )
         super().save(*args, **kwargs)
 
@@ -204,6 +208,23 @@ class Task(models.Model):
 
     def __str__(self):
         return self.title
+
+
+class TaskImage(BaseImage):
+    """Модель изображений к задачам."""
+
+    task = models.ForeignKey(
+        'Task',
+        related_name='images',
+        on_delete=models.CASCADE
+    )
+
+    class Meta:
+        verbose_name = 'Изображение'
+        verbose_name_plural = 'Изображения'
+
+    def __str__(self):
+        return f'Изображение для задачи "{self.task.title}"'
 
 
 class TaskTag(models.Model):
@@ -230,53 +251,3 @@ class TaskTag(models.Model):
 
     def __str__(self):
         return f'задача - {self.task} и тег - {self.tag}'
-
-
-class Comment(MPTTModel):
-    """Класс древовидных комментариев к задаче."""
-
-    task = models.ForeignKey(
-        Task,
-        on_delete=models.CASCADE,
-        verbose_name='Задача',
-        help_text='Комментарий к задаче'
-    )
-    author = models.ForeignKey(
-        User,
-        on_delete=models.CASCADE,
-        verbose_name='Автор',
-        help_text='Автор комментария'
-    )
-    text = models.TextField(
-        verbose_name='Текст комментария',
-        help_text='Введите текст комментария'
-    )
-    parent = TreeForeignKey(
-        'self',
-        on_delete=models.CASCADE,
-        null=True,
-        blank=True,
-        related_name='replies',
-        verbose_name='Родительский комментарий',
-        help_text='Введите ответ на комментарий'
-    )
-
-    created = models.DateTimeField(
-        auto_now_add=True,
-        verbose_name='Дата публикации комментария'
-    )
-
-    class MTTMeta:
-        order_insertion_by = ('-created',)
-
-    class Meta:
-        ordering = ['-created']
-        verbose_name = 'Комментарий'
-        verbose_name_plural = 'Комментарии'
-
-    def __str__(self):
-        if self.parent:
-            return (f'{self.author} ответил на комментарий '
-                    f'"{self.parent.text}"')
-        return (f'{self.author} прокомментировал задачу "{self.task.title}": '
-                f'{self.text}')

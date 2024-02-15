@@ -25,9 +25,12 @@ INSTALLED_APPS = [
     'django_celery_beat',
     'mptt',
     'sorl.thumbnail',
+    'debug_toolbar',
 
     'tracker.apps.TrackerConfig',
     'users.apps.UsersConfig',
+    'images.apps.ImagesConfig',
+    'comments.apps.CommentsConfig',
 ]
 
 MIDDLEWARE = [
@@ -38,6 +41,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'debug_toolbar.middleware.DebugToolbarMiddleware',
 ]
 
 ROOT_URLCONF = 'task_tracker.urls'
@@ -127,6 +131,7 @@ USE_TZ = True
 BASE_URL = os.getenv('BASE_URL', 'http://127.0.0.1:8000')
 
 TASKS_IN_PAGE = os.getenv('TASKS_IN_PAGE', 10)
+MAX_IMAGES_COUNT = os.getenv('MAX_IMAGES_COUNT', 5)
 DAYS_IN_CALENDAR_PAGE = int(os.getenv('DAYS_IN_CALENDAR_PAGE', 3))
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
@@ -165,3 +170,30 @@ CELERY_BEAT_SCHEDULE = {
         'options': {'queue': 'slow_queue'}
     },
 }
+
+# CACHES = {
+#     'default': {
+#         'BACKEND': 'django.core.cache.backends.redis.RedisCache',
+#         'LOCATION': os.getenv('CELERY_BROKER_URL', 'redis://127.0.0.1:6379/0'),
+#         'OPTIONS': {
+#             'db': '1',
+#         },
+#     }
+# }
+
+INTERNAL_IPS = [
+    '127.0.0.1',
+]
+
+# LOGGING = {
+#     'version': 1,
+#     'handlers': {
+#         'console': {'class': 'logging.StreamHandler'}
+#     },
+#     'loggers': {
+#         'django.db.backends': {
+#             'handlers': ['console'],
+#             'level': 'DEBUG'
+#         }
+#     }
+# }

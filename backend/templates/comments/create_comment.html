@@ -1,0 +1,219 @@
+{% load tracker_tags %}
+{% load mptt_tags %}
+{% load mark_mentioned_users %}
+{% load thumbnail %}
+
+<style>
+  .nested-comments {
+    margin-top: 20px;
+    margin-left: 20px;
+  }
+
+  .comment {
+    margin-bottom: 20px;
+    position: relative;
+  }
+
+  .comment-reply {
+    margin-left: 20px;
+  }
+
+  .reply-line {
+    position: absolute;
+    left: -5px;
+    width: 1px;
+    height: 100%;
+    background-color: rgba(206, 212, 218, 0.36);
+  }
+
+  /* Добавляем новый класс для подсветки комментария */
+    .highlighted-comment {
+      background-color: #ffc;
+      /* Используйте цвет фона по вашему выбору */
+      padding: 5px;
+      border-radius: 5px;
+    }
+</style>
+
+{% if user.is_authenticated %}
+
+{% endif %}
+
+<div class="container">
+  <div class="card">
+    <div class="card-header">
+      <h6>Комментарии</h6>
+    </div>
+    <div class="card-body">
+
+      {% if comments %}
+        {% recursetree comments %}
+
+{#          <div class="comment {% if not node.is_root_node %}nested-comment{% endif %}">#}
+          <div class="comment {% if not node.is_root_node %}nested-comment{% endif %} {% if node.pk == highlighted_comment_id %}highlighted-comment{% endif %}">
+
+
+            <div class="reply-line"></div>
+            {% if node.author == node.task.author %}
+              <strong>{{ node.author }} (автор)</strong>, <span class="text-muted">{{ node.created }}</span><br>
+            {% else %}
+              <strong>{{ node.author }}</strong>, <span class="text-muted">{{ node.created }}</span><br>
+            {% endif %}
+            <div class="form-group">
+                {% for image_object in node.images.all %}
+                     {% thumbnail image_object.image "200x150" crop="center" upscale=True as im %}
+                         <div id="overlay_comment_{{ image_object.id }}" class="overlay" onclick="closeCommentImageOverlay('{{ image_object.id }}')">
+                            <img src="{{ image_object.image.url }}" alt="Изображение комментария">
+                        </div>
+                        <a href="javascript:void(0);" onclick="openCommentImageOverlay('{{ image_object.id }}')">
+                            <img src="{{ im.url }}" width="{{ im.width }}" height="{{ im.height }}" alt="Изображение комментария">
+                        </a>
+                    {% endthumbnail %}
+                {% endfor %}
+            </div>
+
+            <p>{{ node.text|markdown|mentioned_users_replace:usernames_profiles_links|safe }}</p>
+
+            {% if user.is_authenticated %}
+                <div class="comment-actions">
+                  <div class="btn-group">
+                    <button type="button" class="btn btn-outline-dark btn-sm dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                      Действия
+                    </button>
+                    <div class="dropdown-menu">
+                      {% if user == node.author and node not in comments_with_expired_editing_time %}
+                        <form method="post" action="{% url 'comments:delete_comment' pk=node.id %}" style="display:inline;">
+                          {% csrf_token %}
+                          <button type="submit" class="dropdown-item">Удалить</button>
+                        </form>
+                        <button type="button" class="dropdown-item" onclick="toggleEditForm({{ node.pk }})">Редактировать</button>
+                      {% endif %}
+                      <button type="button" class="dropdown-item" onclick="toggleReplyForm({{ node.pk }})">Ответить</button>
+                    </div>
+                  </div>
+                </div>
+          {% endif %}
+
+            {% if user.is_authenticated %}
+              {% if user == node.author and node not in comments_with_expired_editing_time %}
+                <div class="card-body" style="display: none;" id="editForm{{ node.pk }}">
+                  <form method="post" action="{% url 'comments:edit_comment' pk=node.pk %}" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <div class="form-group">
+                      <textarea class="form-control" id="id_text" name="text" rows="3" required>{{ node.text }}</textarea>
+                    </div>
+                    <div class="btn-group-toggle mt-2">
+                      <button type="submit" class="btn btn-outline-primary btn-sm">Отправить</button>
+                      <a href="{% url 'tracker:detail' pk=node.task.pk %}" class="btn btn-outline-secondary btn-sm">Отмена</a>
+                      <input type="file" multiple class="form-control-file" id="id_image" name="image" accept="image/*">
+
+                      {% if node.images.all %}
+
+                        <div class="form-group">
+                            <input type="checkbox" id="delete_image" name="delete_image">
+                            <label for="delete_image">Удалить существующие изображения</label>
+                        </div>
+
+                      {% endif %}
+
+                    </div>
+                  </form>
+                </div>
+              {% endif %}
+
+              <div class="card-body" style="display: none;" id="replyForm{{ node.pk }}">
+                <form method="post" action="{% url 'comments:create_comment' task_pk=node.task.pk %}" enctype="multipart/form-data">
+                  {% csrf_token %}
+                  <input type="hidden" name="parent" value="{{ node.pk }}">
+                  <div class="form-group">
+                    <textarea class="form-control" id="id_text" name="text" rows="3" required placeholder="Разрешен упрощенный markdown-синтаксис и упоминания через @username"></textarea>
+                  </div>
+                  <div class="btn-group-toggle mt-2">
+                    <button type="submit" class="btn btn-outline-success btn-sm">Отправить ответ</button>
+                    <a href="{% url 'tracker:detail' pk=node.task.pk %}" class="btn btn-outline-secondary btn-sm">Отмена</a>
+                    <input type="file" multiple class="form-control-file" id="id_image" name="image" accept="image/*">
+                  </div>
+                </form>
+              </div>
+            {% endif %}
+
+            {% if not node.is_leaf_node %}
+              <div class="nested-comments">
+                <div class="comment-reply">
+                  {{ children }}
+                </div>
+              </div>
+            {% endif %}
+
+          </div>
+
+        {% endrecursetree %}
+
+      {% else %}
+
+        <p class="text-center">Комментариев нет</p>
+
+      {% endif %}
+
+    </div>
+  </div>
+</div>
+
+{% if user.is_authenticated %}
+
+    {% include 'tasks/../comments/comment_body.html' %}
+
+{% endif %}
+
+<script>
+  function toggleEditForm(commentId) {
+    var editForm = document.getElementById('editForm' + commentId);
+    var replyForm = document.getElementById('replyForm' + commentId);
+
+    // Скрыть форму ответа при открытии формы редактирования
+    if (replyForm) {
+      replyForm.style.display = 'none';
+    }
+
+    // Переключить видимость формы редактирования
+    editForm.style.display = (editForm.style.display === 'none' || editForm.style.display === '') ? 'block' : 'none';
+  }
+
+  function toggleReplyForm(commentId) {
+    var editForm = document.getElementById('editForm' + commentId);
+    var replyForm = document.getElementById('replyForm' + commentId);
+
+    // Скрыть форму редактирования при открытии формы ответа
+    if (editForm) {
+      editForm.style.display = 'none';
+    }
+
+    // Переключить видимость формы ответа
+    replyForm.style.display = (replyForm.style.display === 'none' || replyForm.style.display === '') ? 'block' : 'none';
+  }
+</script>
+
+<script>
+    // Подсветка комментариев при обращении к пользователю
+  document.addEventListener('DOMContentLoaded', function() {
+    var highlightedCommentId = {{ highlighted_comment_id|default:0 }};
+
+    if (highlightedCommentId) {
+      var commentElement = document.getElementById('comment-' + highlightedCommentId);
+
+      if (commentElement) {
+        commentElement.classList.add('highlighted-comment');
+      }
+    }
+  });
+</script>
+
+<script>
+    function openCommentImageOverlay(imageCommentID) {
+        document.getElementById('overlay_comment_' + imageCommentID).style.display = 'block';
+    }
+
+    function closeCommentImageOverlay(imageCommentID) {
+        document.getElementById('overlay_comment_' + imageCommentID).style.display = 'none';
+    }
+</script>

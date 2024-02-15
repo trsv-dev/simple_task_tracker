@@ -1,23 +1,14 @@
-from copy import deepcopy
-from pprint import pprint
-
-from django.http import HttpResponseRedirect, HttpResponseBadRequest
-from django.shortcuts import render
-from django.utils import timezone
-
 from django.contrib import admin, messages
 from django.core.exceptions import ValidationError
-from django.utils.html import format_html
+from django.http import HttpResponseRedirect, HttpResponseBadRequest
 from django_celery_beat.models import (IntervalSchedule, CrontabSchedule,
                                        SolarSchedule, ClockedSchedule,
                                        PeriodicTask)
 
-from tracker.models import Task, Tags, TaskTag, Comment, DONE, PENDING, \
-    IN_PROGRESS
+from tracker.models import Task, DONE, PENDING, \
+    IN_PROGRESS, TaskImage
 from tracker.validators import validate_done_status, validate_done_time, \
-    validate_required_fields
-
-# from tracker.validators import validate_done_fields
+    validate_required_fields, validate_deadline_reminder
 
 admin.site.site_header = "Трекер задач"
 admin.site.site_title = "Панель администрирования"
@@ -31,8 +22,9 @@ admin.site.unregister(IntervalSchedule)
 admin.site.unregister(CrontabSchedule)
 
 
-# class TagsInLine(admin.TabularInline):
-#     model = Task.tags.through
+class TaskImageInline(admin.TabularInline):
+    model = TaskImage
+    extra = 1
 
 
 @admin.register(Task)
@@ -61,7 +53,7 @@ class TaskAdmin(admin.ModelAdmin):
     fieldsets = (
         ('Информация о задаче', {
             'fields': (
-                'author', 'title', 'description', 'image',
+                'author', 'title', 'description',
                 'priority', 'status', 'previous_status', 'assigned_to',
                 'created', 'deadline', 'deadline_reminder', 'is_notified',
             ),
@@ -77,6 +69,8 @@ class TaskAdmin(admin.ModelAdmin):
             # 'classes': ('errornote'),
         }),
     )
+
+    inlines = (TaskImageInline, )
 
     # readonly_fields = ('get_image',)
     readonly_fields = ('created',)
@@ -126,7 +120,7 @@ class TaskAdmin(admin.ModelAdmin):
             return (
                 ('Информация о задаче', {
                     'fields': (
-                        'author', 'title', 'description', 'image',
+                        'author', 'title', 'description',
                         'priority', 'status', 'assigned_to',
                         'created', 'deadline', 'deadline_reminder',
                         'is_notified',
@@ -150,6 +144,7 @@ class TaskAdmin(admin.ModelAdmin):
 
             validate_done_status(obj, self.need_to_clear_done_fields)
             validate_done_time(obj)
+            validate_deadline_reminder(obj)
             validate_required_fields(required_fields)
 
             # Если редактируем объект, а не создаем новый
@@ -204,6 +199,12 @@ class TaskAdmin(admin.ModelAdmin):
         """
         Переопределяем метод для обработки ответа после создания задачи.
         """
+
+        try:
+            obj.save()
+        except ValidationError:
+            return HttpResponseRedirect(request.path_info)
+
         if "_addanother" in request.POST or post_url_continue:
             return super().response_add(request, obj, post_url_continue)
 
@@ -215,26 +216,6 @@ class TaskAdmin(admin.ModelAdmin):
         # В противном случае, перенаправляем на страницу списка объектов.
         return super().response_add(request, obj, post_url_continue)
 
-
-@admin.register(Comment)
-class CommentAdmin(admin.ModelAdmin):
-    list_display = ('id', 'get_task', 'author', 'get_text', 'created')
-    ordering = ('created',)
-    search_fields = ('task__author__username', 'task__author__email', 'text')
-
-    def get_text(self, obj):
-        """Обрезаем длинные комментарии."""
-
-        return obj.text[:50] + ('...' if len(obj.text) > 50 else '')
-
-    def get_task(self, obj):
-        """Обрезаем длинные заголовки задачи."""
-
-        return (obj.task.title[:50] +
-                ('...' if len(obj.task.title) > 50 else ''))
-
-    get_text.short_description = 'текст'
-    get_task.short_description = 'задача'
 
 # @admin.register(TaskTag)
 # class TaskTagsAdmin(admin.ModelAdmin):

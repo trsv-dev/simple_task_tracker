@@ -14,16 +14,16 @@
     {% if page_obj.has_next or page_obj.has_previous%}
       {% include 'includes/paginator.html' %}
     {% endif %}
-
+    <br>
     <section class="search-list">
         {% if page_obj %}
             {% for task in page_obj %}
                 {% include 'includes/task_flat_card.html' %}
             {% endfor %}
         {% elif no_results_message %}
-            <br>{{ no_results_message }}
+            <br><p class="text-center">{{ no_results_message }}</p>
         {% else %}
-            <br><p>Ничего не найдено</p>
+            <br><p class="text-center">Ничего не найдено</p>
         {% endif %}
     </section>
 

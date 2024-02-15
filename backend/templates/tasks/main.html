@@ -33,4 +33,7 @@
 
 {% else %}
     <p class="text-center">Список заданий пуст</p>
+    {% if user.is_authenticated %}
+        <p class="text-center"><a class="nav-item nav-link active" href="{% url 'tracker:create' %}">✏️ Создать задачу ?</a></p>
+    {% endif %}
 {% endif %}
