@@ -1,5 +1,5 @@
 from django.core.exceptions import ValidationError
-
+from django.conf import settings
 from comments.models import Comment, CommentImage
 from tracker.models import Task, TaskImage
 
@@ -9,7 +9,8 @@ def handle_images(request, object, model):
 
     images = request.FILES.getlist('image')
     images_count = object.images.count()
-    max_images_count = 5
+    max_images_count = settings.MAX_IMAGES_COUNT
+
 
     if len(request.FILES.getlist('image')) > max_images_count:
         raise ValidationError(f'Максимальное количество изображений - '
@@ -18,7 +19,7 @@ def handle_images(request, object, model):
 
     if images_count + len(images) > max_images_count:
         raise ValidationError(f'Максимальное количество изображений - '
-                              f'{max_images_count}. Изображений в задаче уже '
+                              f'{max_images_count}. Загружено '
                               f'{images_count}, а вы пытаетесь загрузить еще '
                               f'{len(images)}.')
 
