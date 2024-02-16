@@ -2,6 +2,18 @@
   <div class="card">
     <div class="card-header">
       <h6>Добавить комментарий</h6>
+
+            {% if comment_form.errors and request.method == 'POST' %}
+                <div class="alert alert-danger">
+                    {% for field, errors in comment_form.errors.items %}
+                        {% for error in errors %}
+                            {{ error }}
+                        {% endfor %}
+                        <br>
+                    {% endfor %}
+                </div>
+            {% endif %}
+
     </div>
     <div class="card-body">
 {#      <form method="post" action="{% url 'tracker:create_comment' task_pk=task.pk %}">#}

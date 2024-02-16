@@ -51,6 +51,23 @@
     </div>
   </div>
 </div>
-    <br>
+
+
+<div class="container">
+    <div class="card-body">
+         {% if comment_form.errors and request.method == 'POST' %}
+            <div class="alert alert-danger">
+                {% for field, errors in comment_form.errors.items %}
+                    {% for error in errors %}
+                        {{ error }}
+                    {% endfor %}
+                    <br>
+                {% endfor %}
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+
 {% include 'comments/create_comment.html' %}
 {% endblock %}

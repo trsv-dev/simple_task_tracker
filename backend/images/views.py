@@ -11,7 +11,6 @@ def handle_images(request, object, model):
     images_count = object.images.count()
     max_images_count = settings.MAX_IMAGES_COUNT
 
-
     if len(request.FILES.getlist('image')) > max_images_count:
         raise ValidationError(f'Максимальное количество изображений - '
                               f'{max_images_count}, а вы пытаетесь загрузить '

@@ -60,16 +60,19 @@
               <strong>{{ node.author }}</strong>, <span class="text-muted">{{ node.created }}</span><br>
             {% endif %}
             <div class="form-group">
-                {% for image_object in node.images.all %}
-                     {% thumbnail image_object.image "200x150" crop="center" upscale=True as im %}
-                         <div id="overlay_comment_{{ image_object.id }}" class="overlay" onclick="closeCommentImageOverlay('{{ image_object.id }}')">
-                            <img src="{{ image_object.image.url }}" alt="Изображение комментария">
-                        </div>
-                        <a href="javascript:void(0);" onclick="openCommentImageOverlay('{{ image_object.id }}')">
-                            <img src="{{ im.url }}" width="{{ im.width }}" height="{{ im.height }}" alt="Изображение комментария">
-                        </a>
-                    {% endthumbnail %}
-                {% endfor %}
+                {% if node.images.all %}
+                    {% for image_object in node.images.all %}
+{#                         {% thumbnail image_object.image "200x150" crop="center" upscale=True as im %}#}
+                         {% thumbnail image_object.image "100x60" crop="center" upscale=True as im %}
+                             <div id="overlay_comment_{{ image_object.id }}" class="overlay" onclick="closeCommentImageOverlay('{{ image_object.id }}')">
+                                <img src="{{ image_object.image.url }}" alt="Изображение комментария">
+                            </div>
+                            <a href="javascript:void(0);" onclick="openCommentImageOverlay('{{ image_object.id }}')">
+                                <img src="{{ im.url }}" width="{{ im.width }}" height="{{ im.height }}" alt="Изображение комментария">
+                            </a>
+                         {% endthumbnail %}
+                    {% endfor %}
+                {% endif %}
             </div>
 
             <p>{{ node.text|markdown|mentioned_users_replace:usernames_profiles_links|safe }}</p>
