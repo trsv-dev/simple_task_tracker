@@ -8,8 +8,10 @@ from celery import shared_task
 from django.core.mail import send_mail
 from django.shortcuts import get_object_or_404
 from django.template.loader import render_to_string
+from django.urls import reverse
 from django.utils import timezone
 
+from comments.forms import CommentForm
 from task_tracker.settings import EMAIL_HOST_USER, TEMPLATES_DIR
 from tracker.models import Task, User
 from tracker.serializers import TaskSerializer, UserSerializer
@@ -218,3 +220,50 @@ def universal_mail_sender(request, task, assigned_to_email,
         queue=queue,
         countdown=5
     )
+
+
+def get_profile(username):
+    """Получение ссылки на профиль пользователя."""
+
+    return reverse('tracker:profile', kwargs={'user': username})
+
+
+def get_all_usernames_list():
+    return [user.username for user in User.objects.all()]
+
+
+def get_common_context(request, task, comments):
+    comment_form = CommentForm(request.POST or None)
+    comment_texts = [comment.text for comment in comments]
+    comments_with_expired_editing_time = []
+    images_in_task = task.images.all()
+
+    images_in_comments = [comment.images.all() for comment in comments]
+
+    highlighted_comment_id = int(request.GET.get('highlighted_comment_id', 0))
+
+    for comment in comments:
+        if timezone.now() > (comment.created + timedelta(minutes=30)):
+            comments_with_expired_editing_time.append(comment)
+
+    all_usernames_list = get_all_usernames_list()
+    # Из списка списков делаем плоский список пользователей.
+    list_of_mentioned_users = sum([search_mentioned_users(
+        comment_text, all_usernames_list
+    ) for comment_text in comment_texts], [])
+    # Создаем словарь: ключ - имя пользователя, значение - ссылка на профиль.
+    usernames_profiles_links = {
+        username: get_profile(username) for username in list_of_mentioned_users
+    }
+
+    return {
+        'comment_form': comment_form,
+        'task': task,
+        'comments': comments,
+        'comments_with_expired_editing_time':
+            comments_with_expired_editing_time,
+        'usernames_profiles_links': usernames_profiles_links,
+        'images_in_task': images_in_task,
+        'images_in_comments': images_in_comments,
+        'highlighted_comment_id': highlighted_comment_id
+    }

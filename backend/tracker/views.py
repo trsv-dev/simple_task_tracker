@@ -9,16 +9,14 @@ from django.core.paginator import Paginator
 from django.db import transaction
 from django.db.models import Q
 from django.shortcuts import render, redirect, get_object_or_404
-from django.urls import reverse
 from django.utils import timezone
 from django.views.decorators.http import require_POST
 
-from comments.forms import CommentForm
 from images.views import handle_images
 from tracker.forms import TaskCreateForm
 from tracker.models import Task
-from tracker.utils import (templates, search_mentioned_users,
-                           universal_mail_sender)
+from tracker.utils import (templates, universal_mail_sender,
+                           get_common_context)
 
 
 def check_rights_to_task(username, task):
@@ -151,7 +149,7 @@ def is_deadline_deadline_reminder_user_changed(request, original_task,
 @transaction.atomic
 def save_transaction(request, form, object=None, model=None,
                      skip_deadline_reminder_check=None):
-    """Транзакция сохранения задачи и обработки изображений."""
+    """Транзакция сохранения задачи или комментария и обработки изображений."""
 
     if 'delete_image' in request.POST:
         object.images.all().delete()
@@ -164,10 +162,10 @@ def save_transaction(request, form, object=None, model=None,
         handle_images(request, object, model)
 
 
-def save_task_and_handle_form_errors(request, form, all_users=None,
-                                     object=None,
-                                     model=None,
-                                     skip_deadline_reminder_check=None):
+def save_obj_and_handle_form_errors(request, form, all_users=None,
+                                    object=None,
+                                    model=None,
+                                    skip_deadline_reminder_check=None):
     """
     Попытка сохранить задачу и вывод ошибок для дальнейшего
     отображения в форме при неудачном сохранении.
@@ -420,61 +418,11 @@ def full_archive_by_dates(request):
     return render(request, 'tasks/full_archive.html', context)
 
 
-def get_profile(username):
-    """Получение ссылки на профиль пользователя."""
-
-    return reverse('tracker:profile', kwargs={'user': username})
-
-
-def get_all_usernames_list():
-    return [user.username for user in User.objects.all()]
-
-
-# @cache_page(20)
 def task_detail(request, pk):
-    """Отображение деталей задачи."""
-
-    task = get_object_or_404(Task.objects.select_related('author',
-                                                         'assigned_to',
-                                                         'done_by'), pk=pk)
-
+    task = get_object_or_404(Task.objects.select_related('author', 'assigned_to', 'done_by'), pk=pk)
     comments = task.comments.select_related('author').prefetch_related('images')
 
-    comment_form = CommentForm(request.POST or None)
-    comment_texts = [comment.text for comment in comments]
-    comments_with_expired_editing_time = []
-    images_in_task = task.images.all()
-
-    images_in_comments = [comment.images.all() for comment in comments]
-
-    highlighted_comment_id = int(request.GET.get('highlighted_comment_id', 0))
-
-    for comment in comments:
-        if timezone.now() > (comment.created + timedelta(minutes=30)):
-            comments_with_expired_editing_time.append(comment)
-
-    all_usernames_list = get_all_usernames_list()
-    # Из списка списков делаем плоский список пользователей.
-    list_of_mentioned_users = sum([search_mentioned_users(
-        comment_text, all_usernames_list
-    ) for comment_text in comment_texts], [])
-    # Создаем словарь: ключ - имя пользователя, значение - ссылка на профиль.
-    usernames_profiles_links = {
-        username: get_profile(username) for username in list_of_mentioned_users
-    }
-
-    context = {
-        'task': task,
-        'comments': comments,
-        'comments_with_expired_editing_time':
-            comments_with_expired_editing_time,
-        'comment_form': comment_form,
-        'usernames_profiles_links': usernames_profiles_links,
-        'images_in_task': images_in_task,
-        'images_in_comments': images_in_comments,
-        'highlighted_comment_id': highlighted_comment_id
-    }
-
+    context = get_common_context(request, task, comments)
     return render(request, 'tasks/task_detail.html', context)
 
 
@@ -518,8 +466,8 @@ def create_task(request):
         # Т.к. task уже есть (task = form.save(commit=False)) то передаем
         # форму, чтобы попытаться ее сохранить и task, с которым мы свяжем
         # изображения в случае успешного сохранения form.
-        result = save_task_and_handle_form_errors(request, form,
-                                                  all_users, task, Task)
+        result = save_obj_and_handle_form_errors(request, form,
+                                                 all_users, task, Task)
 
         if result:
             context.update(result)
@@ -575,7 +523,7 @@ def edit_task(request, pk):
                                                         original_task, form):
 
             skip_deadline_reminder_check = True
-            result = save_task_and_handle_form_errors(
+            result = save_obj_and_handle_form_errors(
                 request, form, all_users,
                 task, Task, skip_deadline_reminder_check
             )
@@ -595,8 +543,8 @@ def edit_task(request, pk):
                                                        new_deadline_reminder,
                                                        new_assigned_to)
 
-            result = save_task_and_handle_form_errors(request, form,
-                                                      all_users, task, Task)
+            result = save_obj_and_handle_form_errors(request, form,
+                                                     all_users, task, Task)
 
             if result:
                 print(context)
