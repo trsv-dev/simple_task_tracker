@@ -205,6 +205,18 @@ def index(request):
 
     tasks = Task.objects.select_related('author').all()
 
+    # pending = tasks.filter(status='Ожидает выполнения')
+    # in_progress = tasks.filter(status='В процессе выполнения')
+
+    # Уменьшаем на 2 кол-во запросов к БД
+    tasks = tasks.filter(
+        status__in=['Ожидает выполнения', 'В процессе выполнения']
+    )
+    pending = [task for task in tasks if task.status == 'Ожидает выполнения']
+    in_progress = [
+        task for task in tasks if task.status == 'В процессе выполнения'
+    ]
+
     current_data = timezone.now()
 
     # Отображаем завершенные за сутки задания.
@@ -218,6 +230,8 @@ def index(request):
 
     context = {
         'tasks': tasks,
+        'pending': pending,
+        'in_progress': in_progress,
         'completed_tasks': completed_tasks
     }
 
@@ -511,8 +525,6 @@ def edit_task(request, pk):
         'all_users': all_users,
     }
 
-    print(f'Task context before update - {context}')
-
     if form.is_valid():
         task = form.save(commit=False)
         new_assigned_to = form.cleaned_data.get('assigned_to')
@@ -531,8 +543,6 @@ def edit_task(request, pk):
             if result:
                 context.update(result)
 
-                print(f'Task context after update - {context}')
-
                 return render(request, 'tasks/create.html', context)
 
             return redirect('tracker:detail', pk=task.id)
@@ -547,7 +557,6 @@ def edit_task(request, pk):
                                                      all_users, task, Task)
 
             if result:
-                print(context)
                 context.update(result)
                 return render(request, 'tasks/create.html', context)
 
