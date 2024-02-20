@@ -1,3 +1,5 @@
+from django.conf import settings
+from django.core.exceptions import ValidationError
 from django.db import models
 from mptt.fields import TreeForeignKey
 from mptt.models import MPTTModel
@@ -65,6 +67,14 @@ class Comment(MPTTModel):
         ordering = ['-created']
         verbose_name = 'Комментарий'
         verbose_name_plural = 'Комментарии'
+
+    def save(self, *args, **kwargs):
+        print(settings.MAX_COMMENTS_DEPTH)
+        max_depth = settings.MAX_COMMENTS_DEPTH
+        if self.parent and self.parent.level >= max_depth:
+            raise ValidationError('Достигнута максимальная глубина вложенных '
+                                  'комментариев')
+        super().save(*args, **kwargs)
 
     def __str__(self):
         if self.parent:

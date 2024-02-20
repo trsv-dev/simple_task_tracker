@@ -135,6 +135,7 @@ BASE_URL = os.getenv('BASE_URL', 'http://127.0.0.1:8000')
 TASKS_IN_PAGE = os.getenv('TASKS_IN_PAGE', 10)
 MAX_IMAGES_COUNT = int(os.getenv('MAX_IMAGES_COUNT', 5))
 DAYS_IN_CALENDAR_PAGE = int(os.getenv('DAYS_IN_CALENDAR_PAGE', 3))
+MAX_COMMENTS_DEPTH = int(os.getenv('MAX_COMMENTS_DEPTH', 2))
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
