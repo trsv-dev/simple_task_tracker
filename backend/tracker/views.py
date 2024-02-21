@@ -208,9 +208,9 @@ def index(request):
     # pending = tasks.filter(status='Ожидает выполнения')
     # in_progress = tasks.filter(status='В процессе выполнения')
 
-    # Уменьшаем на 2 кол-во запросов к БД
+    # Уменьшаем на 1 кол-во запросов к БД
     tasks = tasks.filter(
-        status__in=['Ожидает выполнения', 'В процессе выполнения']
+        status__in=['Ожидает выполнения', 'В процессе выполнения', 'Выполнено']
     )
     pending = [task for task in tasks if task.status == 'Ожидает выполнения']
     in_progress = [
@@ -433,7 +433,8 @@ def full_archive_by_dates(request):
 
 
 def task_detail(request, pk):
-    task = get_object_or_404(Task.objects.select_related('author', 'assigned_to', 'done_by'), pk=pk)
+    task = get_object_or_404(
+        Task.objects.select_related('author', 'assigned_to', 'done_by'), pk=pk)
     comments = task.comments.select_related('author').prefetch_related('images')
 
     context = get_common_context(request, task, comments)

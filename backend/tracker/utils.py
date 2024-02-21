@@ -233,11 +233,15 @@ def get_all_usernames_list():
 
 
 def get_common_context(request, task, comments):
+    user = request.user
     comment_form = CommentForm(request.POST or None)
     comment_texts = [comment.text for comment in comments]
     comments_with_expired_editing_time = []
     images_in_task = task.images.all()
-
+    # Если пользователь аутентифицирован, то показываем кнопку добавления
+    # в избранное
+    if user.is_authenticated:
+        is_favorited = bool(user.favorites.filter(task=task))
     images_in_comments = [comment.images.all() for comment in comments]
 
     highlighted_comment_id = int(request.GET.get('highlighted_comment_id', 0))
@@ -256,7 +260,7 @@ def get_common_context(request, task, comments):
         username: get_profile(username) for username in list_of_mentioned_users
     }
 
-    return {
+    context = {
         'comment_form': comment_form,
         'task': task,
         'comments': comments,
@@ -267,3 +271,11 @@ def get_common_context(request, task, comments):
         'images_in_comments': images_in_comments,
         'highlighted_comment_id': highlighted_comment_id
     }
+
+    if not user.is_authenticated:
+        return context
+
+    # Если пользователь аутентифицирован, то показываем кнопку добавления
+    # в избранное
+    context['is_favorited'] = is_favorited
+    return context
