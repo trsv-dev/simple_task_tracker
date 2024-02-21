@@ -41,8 +41,9 @@
                               <a class="nav-item nav-link active" href="{% url 'tracker:user_archive' user=user%}">✅ Выполненные</a>
                               <a class="nav-item nav-link active" href="{% url 'tracker:delegated_tasks' user=user%}">📣 Поставленные</a>
                               <a class="nav-item nav-link active" href="{% url 'tracker:full_archive'%}">📚 Архив задач</a>
+                              <a class="nav-item nav-link active" href="{% url 'favorites:favorites' user=user %}">🫶 Избранное</a>
                               <a class="nav-item nav-link active" href="{% url 'tracker:profile' user=user%}">🤓 Профиль</a>
-                              <a class="nav-item nav-link active" href="{% url 'users:logout' %}">🔌 Выйти (вошли как {{ user.username }})</a>
+                              <a class="nav-item nav-link active" href="{% url 'users:logout' %}">🔌 Выйти ({{ user.username }})</a>
                             {% else %}
                                 <a class="nav-item nav-link active" href="{% url 'users:login' %}">Войти</a>
                                 <a class="nav-item nav-link active"> 🧐 </a>

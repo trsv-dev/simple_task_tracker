@@ -5,8 +5,13 @@ from comments import views
 app_name = 'comments'
 
 urlpatterns = [
+    # path(
+    #     'detail/<int:task_pk>/comment/',
+    #     views.create_comment,
+    #     name='create_comment'
+    # ),
     path(
-        'detail/<int:task_pk>/comment/',
+        'detail/<int:task_pk>/',
         views.create_comment,
         name='create_comment'
     ),

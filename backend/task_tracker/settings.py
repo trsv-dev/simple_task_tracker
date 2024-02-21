@@ -1,8 +1,8 @@
 import os
 from pathlib import Path
 
-from dotenv import load_dotenv
 from celery.schedules import crontab
+from dotenv import load_dotenv
 
 load_dotenv()
 
@@ -13,6 +13,8 @@ SECRET_KEY = os.getenv('SECRET_KEY', 'you_need_to_set_the_secret_key_in_env')
 DEBUG = os.getenv('DEBUG', 'False') == 'True'
 
 ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '127.0.0.1, localhost').split(', ')
+
+INTERNAL_IPS = os.getenv('INTERNAL_IPS', '127.0.0.1, localhost').split(', ')
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -31,6 +33,7 @@ INSTALLED_APPS = [
     'users.apps.UsersConfig',
     'images.apps.ImagesConfig',
     'comments.apps.CommentsConfig',
+    'favorites.apps.FavoritesConfig',
 ]
 
 MIDDLEWARE = [
@@ -131,8 +134,9 @@ USE_TZ = True
 BASE_URL = os.getenv('BASE_URL', 'http://127.0.0.1:8000')
 
 TASKS_IN_PAGE = os.getenv('TASKS_IN_PAGE', 10)
-MAX_IMAGES_COUNT = os.getenv('MAX_IMAGES_COUNT', 5)
+MAX_IMAGES_COUNT = int(os.getenv('MAX_IMAGES_COUNT', 5))
 DAYS_IN_CALENDAR_PAGE = int(os.getenv('DAYS_IN_CALENDAR_PAGE', 3))
+MAX_COMMENTS_DEPTH = int(os.getenv('MAX_COMMENTS_DEPTH', 2))
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
@@ -180,10 +184,6 @@ CELERY_BEAT_SCHEDULE = {
 #         },
 #     }
 # }
-
-INTERNAL_IPS = [
-    '127.0.0.1',
-]
 
 # LOGGING = {
 #     'version': 1,

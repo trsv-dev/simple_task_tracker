@@ -4,16 +4,25 @@
 <title>Профиль пользователя {{ user_profile }}</title>
 
 {% block content %}
-  <div class="container mt-4">
-    <section class="user-profile text-center">
-        <p>Профиль пользователя <strong> {{ user_profile }} </strong></p>
-        <p>Имя:<strong> {{ user_profile.first_name }} </strong></p>
-        <p>Фамилия:<strong> {{ user_profile.last_name }} </strong></p>
-        <p>Почта:<strong> {{ user_profile.email }} </strong></p>
-        <p>Дата регистрации:<strong> {{ user_profile.date_joined }} </strong></p>
-        <a class="btn btn-outline-danger my-4" href="{% url 'password_change' %}">Сменить пароль?</a>
-    </section>
-  </div>
+
+    {% if user.is_authenticated %}
+          <div class="container mt-4">
+            <section class="user-profile text-center">
+                <p>Профиль пользователя <strong> {{ user_profile }} </strong></p>
+                <p>Имя:<strong> {{ user_profile.first_name }} </strong></p>
+                <p>Фамилия:<strong> {{ user_profile.last_name }} </strong></p>
+                <p>Почта:<strong> {{ user_profile.email }} </strong></p>
+                <p>Дата регистрации:<strong> {{ user_profile.date_joined }} </strong></p>
+                {% if user == user_profile %}
+                    <a class="btn btn-outline-danger my-4" href="{% url 'password_change' %}">Сменить пароль?</a>
+                {% endif %}
+            </section>
+          </div>
+    {% else %}
+        <div class="text-center">
+            <p>Для просмотра профилей пользователей необходимо войти или зарегистрироваться</p>
+        </div>
+    {% endif %}
 {% endblock %}
 
 {% include 'includes/footer.html' %}

@@ -10,6 +10,7 @@ urlpatterns = [
     path('auth/', include('users.urls')),
     path('auth/', include('django.contrib.auth.urls')),
     path('comments/', include('comments.urls')),
+    path('favorites/', include('favorites.urls')),
 ]
 
 if settings.DEBUG:
