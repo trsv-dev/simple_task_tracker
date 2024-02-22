@@ -5,6 +5,7 @@ from smtplib import SMTPException
 from urllib.parse import unquote_plus
 
 from celery import shared_task
+from django.contrib import messages
 from django.core.mail import send_mail
 from django.shortcuts import get_object_or_404
 from django.template.loader import render_to_string
@@ -279,3 +280,13 @@ def get_common_context(request, task, comments):
     # в избранное
     context['is_favorited'] = is_favorited
     return context
+
+
+def catch_message(request):
+
+    message = request.GET.get('message')
+    message_level = request.GET.get('message_level', 'success')
+
+    if message:
+        message_method = getattr(messages, message_level, messages.success)
+        return message_method(request, message)

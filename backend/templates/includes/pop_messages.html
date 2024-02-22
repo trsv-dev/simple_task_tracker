@@ -1,0 +1,11 @@
+{% if messages %}
+  <div class="messages text-center">
+    {% for message in messages %}
+        <div class="alert {% if message.tags == 'success' %}alert-success{% elif message.tags == 'info' %}alert-info{% elif message.tags == 'warning' %}alert-warning{% endif %}" role="alert">
+          {% if message.tags %}
+              {% autoescape off %}{{ message }}{% endautoescape %}
+          {% endif %}
+      </div>
+    {% endfor %}
+  </div>
+{% endif %}

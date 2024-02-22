@@ -34,6 +34,7 @@ INSTALLED_APPS = [
     'images.apps.ImagesConfig',
     'comments.apps.CommentsConfig',
     'favorites.apps.FavoritesConfig',
+    'tags.apps.TagsConfig',
 ]
 
 MIDDLEWARE = [

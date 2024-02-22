@@ -17,3 +17,7 @@
     max-width: 90%;
     max-height: 90%;
 }
+
+.wide-select {
+    width: 30%;  /* Ширина поля выбора тегов */
+}
