@@ -40,6 +40,12 @@
             <textarea class="form-control" id="id_description" name="description" rows="6" placeholder="Опишите задачу. Можно использовать упрощенный markdown-синтаксис" required>{% if task %}{{ task.description }}{% elif form.description.value %}{{ form.description.value }}{% endif %}</textarea>
         </div>
 
+        <div class="form-group">
+            <label for="id_tags">Выбор тегов:</label>
+            <p style="margin-bottom: 0;"><small class="text-muted">Можно выбрать несколько, зажав Ctrl</small></p>
+            {{ form.tags }}
+        </div>
+
         {% if task and task.images %}
 
             <label for="id_image">Изображение:</label>

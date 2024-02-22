@@ -1,5 +1,6 @@
 from django import forms
 
+from tags.models import Tags, TaskTag
 from tracker.models import Task
 
 
@@ -18,11 +19,18 @@ from tracker.models import Task
 class TaskCreateForm(forms.ModelForm):
     """Форма создания задачи."""
 
+    tags = forms.ModelMultipleChoiceField(
+        queryset=Tags.objects.all(),
+        widget=forms.SelectMultiple(attrs={'class': 'wide-select'}),
+        label='Теги',
+        required=False,
+    )
+
     class Meta:
         model = Task
         fields = ('title', 'description', 'priority',
                   'status', 'deadline', 'deadline_reminder', 'assigned_to',
-                  )
+                  'tags',)
 
         labels = {
             'title': 'Название',
@@ -32,4 +40,5 @@ class TaskCreateForm(forms.ModelForm):
             'deadline': 'Дедлайн',
             'deadline_reminder': 'Когда напомнить о дедлайне',
             'assigned_to': 'Ответственный',
+            'tags': 'Теги',
         }

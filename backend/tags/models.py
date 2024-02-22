@@ -53,6 +53,12 @@ class TaskTag(models.Model):
     class Meta:
         verbose_name = 'Присвоить тег'
         verbose_name_plural = 'Присвоить теги'
+        constraints = (
+            models.UniqueConstraint(
+                fields=('task', 'tag'),
+                name='unique_task_tag'
+            ),
+        )
 
     def __str__(self):
         return f'Задаче "{self.task}" присвоен тег "{self.tag}"'

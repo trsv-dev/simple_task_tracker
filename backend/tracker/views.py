@@ -15,7 +15,7 @@ from django.utils import timezone
 from django.views.decorators.http import require_POST
 
 from images.views import handle_images
-from tags.models import TaskTag
+from tags.models import TaskTag, Tags
 from tracker.forms import TaskCreateForm
 from tracker.models import Task
 from tracker.utils import (templates, universal_mail_sender,
@@ -469,6 +469,7 @@ def create_task(request):
     if form.is_valid():
         task = form.save(commit=False)
         task.author = username
+        tags = form.cleaned_data.get('tags', [])
 
         # Если поле даты/времени напоминания о дедлайне не было заполнено,
         # то оно придет за сутки до дедлайна.
@@ -497,6 +498,10 @@ def create_task(request):
         if result:
             context.update(result)
             return render(request, 'tasks/create.html', context)
+
+        task_tags = [TaskTag(task=task, tag=tag) for tag in tags]
+        # Создаем объекты TaskTag одним запросом.
+        TaskTag.objects.bulk_create(task_tags)
 
         assigned_to_email = task.assigned_to.email
 
@@ -546,6 +551,7 @@ def edit_task(request, pk):
         new_assigned_to = form.cleaned_data.get('assigned_to')
         new_deadline = form.cleaned_data.get('deadline')
         new_deadline_reminder = form.cleaned_data.get('deadline_reminder')
+        tags = form.cleaned_data.get('tags', [])
 
         if is_title_description_priority_status_changed(request,
                                                         original_task, form):
@@ -576,6 +582,11 @@ def edit_task(request, pk):
             if result:
                 context.update(result)
                 return render(request, 'tasks/create.html', context)
+
+            task.tags.all().delete()
+            task_tags = [TaskTag(task=task, tag=tag) for tag in tags]
+            # Создаем объекты TaskTag одним запросом.
+            TaskTag.objects.bulk_create(task_tags)
 
             messages.warning(request, 'Изменения в задаче были сохранены!')
             return redirect('tracker:detail', pk=task.id)
