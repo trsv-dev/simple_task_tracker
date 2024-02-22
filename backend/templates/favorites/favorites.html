@@ -5,37 +5,35 @@
 
 {% block content %}
   <div class="container mt-4">
-    <section class="user-profile text-center">
-        <p>Избранное пользователя <b>{{ username }}</b></p>
-    </section>
+        <section class="user-profile text-center">
+            <p>Избранное пользователя <b>{{ username }}</b></p>
+        </section>
+          <!-- Верхняя пагинация -->
+        {% if page_obj.has_next or page_obj.has_previous %}
+          {% include 'includes/paginator.html' %}
+        {% endif %}
 
-      <!-- Верхняя пагинация -->
+        <section class="task-list">
+          {% if tasks_by_date %}
+              {% for date, favorite_item in tasks_by_date.items %}
+                <br><div class="text-center mb-2"><b>{{ date }}</b></div><br>
+
+                {% for task_item in favorite_item %}
+                  {% with task=task_item.task %}
+                    {% include 'includes/task_flat_card.html' %}
+                  {% endwith %}
+                {% endfor %}
+              {% endfor %}
+          {% else %}
+            <div class="text-center">
+                У вас пока нет избранных задач 😵
+            </div>
+          {% endif %}
+        </section>
+
+    <!-- Нижняя пагинация -->
     {% if page_obj.has_next or page_obj.has_previous %}
       {% include 'includes/paginator.html' %}
     {% endif %}
-    <br>
-
-    <section class="task-list">
-      {% if tasks_by_date %}
-          {% for date, favorite_item in tasks_by_date.items %}
-            <br><div class="text-center mb-2"><b>{{ date }}</b></div><br>
-
-            {% for task_item in favorite_item %}
-              {% with task=task_item.task %}
-                {% include 'includes/task_flat_card.html' %}
-              {% endwith %}
-            {% endfor %}
-          {% endfor %}
-      {% else %}
-        <div class="text-center">
-            У вас пока нет избранных задач 😵
-        </div>
-      {% endif %}
-    </section>
-
-<!-- Нижняя пагинация -->
-{% if page_obj.has_next or page_obj.has_previous %}
-  {% include 'includes/paginator.html' %}
-{% endif %}
-
+</div>
 {% endblock %}

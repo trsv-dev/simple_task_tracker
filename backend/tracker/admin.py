@@ -40,7 +40,10 @@ class TaskAdmin(admin.ModelAdmin):
     def show_tags(self, object):
         """Показывать тэги."""
 
-        return '\n'.join(tag.name for tag in object.tags.all())
+        tag_names = [tag.tag.name for tag in object.tags.filter(task=object)]
+        return tag_names
+
+        # return '\n'.join(tag.name for tag in object.tags.all())
 
     show_tags.short_description = 'Теги'
 
@@ -77,8 +80,6 @@ class TaskAdmin(admin.ModelAdmin):
     search_fields = ('author__username', 'author__email',
                      'description', 'title')
     ordering = ('-created',)
-
-    # inlines = (TagsInLine,)
 
     def get_title(self, obj):
         """Обрезаем длинные заголовки."""
@@ -215,14 +216,3 @@ class TaskAdmin(admin.ModelAdmin):
 
         # В противном случае, перенаправляем на страницу списка объектов.
         return super().response_add(request, obj, post_url_continue)
-
-
-# @admin.register(TaskTag)
-# class TaskTagsAdmin(admin.ModelAdmin):
-#     list_display = ('task', 'tag')
-#
-#
-# @admin.register(Tags)
-# class TagsAdmin(admin.ModelAdmin):
-#     list_display = ('name', 'slug')
-#     prepopulated_fields = {'slug': ('name',)}

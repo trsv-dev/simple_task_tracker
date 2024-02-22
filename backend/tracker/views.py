@@ -2,21 +2,24 @@ from copy import deepcopy
 from datetime import datetime, timedelta
 
 from django.conf import settings
+from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from django.core.paginator import Paginator
 from django.db import transaction
-from django.db.models import Q
+from django.db.models import Q, Prefetch
 from django.shortcuts import render, redirect, get_object_or_404
+from django.urls import reverse
 from django.utils import timezone
 from django.views.decorators.http import require_POST
 
 from images.views import handle_images
+from tags.models import TaskTag
 from tracker.forms import TaskCreateForm
 from tracker.models import Task
 from tracker.utils import (templates, universal_mail_sender,
-                           get_common_context)
+                           get_common_context, catch_message)
 
 
 def check_rights_to_task(username, task):
@@ -202,6 +205,8 @@ def index(request):
 
     # if not request.user.is_authenticated:
     #     return redirect('users:login')
+
+    catch_message(request)
 
     tasks = Task.objects.select_related('author').all()
 
@@ -433,8 +438,13 @@ def full_archive_by_dates(request):
 
 
 def task_detail(request, pk):
+
+    catch_message(request)
+
     task = get_object_or_404(
-        Task.objects.select_related('author', 'assigned_to', 'done_by'), pk=pk)
+        Task.objects.select_related('author', 'assigned_to', 'done_by')
+        .prefetch_related('tags__tag'), pk=pk)
+
     comments = task.comments.select_related('author').prefetch_related('images')
 
     context = get_common_context(request, task, comments)
@@ -493,6 +503,11 @@ def create_task(request):
         universal_mail_sender(request, task, assigned_to_email,
                               templates['create_task_template'])
 
+        url = settings.BASE_URL + reverse('tracker:detail', args=[task.pk])
+        messages.success(
+            request, f'<a href="{url}">Задача</a> успешно создана!'
+        )
+
         return redirect('tracker:index')
     return render(request, 'tasks/create.html', context)
 
@@ -546,6 +561,7 @@ def edit_task(request, pk):
 
                 return render(request, 'tasks/create.html', context)
 
+            messages.warning(request, 'Изменения в задаче были сохранены!')
             return redirect('tracker:detail', pk=task.id)
 
         else:
@@ -561,6 +577,7 @@ def edit_task(request, pk):
                 context.update(result)
                 return render(request, 'tasks/create.html', context)
 
+            messages.warning(request, 'Изменения в задаче были сохранены!')
             return redirect('tracker:detail', pk=task.id)
 
     return render(request, 'tasks/create.html', context)
@@ -590,6 +607,8 @@ def delete_task(request, pk):
 
     universal_mail_sender(request, saved_task_data, assigned_to_email,
                           templates['delete_task_template'])
+
+    messages.info(request, f'Задача "{saved_task_data.title}" была удалена!')
 
     return redirect('tracker:index')
 

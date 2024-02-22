@@ -4,6 +4,7 @@
 
 <link rel="stylesheet" href="{% static 'css/default.min.css' %}">
 <link rel="stylesheet" href="{% static 'css/tracker.css' %}">
+<link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}">
 <script src="{% static 'js/highlight.min.js' %}"></script>
 
 {% for TaskImage_object in images_in_task %}
@@ -19,6 +20,13 @@
 
 
 <p><b>Описание:</b> {{ task.description|markdown }}</p>
+{% if task.tags %}
+    <p>
+        {% for task_tag in task.tags.all %}
+            <span class="badge bg-secondary">{{ task_tag.tag.name }}</span>
+        {% endfor %}
+    </p>
+{% endif %}
 <hr>
 
 <p>
