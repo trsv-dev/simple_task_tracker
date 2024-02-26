@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+{#{% load tracker_tags %}#}
+
+{% block title %}Тег "{{ tag_name }}"{% endblock %}
+
+{% block content %}
+  <div class="container mt-4">
+    <section class="user-profile text-center">
+        <p>Задачи, отмеченные тегом "<b>{{ tag_name }}</b>":</p>
+    </section>
+
+      <!-- Верхняя пагинация -->
+    {% if page_obj.has_next or page_obj.has_previous %}
+      {% include 'includes/paginator.html' %}
+    {% endif %}
+    <br>
+    <section class="task-list">
+      {% if page_obj %}
+        {% for task in page_obj %}
+            {% include 'includes/task_flat_card.html' %}
+        {% endfor %}
+      {% else %}
+        <div class="text-center">
+            По тегу "<b>{{ tag_name }}</b>" ничего не найдено
+        </div>
+      {% endif %}
+    </section>
+  </div>
+
+<!-- Нижняя пагинация -->
+{% if page_obj.has_next or page_obj.has_previous %}
+  {% include 'includes/paginator.html' %}
+{% endif %}
+
+{% endblock %}

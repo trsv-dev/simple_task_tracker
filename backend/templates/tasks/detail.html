@@ -2,10 +2,12 @@
 {% load tracker_tags %}
 {% load thumbnail %}
 
-<link rel="stylesheet" href="{% static 'css/default.min.css' %}">
-<link rel="stylesheet" href="{% static 'css/tracker.css' %}">
-<link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}">
-<script src="{% static 'js/highlight.min.js' %}"></script>
+<head>
+    <link rel="stylesheet" href="{% static 'css/default.min.css' %}">
+    <link rel="stylesheet" href="{% static 'css/tracker.css' %}">
+    <link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}">
+    <script src="{% static 'js/highlight.min.js' %}"></script>
+</head>
 
 {% for TaskImage_object in images_in_task %}
     {% thumbnail TaskImage_object.image "200x150" crop="center" upscale=True as im %}
@@ -20,13 +22,17 @@
 
 
 <p><b>Описание:</b> {{ task.description|markdown }}</p>
+
 {% if task.tags %}
-    <p>
         {% for task_tag in task.tags.all %}
-            <span class="badge bg-secondary">{{ task_tag.tag.name }}</span>
+            <a href="{% url 'tags:by_tag' tag_name=task_tag.tag.name %}">
+                <span type="button" class="badge bg-secondary" >
+                    {{ task_tag.tag.name }}
+                </span>
+            </a>
         {% endfor %}
-    </p>
 {% endif %}
+
 <hr>
 
 <p>

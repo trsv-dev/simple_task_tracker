@@ -1,7 +1,14 @@
 {% load static %}
 {% include 'includes/header.html' %}
 
-<title>{% block title %}Трекер задач{% endblock %}</title>
+<head>
+    <link rel="stylesheet" href="{% static 'css/default.min.css' %}">
+    <link rel="stylesheet" href="{% static 'css/tracker.css' %}">
+    <link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}">
+    <script src="{% static 'js/highlight.min.js' %}"></script>
+
+    <title>{% block title %}Трекер задач{% endblock %}</title>
+</head>
 
 <body>
     {% block content %}
