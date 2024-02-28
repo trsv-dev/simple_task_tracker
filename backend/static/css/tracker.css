@@ -25,3 +25,33 @@
 a {
     display: inline-block;
 }
+
+/* Стили для бейджей */
+.badge {
+    display: inline-block;
+    margin-right: 2px; /* Пространство между бейджами */
+}
+
+/* Медиа-запрос для узких экранов (меньше 768px) */
+@media (max-width: 767px) {
+    .badge {
+        display: block; /* Размещение бейджей в столбец */
+        margin-bottom: 2px; /* Пространство между бейджами на узких экранах */
+    }
+}
+
+/* Медиа-запрос для узких экранов (меньше 768px) */
+@media (max-width: 767px) {
+    .btn {
+        /*display: block; !* Размещение кнопок в столбец *!*/
+        margin-bottom: 2px; /* Пространство между кнопками на узких экранах */
+    }
+}
+
+.author-badge {
+    background-color: #83b0ce; /* Светло-серый цвет фона */
+  }
+
+.likes-badge {
+    background-color: rgb(42, 157, 42); /* Светло-серый цвет фона */
+  }

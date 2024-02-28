@@ -1,5 +1,6 @@
 from django.contrib import admin, messages
 from django.core.exceptions import ValidationError
+from django.db.models import Count
 from django.http import HttpResponseRedirect, HttpResponseBadRequest
 from django_celery_beat.models import (IntervalSchedule, CrontabSchedule,
                                        SolarSchedule, ClockedSchedule,
@@ -49,9 +50,9 @@ class TaskAdmin(admin.ModelAdmin):
 
     list_display = (
         'id', 'author', 'get_title', 'get_description', 'show_tags',
-        'priority', 'status', 'previous_status', 'assigned_to',
-        'created', 'deadline', 'deadline_reminder', 'is_notified',
-        'is_done', 'done_by', 'done_by_time')
+        'get_favorites_count', 'priority', 'status', 'previous_status',
+        'assigned_to', 'created', 'deadline', 'deadline_reminder',
+        'is_notified', 'is_done', 'done_by', 'done_by_time')
 
     fieldsets = (
         ('Информация о задаче', {
@@ -80,6 +81,19 @@ class TaskAdmin(admin.ModelAdmin):
     search_fields = ('author__username', 'author__email',
                      'description', 'title')
     ordering = ('-created',)
+
+    def get_queryset(self, request):
+        """Добавляем аннотацию для подсчета количества избранных элементов."""
+
+        return super().get_queryset(request).annotate(
+            favorites_count=Count('favorites'))
+
+    def get_favorites_count(self, obj):
+        """Получаем число добавлений задач в избранное."""
+
+        return obj.favorites_count
+
+    get_favorites_count.short_description = 'в избранном'
 
     def get_title(self, obj):
         """Обрезаем длинные заголовки."""

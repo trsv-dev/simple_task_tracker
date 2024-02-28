@@ -26,11 +26,17 @@
 {% if task.tags %}
         {% for task_tag in task.tags.all %}
             <a href="{% url 'tags:by_tag' tag_name=task_tag.tag.name %}">
-                <span type="button" class="badge bg-secondary" >
+                <span type="button" class="badge bg-secondary" title="Теги">
                     {{ task_tag.tag.name }}
                 </span>
             </a>
         {% endfor %}
+{% endif %}
+
+{% if in_favorites %}
+    <span class="badge rounded-pill bg-warning text-dark" title="Количество человек, которые добавили задачу в избранное">
+        ★ {{ in_favorites }}
+    </span>
 {% endif %}
 
 <hr>
