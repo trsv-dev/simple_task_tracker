@@ -2,21 +2,26 @@ from copy import deepcopy
 from datetime import datetime, timedelta
 
 from django.conf import settings
+from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
-from django.core.paginator import Paginator
 from django.db import transaction
-from django.db.models import Q
+from django.db.models import Q, Count
 from django.shortcuts import render, redirect, get_object_or_404
+from django.urls import reverse
 from django.utils import timezone
+from django.views.decorators.cache import cache_page
 from django.views.decorators.http import require_POST
 
+from favorites.models import Favorites
 from images.views import handle_images
+from tags.models import TaskTag
 from tracker.forms import TaskCreateForm
 from tracker.models import Task
 from tracker.utils import (templates, universal_mail_sender,
-                           get_common_context)
+                           get_common_context, catch_message,
+                           get_page_obj)
 
 
 def check_rights_to_task(username, task):
@@ -203,6 +208,8 @@ def index(request):
     # if not request.user.is_authenticated:
     #     return redirect('users:login')
 
+    catch_message(request)
+
     tasks = Task.objects.select_related('author').all()
 
     # pending = tasks.filter(status='Ожидает выполнения')
@@ -253,17 +260,12 @@ def current_tasks(request, user):
     """Отображение текущих задач пользователя."""
 
     profile_user = get_object_or_404(User, username=user)
-    # tasks = Task.objects.filter(
-    #     assigned_to=profile_user, done_by=None
-    # ).order_by('deadline')
 
     tasks = Task.objects.filter(
         assigned_to=profile_user, done_by=None
     ).order_by('deadline').select_related('author')
 
-    paginator = Paginator(tasks, settings.TASKS_IN_PAGE)
-    page_number = request.GET.get('page')
-    page_obj = paginator.get_page(page_number)
+    page_obj = get_page_obj(request, tasks, settings.TASKS_IN_PAGE)
 
     context = {
         'username': profile_user,
@@ -299,8 +301,9 @@ def user_archive(request, user):
         'done_by_time__date', 'done_by_time'
     )
 
-    paginator = Paginator(dates, items_in_page)
-    page_obj = paginator.get_page(page_number)
+    page_obj = get_page_obj(
+        request, dates, settings.DAYS_IN_CALENDAR_PAGE
+    )
 
     context = {
         'username': profile_user,
@@ -318,7 +321,6 @@ def delegated_tasks(request, user):
     if not request.user.is_authenticated:
         return redirect('users:login')
 
-    # tasks = Task.objects.all()
     username = get_object_or_404(User, username=user)
     delegated_tasks = Task.objects.filter(
         author=username).select_related('author')
@@ -339,8 +341,9 @@ def delegated_tasks(request, user):
         'created__date', 'created'
     )
 
-    paginator = Paginator(dates, items_per_page)
-    page_obj = paginator.get_page(page_number)
+    page_obj = get_page_obj(
+        request, dates, settings.DAYS_IN_CALENDAR_PAGE
+    )
 
     context = {
         'username': username,
@@ -371,9 +374,9 @@ def get_undone_delegated_tasks(request, user):
 
     undone_delegated_tasks = undone_delegated_tasks.order_by(order_by)
 
-    page_number = request.GET.get('page')
-    paginator = Paginator(undone_delegated_tasks, settings.TASKS_IN_PAGE)
-    page_obj = paginator.get_page(page_number)
+    page_obj = get_page_obj(
+        request, undone_delegated_tasks, settings.TASKS_IN_PAGE
+    )
 
     context = {
         'username': username,
@@ -420,8 +423,9 @@ def full_archive_by_dates(request):
     )
 
     # Создаем объект Paginator для навигации по страницам
-    paginator = Paginator(dates, items_per_page)
-    page_obj = paginator.get_page(page_number)
+    page_obj = get_page_obj(
+        request, dates, settings.DAYS_IN_CALENDAR_PAGE
+    )
 
     context = {
         'full_archive_quantity': len(full_archive),
@@ -433,11 +437,32 @@ def full_archive_by_dates(request):
 
 
 def task_detail(request, pk):
+    """Отображение деталей задачи."""
+
+    catch_message(request)
+
     task = get_object_or_404(
-        Task.objects.select_related('author', 'assigned_to', 'done_by'), pk=pk)
-    comments = task.comments.select_related('author').prefetch_related('images')
+        Task.objects.select_related('author', 'assigned_to', 'done_by')
+        .prefetch_related('tags__tag'), pk=pk)
+
+    comments = task.comments.select_related('author').prefetch_related(
+        'images').annotate(likes_count=Count('likes'))
 
     context = get_common_context(request, task, comments)
+
+    context['in_favorites'] = Favorites.objects.filter(task=task).values(
+        'user').count()
+
+    if request.user.is_authenticated:
+        users_likes = request.user.likes.select_related(
+            'user').prefetch_related('comment')
+
+        users_likes_dict = {}
+        for likes in users_likes:
+            users_likes_dict[likes.comment.text] = likes.user.username
+
+        context['users_likes_dict'] = users_likes_dict
+
     return render(request, 'tasks/task_detail.html', context)
 
 
@@ -459,6 +484,7 @@ def create_task(request):
     if form.is_valid():
         task = form.save(commit=False)
         task.author = username
+        tags = form.cleaned_data.get('tags', [])
 
         # Если поле даты/времени напоминания о дедлайне не было заполнено,
         # то оно придет за сутки до дедлайна.
@@ -488,10 +514,19 @@ def create_task(request):
             context.update(result)
             return render(request, 'tasks/create.html', context)
 
+        task_tags = [TaskTag(task=task, tag=tag) for tag in tags]
+        # Создаем объекты TaskTag одним запросом.
+        TaskTag.objects.bulk_create(task_tags)
+
         assigned_to_email = task.assigned_to.email
 
         universal_mail_sender(request, task, assigned_to_email,
                               templates['create_task_template'])
+
+        url = settings.BASE_URL + reverse('tracker:detail', args=[task.pk])
+        messages.success(
+            request, f'<a href="{url}">Задача</a> успешно создана!'
+        )
 
         return redirect('tracker:index')
     return render(request, 'tasks/create.html', context)
@@ -511,6 +546,10 @@ def edit_task(request, pk):
         .prefetch_related('images'),
         pk=pk
     )
+
+    existing_tags = task.tags.select_related('task').prefetch_related('tag')
+    initial_tags = [tasktag.tag.name for tasktag in existing_tags]
+
     original_task = deepcopy(task)
 
     if not check_rights_to_task(username, task):
@@ -522,8 +561,10 @@ def edit_task(request, pk):
 
     context = {
         'task': task,
+        'initial_tags': initial_tags,
         'form': form,
         'all_users': all_users,
+
     }
 
     if form.is_valid():
@@ -531,6 +572,7 @@ def edit_task(request, pk):
         new_assigned_to = form.cleaned_data.get('assigned_to')
         new_deadline = form.cleaned_data.get('deadline')
         new_deadline_reminder = form.cleaned_data.get('deadline_reminder')
+        tags = form.cleaned_data.get('tags', [])
 
         if is_title_description_priority_status_changed(request,
                                                         original_task, form):
@@ -546,6 +588,7 @@ def edit_task(request, pk):
 
                 return render(request, 'tasks/create.html', context)
 
+            messages.warning(request, 'Изменения в задаче были сохранены!')
             return redirect('tracker:detail', pk=task.id)
 
         else:
@@ -561,6 +604,12 @@ def edit_task(request, pk):
                 context.update(result)
                 return render(request, 'tasks/create.html', context)
 
+            task.tags.all().delete()
+            task_tags = [TaskTag(task=task, tag=tag) for tag in tags]
+            # Создаем объекты TaskTag одним запросом.
+            TaskTag.objects.bulk_create(task_tags)
+
+            messages.warning(request, 'Изменения в задаче были сохранены!')
             return redirect('tracker:detail', pk=task.id)
 
     return render(request, 'tasks/create.html', context)
@@ -590,6 +639,8 @@ def delete_task(request, pk):
 
     universal_mail_sender(request, saved_task_data, assigned_to_email,
                           templates['delete_task_template'])
+
+    messages.info(request, f'Задача "{saved_task_data.title}" была удалена!')
 
     return redirect('tracker:index')
 
@@ -675,9 +726,9 @@ def task_search(request):
         Q(description__icontains=search_query)
     ).order_by('title').select_related('author')
 
-    page_number = int(request.GET.get('page', 1))
-    paginator = Paginator(search_results, settings.TASKS_IN_PAGE)
-    page_obj = paginator.get_page(page_number)
+    page_obj = get_page_obj(
+        request, search_results, settings.TASKS_IN_PAGE
+    )
 
     context = {
         'page_obj': page_obj,

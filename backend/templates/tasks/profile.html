@@ -1,7 +1,11 @@
+{% extends 'base.html' %}
+{% load static %}
 {% include 'includes/header.html' %}
 {% load tracker_tags %}
 
-<title>Профиль пользователя {{ user_profile }}</title>
+<head>
+    <title>Профиль пользователя {{ user_profile }}</title>
+</head>
 
 {% block content %}
 

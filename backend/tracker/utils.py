@@ -5,7 +5,10 @@ from smtplib import SMTPException
 from urllib.parse import unquote_plus
 
 from celery import shared_task
+from django.contrib import messages
+from django.core.cache import cache
 from django.core.mail import send_mail
+from django.core.paginator import Paginator
 from django.shortcuts import get_object_or_404
 from django.template.loader import render_to_string
 from django.urls import reverse
@@ -229,15 +232,33 @@ def get_profile(username):
 
 
 def get_all_usernames_list():
+    """Получение юзернеймов всех пользователей."""
+
     return [user.username for user in User.objects.all()]
 
 
 def get_common_context(request, task, comments):
+    """
+    Получение общего контекста для страницы деталей задачи,
+    т.к. там отображаются детали задачи, комментарии и редактирование
+    комментариев, которые имеют плюс/минус один контекст.
+    """
+
     user = request.user
     comment_form = CommentForm(request.POST or None)
     comment_texts = [comment.text for comment in comments]
     comments_with_expired_editing_time = []
     images_in_task = task.images.all()
+
+    # cache_name = 'images_cache'
+    # images = cache.get('images_in_task')
+    #
+    # if images:
+    #     images_in_task = images
+    # else:
+    #     images_in_task = task.images.all()
+    #     cache.get(cache_name, images_in_task, 200)
+
     # Если пользователь аутентифицирован, то показываем кнопку добавления
     # в избранное
     if user.is_authenticated:
@@ -268,6 +289,7 @@ def get_common_context(request, task, comments):
             comments_with_expired_editing_time,
         'usernames_profiles_links': usernames_profiles_links,
         'images_in_task': images_in_task,
+        # 'images_in_task': images,
         'images_in_comments': images_in_comments,
         'highlighted_comment_id': highlighted_comment_id
     }
@@ -279,3 +301,24 @@ def get_common_context(request, task, comments):
     # в избранное
     context['is_favorited'] = is_favorited
     return context
+
+
+def catch_message(request):
+    """Перехват информационных сообщений для отображения в интерфейсе."""
+
+    message = request.GET.get('message')
+    message_level = request.GET.get('message_level', 'success')
+
+    if message:
+        message_method = getattr(messages, message_level, messages.success)
+        return message_method(request, message)
+
+
+def get_page_obj(request, object, items_per_page):
+    """Пагинатор. Возвращает page_obj."""
+
+    paginator = Paginator(object, items_per_page)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    return page_obj

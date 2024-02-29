@@ -55,12 +55,13 @@
 
             <div class="reply-line"></div>
             {% if node.author == node.task.author %}
-              <strong>{{ node.author }} (автор)</strong>, <span class="text-muted">{{ node.created }}</span><br>
+              <span class="badge rounded-pill author-badge"><strong>{{ node.author }} (автор)</strong></span> <span class="text-muted">{{ node.created }}</span><br>
             {% else %}
-              <strong>{{ node.author }}</strong>, <span class="text-muted">{{ node.created }}</span><br>
+              <span class="badge rounded-pill bg-light text-dark"><strong>{{ node.author }}</strong></span> <span class="text-muted">{{ node.created }}</span><br>
             {% endif %}
             <div class="form-group">
                 {% if node.images.all %}
+                    <br>
                     {% for image_object in node.images.all %}
 {#                         {% thumbnail image_object.image "200x150" crop="center" upscale=True as im %}#}
                          {% thumbnail image_object.image "100x60" crop="center" upscale=True as im %}
@@ -77,6 +78,13 @@
 
             <p>{{ node.text|markdown|mentioned_users_replace:usernames_profiles_links|safe }}</p>
 
+            {% if node.likes_count %}
+                <h6><span class="badge bg-success" title="Количество лайков">
+                    +{{ node.likes_count }}
+                </span></h6>
+            {% endif %}
+
+
             {% if user.is_authenticated %}
                 <div class="comment-actions">
                   <div class="btn-group">
@@ -84,6 +92,19 @@
                       Действия
                     </button>
                     <div class="dropdown-menu">
+
+                    {% if user.is_authenticated and user != node.author %}
+                        {% if users_likes_dict %}
+                                {% if node.text not in users_likes_dict.keys %}
+                                    <a href="{% url 'likes:add_like' pk=node.id %}" class="dropdown-item">👍 Лайк!</a>
+                                {% elif user.username in users_likes_dict.values %}
+                                    <a href="{% url 'likes:delete_like' pk=node.id %}" class="dropdown-item">👎 Убрать лайк</a>
+                                {% endif %}
+                        {% else %}
+                            <a href="{% url 'likes:add_like' pk=node.id %}" class="dropdown-item">👍 Лайк!</a>
+                        {% endif %}
+                    {% endif %}
+
                       {% if user == node.author and node not in comments_with_expired_editing_time %}
                         <form method="post" action="{% url 'comments:delete_comment' pk=node.id %}" style="display:inline;">
                           {% csrf_token %}

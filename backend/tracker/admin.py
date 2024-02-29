@@ -1,5 +1,6 @@
 from django.contrib import admin, messages
 from django.core.exceptions import ValidationError
+from django.db.models import Count
 from django.http import HttpResponseRedirect, HttpResponseBadRequest
 from django_celery_beat.models import (IntervalSchedule, CrontabSchedule,
                                        SolarSchedule, ClockedSchedule,
@@ -40,15 +41,18 @@ class TaskAdmin(admin.ModelAdmin):
     def show_tags(self, object):
         """Показывать тэги."""
 
-        return '\n'.join(tag.name for tag in object.tags.all())
+        tag_names = [tag.tag.name for tag in object.tags.filter(task=object)]
+        return tag_names
+
+        # return '\n'.join(tag.name for tag in object.tags.all())
 
     show_tags.short_description = 'Теги'
 
     list_display = (
         'id', 'author', 'get_title', 'get_description', 'show_tags',
-        'priority', 'status', 'previous_status', 'assigned_to',
-        'created', 'deadline', 'deadline_reminder', 'is_notified',
-        'is_done', 'done_by', 'done_by_time')
+        'get_favorites_count', 'priority', 'status', 'previous_status',
+        'assigned_to', 'created', 'deadline', 'deadline_reminder',
+        'is_notified', 'is_done', 'done_by', 'done_by_time')
 
     fieldsets = (
         ('Информация о задаче', {
@@ -78,7 +82,18 @@ class TaskAdmin(admin.ModelAdmin):
                      'description', 'title')
     ordering = ('-created',)
 
-    # inlines = (TagsInLine,)
+    def get_queryset(self, request):
+        """Добавляем аннотацию для подсчета количества избранных элементов."""
+
+        return super().get_queryset(request).annotate(
+            favorites_count=Count('favorites'))
+
+    def get_favorites_count(self, obj):
+        """Получаем число добавлений задач в избранное."""
+
+        return obj.favorites_count
+
+    get_favorites_count.short_description = 'в избранном'
 
     def get_title(self, obj):
         """Обрезаем длинные заголовки."""
@@ -215,14 +230,3 @@ class TaskAdmin(admin.ModelAdmin):
 
         # В противном случае, перенаправляем на страницу списка объектов.
         return super().response_add(request, obj, post_url_continue)
-
-
-# @admin.register(TaskTag)
-# class TaskTagsAdmin(admin.ModelAdmin):
-#     list_display = ('task', 'tag')
-#
-#
-# @admin.register(Tags)
-# class TagsAdmin(admin.ModelAdmin):
-#     list_display = ('name', 'slug')
-#     prepopulated_fields = {'slug': ('name',)}

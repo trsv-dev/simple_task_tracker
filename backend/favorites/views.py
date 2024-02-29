@@ -4,6 +4,7 @@ from django.shortcuts import render, get_object_or_404, redirect
 
 from favorites.models import Favorites
 from tracker.models import Task, User
+from tracker.utils import get_page_obj
 from tracker.views import get_current_dates, get_tasks_by_date
 
 
@@ -18,7 +19,8 @@ def add_to_favorites(request, pk):
 
     if user is not task.author:
         Favorites.objects.create(task=task, user=user)
-        return redirect('tracker:detail', pk=task.pk)
+
+    return redirect('tracker:detail', pk=task.pk)
 
 
 def delete_from_favorites(request, pk):
@@ -30,7 +32,7 @@ def delete_from_favorites(request, pk):
     if not user.is_authenticated:
         return redirect('users:login')
 
-    favorited_task = Favorites.objects.filter(task=task)
+    favorited_task = Favorites.objects.filter(user=user)
     favorited_task.delete()
 
     return redirect('tracker:detail', pk=task.pk)
@@ -57,8 +59,7 @@ def get_favorites(request, user):
         'added_time__date', 'added_time'
     )
 
-    paginator = Paginator(dates, items_in_page)
-    page_obj = paginator.get_page(page_number)
+    page_obj = get_page_obj(request, dates, settings.DAYS_IN_CALENDAR_PAGE)
 
     context = {
         'username': username,
