@@ -11,7 +11,8 @@ class CommentImageInline(admin.TabularInline):
 
 @admin.register(Comment)
 class CommentAdmin(admin.ModelAdmin):
-    list_display = ('id', 'get_task', 'author', 'get_likes_count', 'get_text', 'created')
+    list_display = ('id', 'get_task', 'author', 'get_likes_count', 'get_text',
+                    'created')
     ordering = ('created',)
     search_fields = ('task__author__username', 'task__author__email', 'text')
 

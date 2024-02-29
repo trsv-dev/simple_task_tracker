@@ -1,6 +1,5 @@
 from copy import deepcopy
 from datetime import datetime, timedelta
-from pprint import pprint
 
 from django.conf import settings
 from django.contrib import messages
@@ -12,11 +11,11 @@ from django.db.models import Q, Count
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
 from django.utils import timezone
+from django.views.decorators.cache import cache_page
 from django.views.decorators.http import require_POST
 
 from favorites.models import Favorites
 from images.views import handle_images
-from likes.models import Likes
 from tags.models import TaskTag
 from tracker.forms import TaskCreateForm
 from tracker.models import Task
@@ -547,6 +546,10 @@ def edit_task(request, pk):
         .prefetch_related('images'),
         pk=pk
     )
+
+    existing_tags = task.tags.select_related('task').prefetch_related('tag')
+    initial_tags = [tasktag.tag.name for tasktag in existing_tags]
+
     original_task = deepcopy(task)
 
     if not check_rights_to_task(username, task):
@@ -558,8 +561,10 @@ def edit_task(request, pk):
 
     context = {
         'task': task,
+        'initial_tags': initial_tags,
         'form': form,
         'all_users': all_users,
+
     }
 
     if form.is_valid():

@@ -61,6 +61,7 @@
             {% endif %}
             <div class="form-group">
                 {% if node.images.all %}
+                    <br>
                     {% for image_object in node.images.all %}
 {#                         {% thumbnail image_object.image "200x150" crop="center" upscale=True as im %}#}
                          {% thumbnail image_object.image "100x60" crop="center" upscale=True as im %}

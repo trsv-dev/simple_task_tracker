@@ -41,18 +41,26 @@
         </div>
 
         <div class="form-group">
-            <label for="id_tags">Выбор тегов:</label>
+            <label for="tags">Выбор тегов:</label>
             <p style="margin-bottom: 0;"><small class="text-muted">Можно выбрать несколько, зажав Ctrl</small></p>
-            {{ form.tags }}
+            <select class="form-control" id="tags" name="tags" multiple>
+                {% for tag in form.tags.field.queryset.all %}
+                    {% if tag.name in initial_tags %}
+                        <option value="{{ tag.id }}" selected>{{ tag.name }}</option>
+                    {% else %}
+                        <option value="{{ tag.id }}">{{ tag.name }}</option>
+                    {% endif %}
+                {% endfor %}
+            </select>
         </div>
 
-        {% if task and task.images %}
+        {% if task and task.images.all %}
 
             <label for="id_image">Изображение:</label>
 
             <div class="form-group">
                 {% for TaskImage_object in task.images.all %}
-                    {% thumbnail TaskImage_object.image "200x150" crop="center" upscale=True as im %}
+                    {% thumbnail TaskImage_object.image "175x125" crop="center" upscale=True as im %}
                         <div id="overlay_{{ TaskImage_object.id }}" class="overlay" onclick="closeImageOverlay('{{ TaskImage_object.id }}')">
                             <img src="{{ TaskImage_object.image.url }}" alt="Изображение задачи">
                         </div>

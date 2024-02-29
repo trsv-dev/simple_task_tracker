@@ -5,8 +5,8 @@ from smtplib import SMTPException
 from urllib.parse import unquote_plus
 
 from celery import shared_task
-from django.conf import settings
 from django.contrib import messages
+from django.core.cache import cache
 from django.core.mail import send_mail
 from django.core.paginator import Paginator
 from django.shortcuts import get_object_or_404
@@ -15,7 +15,6 @@ from django.urls import reverse
 from django.utils import timezone
 
 from comments.forms import CommentForm
-from favorites.models import Favorites
 from task_tracker.settings import EMAIL_HOST_USER, TEMPLATES_DIR
 from tracker.models import Task, User
 from tracker.serializers import TaskSerializer, UserSerializer
@@ -250,6 +249,16 @@ def get_common_context(request, task, comments):
     comment_texts = [comment.text for comment in comments]
     comments_with_expired_editing_time = []
     images_in_task = task.images.all()
+
+    # cache_name = 'images_cache'
+    # images = cache.get('images_in_task')
+    #
+    # if images:
+    #     images_in_task = images
+    # else:
+    #     images_in_task = task.images.all()
+    #     cache.get(cache_name, images_in_task, 200)
+
     # Если пользователь аутентифицирован, то показываем кнопку добавления
     # в избранное
     if user.is_authenticated:
@@ -280,6 +289,7 @@ def get_common_context(request, task, comments):
             comments_with_expired_editing_time,
         'usernames_profiles_links': usernames_profiles_links,
         'images_in_task': images_in_task,
+        # 'images_in_task': images,
         'images_in_comments': images_in_comments,
         'highlighted_comment_id': highlighted_comment_id
     }

@@ -177,15 +177,23 @@ CELERY_BEAT_SCHEDULE = {
     },
 }
 
-# CACHES = {
-#     'default': {
-#         'BACKEND': 'django.core.cache.backends.redis.RedisCache',
-#         'LOCATION': os.getenv('CELERY_BROKER_URL', 'redis://127.0.0.1:6379/0'),
-#         'OPTIONS': {
-#             'db': '1',
-#         },
-#     }
-# }
+CACHES = {
+    'default': {
+        'BACKEND': os.getenv('CACHE_BACKEND', 'django.core.cache.backends.redis.RedisCache'),
+        'LOCATION': os.getenv('CACHE_LOCATION', 'redis://127.0.0.1:6379/1'),
+    }
+}
+
+# # Сжатие CSS
+# COMPRESS_CSS_FILTERS = [
+#     'compressor.filters.css_default.CssAbsoluteFilter',
+# ]
+#
+# # Сжатие JavaScript
+# COMPRESS_JS_FILTERS = [
+#     'compressor.filters.jsmin.JSMinFilter',
+# ]
+
 
 # LOGGING = {
 #     'version': 1,

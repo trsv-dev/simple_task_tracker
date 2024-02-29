@@ -10,7 +10,7 @@
 </head>
 
 {% for TaskImage_object in images_in_task %}
-    {% thumbnail TaskImage_object.image "200x150" crop="center" upscale=True as im %}
+    {% thumbnail TaskImage_object.image "160x110" crop="center" upscale=True as im %}
         <div id="overlay_{{ TaskImage_object.id }}" class="overlay" onclick="closeImageOverlay('{{ TaskImage_object.id }}')">
             <img src="{{ TaskImage_object.image.url }}" alt="Изображение задачи">
         </div>
