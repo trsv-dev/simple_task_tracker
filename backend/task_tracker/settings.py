@@ -6,7 +6,8 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-CSRF_TRUSTED_ORIGINS = os.getenv('CSRF_TRUSTED_ORIGINS', '127.0.0.1, localhost').split(', ')
+#### Uncomment this on production and enter your domain name here:
+#CSRF_TRUSTED_ORIGINS = os.getenv('CSRF_TRUSTED_ORIGINS', 'your_domain.com').split(', ')
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -135,7 +136,7 @@ USE_I18N = True
 
 USE_TZ = True
 
-BASE_URL = os.getenv('BASE_URL', 'http://127.0.0.1:8000')
+BASE_URL = os.getenv('BASE_URL', 'http://127.0.0.1:9000')
 
 TASKS_IN_PAGE = os.getenv('TASKS_IN_PAGE', 10)
 MAX_IMAGES_COUNT = int(os.getenv('MAX_IMAGES_COUNT', 5))
@@ -144,7 +145,7 @@ MAX_COMMENTS_DEPTH = int(os.getenv('MAX_COMMENTS_DEPTH', 2))
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# Отправка писем Яндекс-почтой (Не работает на pythonanywhere.com)
+# Sending emails via Yandex mail (Don't work on pythonanywhere.com)
 RECIPIENT_ADDRESS = os.getenv('RECIPIENT_ADDRESS',
                               'your_email_on_yandex@yandex.ru')
 EMAIL_HOST = os.getenv('EMAIL_HOST', 'smtp.yandex.ru')
