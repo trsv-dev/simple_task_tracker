@@ -9,7 +9,7 @@ load_dotenv()
 # Uncomment this on production and enter your domain name here:
 ###############################################################################
 
-# CSRF_TRUSTED_ORIGINS = os.getenv('CSRF_TRUSTED_ORIGINS', 'your_domain.com').split(', ')
+#CSRF_TRUSTED_ORIGINS = os.getenv('CSRF_TRUSTED_ORIGINS', 'http(s)://your_domain.com').split(', ')
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -104,16 +104,16 @@ DATABASES = {
 # PostgreSQL's settings (for production or locally in containers):
 ###############################################################################
 
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.postgresql',
-#         'NAME': os.getenv('POSTGRES_DB', 'django'),
-#         'USER': os.getenv('POSTGRES_USER', 'django'),
-#         'PASSWORD': os.getenv('POSTGRES_PASSWORD', 'you_need_to_set_the_password_in_env'),
-#         'HOST': os.getenv('DB_HOST', 'localhost'),
-#         'PORT': os.getenv('DB_PORT', 5432)
-#     }
-# }
+#DATABASES = {
+#    'default': {
+#        'ENGINE': 'django.db.backends.postgresql',
+#        'NAME': os.getenv('POSTGRES_DB', 'django'),
+#        'USER': os.getenv('POSTGRES_USER', 'django'),
+#        'PASSWORD': os.getenv('POSTGRES_PASSWORD', 'you_need_to_set_the_password_in_env'),
+#        'HOST': os.getenv('DB_HOST', 'localhost'),
+#        'PORT': os.getenv('DB_PORT', 5432)
+#    }
+#}
 
 AUTH_PASSWORD_VALIDATORS = [
     {
@@ -198,15 +198,15 @@ CACHES = {
 # DB queries debugging
 ###############################################################################
 
-# LOGGING = {
-#     'version': 1,
-#     'handlers': {
-#         'console': {'class': 'logging.StreamHandler'}
-#     },
-#     'loggers': {
-#         'django.db.backends': {
-#             'handlers': ['console'],
-#             'level': 'DEBUG'
-#         }
-#     }
-# }
+#LOGGING = {
+#    'version': 1,
+#    'handlers': {
+#        'console': {'class': 'logging.StreamHandler'}
+#    },
+#    'loggers': {
+#        'django.db.backends': {
+#            'handlers': ['console'],
+#            'level': 'DEBUG'
+#        }
+#    }
+#}
