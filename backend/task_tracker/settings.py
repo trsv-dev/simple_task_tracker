@@ -6,8 +6,10 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-#### Uncomment this on production and enter your domain name here:
-#CSRF_TRUSTED_ORIGINS = os.getenv('CSRF_TRUSTED_ORIGINS', 'your_domain.com').split(', ')
+# Uncomment this on production and enter your domain name here:
+###############################################################################
+
+# CSRF_TRUSTED_ORIGINS = os.getenv('CSRF_TRUSTED_ORIGINS', 'your_domain.com').split(', ')
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -89,7 +91,7 @@ MEDIA_ROOT = BASE_DIR / 'media'
 
 WSGI_APPLICATION = 'task_tracker.wsgi.application'
 
-# SQLite settings (for local development):
+# SQLite's settings (for local development):
 ###############################################################################
 
 DATABASES = {
@@ -99,8 +101,8 @@ DATABASES = {
     }
 }
 
-# PostgreSQL settings (for production or locally in containers):
-# ##############################################################################
+# PostgreSQL's settings (for production or locally in containers):
+###############################################################################
 
 # DATABASES = {
 #     'default': {
@@ -146,6 +148,8 @@ MAX_COMMENTS_DEPTH = int(os.getenv('MAX_COMMENTS_DEPTH', 2))
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Sending emails via Yandex mail (Don't work on pythonanywhere.com)
+###############################################################################
+
 RECIPIENT_ADDRESS = os.getenv('RECIPIENT_ADDRESS',
                               'your_email_on_yandex@yandex.ru')
 EMAIL_HOST = os.getenv('EMAIL_HOST', 'smtp.yandex.ru')
@@ -160,11 +164,12 @@ EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD',
 EMAIL_BACKEND = os.getenv('EMAIL_BACKEND',
                           'django.core.mail.backends.smtp.EmailBackend')
 
-
 CELERY_BROKER_URL = os.getenv('CELERY_BROKER_URL', 'redis://127.0.0.1:6379/0')
-CELERY_RESULT_BACKEND = os.getenv('CELERY_RESULT_BACKEND', 'redis://127.0.0.1:6379/0')
+CELERY_RESULT_BACKEND = os.getenv('CELERY_RESULT_BACKEND',
+                                  'redis://127.0.0.1:6379/0')
 
-CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = os.getenv('CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP', 'True') == 'True'
+CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = os.getenv(
+    'CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP', 'True') == 'True'
 
 CELERY_BROKER_TRANSPORT_OPTIONS = {
     'priority_steps': list(range(10)),
@@ -172,6 +177,8 @@ CELERY_BROKER_TRANSPORT_OPTIONS = {
 }
 
 # For testing purposes, the deadline is checked every minute.
+###############################################################################
+
 CELERY_BEAT_SCHEDULE = {
     'Send_email_about_closer_deadline': {
         'task': 'tracker.utils.send_email_about_closer_deadline',
@@ -182,21 +189,14 @@ CELERY_BEAT_SCHEDULE = {
 
 CACHES = {
     'default': {
-        'BACKEND': os.getenv('CACHE_BACKEND', 'django.core.cache.backends.redis.RedisCache'),
+        'BACKEND': os.getenv('CACHE_BACKEND',
+                             'django.core.cache.backends.redis.RedisCache'),
         'LOCATION': os.getenv('CACHE_LOCATION', 'redis://127.0.0.1:6379/1'),
     }
 }
 
-# # Сжатие CSS
-# COMPRESS_CSS_FILTERS = [
-#     'compressor.filters.css_default.CssAbsoluteFilter',
-# ]
-#
-# # Сжатие JavaScript
-# COMPRESS_JS_FILTERS = [
-#     'compressor.filters.jsmin.JSMinFilter',
-# ]
-
+# DB queries debugging
+###############################################################################
 
 # LOGGING = {
 #     'version': 1,

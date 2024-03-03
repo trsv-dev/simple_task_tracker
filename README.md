@@ -76,7 +76,7 @@ CSRF_TRUSTED_ORIGINS=your_domain.com
 ```
 Также замените '127.0.0.1:9000' на свой домен в этой строке:
 ```
-BASE_URL=http://127.0.0.1:=9000
+BASE_URL=http://127.0.0.1:9000
 ```
 И выставите Debug в False:
 ```
@@ -143,8 +143,14 @@ cd ..
 ```
 docker compose -f docker-compose.yml up -d
 ```
-Дождитесь окончания развертывания, далее выполните копирование статики:
+Создайте и примените миграции БД:
 ```
+docker compose -f docker-compose.yml exec backend python manage.py makemigrations
+docker compose -f docker-compose.yml exec backend python manage.py migrate
+```
+Дождитесь окончания развертывания, далее по очереди выполните комадны сбора и копирования статики:
+```
+docker compose -f docker-compose.yml exec backend python manage.py collectstatic
 docker compose -f docker-compose.yml exec backend cp -r /app/collected_static/. /app/static/
 ```
 И создайте суперпользователя командой:
@@ -179,8 +185,9 @@ cd backend/
 ```
 pip install -r requirements.txt
 ``` 
-Выполните миграции:
+Создайте и примените миграции БД:
 ```
+python manage.py makemigrations
 python manage.py migrate
 ```
 Создайте суперпользователя:
