@@ -63,8 +63,7 @@ jobs:
         with:
           host: ${{ secrets.HOST }}
           username: ${{ secrets.USER }}
-          key: ${{ secrets.SSH_KEY }}
-          passphrase: ${{ secrets.SSH_PASSPHRASE }}
+          password: ${{ secrets.SSH_PASSWORD }}
           script: |
             cd simple_task_tracker
             sudo docker compose -f docker-compose.production.yml down
