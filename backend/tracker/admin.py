@@ -6,10 +6,11 @@ from django_celery_beat.models import (IntervalSchedule, CrontabSchedule,
                                        SolarSchedule, ClockedSchedule,
                                        PeriodicTask)
 
-from tracker.models import Task, DONE, PENDING, \
-    IN_PROGRESS, TaskImage
-from tracker.validators import validate_done_status, validate_done_time, \
-    validate_required_fields, validate_deadline_reminder
+from tracker.models import Task, DONE, PENDING, IN_PROGRESS, TaskImage
+from tracker.validators import (validate_done_status,
+                                validate_done_time,
+                                validate_required_fields,
+                                validate_deadline_reminder)
 
 admin.site.site_header = "Трекер задач"
 admin.site.site_title = "Панель администрирования"

@@ -11,7 +11,6 @@ from django.db.models import Q, Count
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
 from django.utils import timezone
-from django.views.decorators.cache import cache_page
 from django.views.decorators.http import require_POST
 
 from favorites.models import Favorites
@@ -30,11 +29,9 @@ def check_rights_to_task(username, task):
     админом или ответственным за задачу.
     """
 
-    return (
-            username == task.author or
+    return (username == task.author or
             username.is_staff or
-            username == task.assigned_to
-    )
+            username == task.assigned_to)
 
 
 def get_current_dates(dates, page_number, items_per_page):
@@ -78,11 +75,9 @@ def check_deadline_or_deadline_reminder(new_deadline, new_deadline_reminder):
     Напоминание о дедлайне не должно быть позже дедлайна.
     """
 
-    return (
-            new_deadline > timezone.now() and
+    return (new_deadline > timezone.now() and
             new_deadline_reminder > timezone.now() and
-            new_deadline_reminder < new_deadline
-    )
+            new_deadline_reminder < new_deadline)
 
 
 def is_title_description_priority_status_changed(request, original_task, form):
@@ -101,7 +96,7 @@ def is_title_description_priority_status_changed(request, original_task, form):
               form_data.get('description') != original_task.description) or
              request.FILES.getlist('image')) and
             (original_task.is_notified or
-            form_data.get('deadline') >
+             form_data.get('deadline') >
              form_data.get('deadline_reminder') >
              timezone.now())
             and form_data.get(

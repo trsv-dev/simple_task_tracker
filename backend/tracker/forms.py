@@ -1,6 +1,6 @@
 from django import forms
 
-from tags.models import Tags, TaskTag
+from tags.models import Tags
 from tracker.models import Task
 
 

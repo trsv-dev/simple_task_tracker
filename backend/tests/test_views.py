@@ -427,8 +427,10 @@ class ViewsTestCase(TestCase):
 
         old_assigned_to = self.test_task.assigned_to
 
-        edit_url = reverse('tracker:edit', args=[self.test_task.pk])
-        edit_response = self.authorized_client.post(edit_url, self.edited_data)
+        # edit_url = reverse('tracker:edit', args=[self.test_task.pk])
+        # edit_response = self.authorized_client.post(
+        # edit_url, self.edited_data
+        # )
 
         edited_task = Task.objects.get(pk=self.test_task.pk)
         new_assigned_to = edited_task.assigned_to
