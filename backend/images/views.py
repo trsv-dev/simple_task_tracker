@@ -1,5 +1,6 @@
-from django.core.exceptions import ValidationError
 from django.conf import settings
+
+from django.core.exceptions import ValidationError
 from comments.models import Comment, CommentImage
 from tracker.models import Task, TaskImage
 

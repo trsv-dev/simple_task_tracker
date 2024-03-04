@@ -7,8 +7,10 @@ from django.views.decorators.http import require_POST
 from comments.forms import CommentForm, CommentImageForm
 from comments.models import Comment
 from tracker.models import Task
-from tracker.utils import search_mentioned_users, notify_mentioned_users, \
-    get_common_context, get_all_usernames_list
+from tracker.utils import (search_mentioned_users,
+                           notify_mentioned_users,
+                           get_common_context,
+                           get_all_usernames_list)
 from tracker.views import save_obj_and_handle_form_errors
 
 
@@ -16,11 +18,15 @@ from tracker.views import save_obj_and_handle_form_errors
 def create_comment(request, task_pk):
     """Создание комментария."""
 
-    task = get_object_or_404(Task.objects.select_related('author',
-                                                         'assigned_to',
-                                                         'done_by'), pk=task_pk)
+    task = get_object_or_404(
+        Task.objects.select_related('author',
+                                    'assigned_to',
+                                    'done_by'), pk=task_pk
+    )
 
-    comments = task.comments.select_related('author').prefetch_related('images')
+    comments = task.comments.select_related('author').prefetch_related(
+        'images'
+    )
     context = get_common_context(request, task, comments)
     context['image_form'] = CommentImageForm(request.POST or None,
                                              request.FILES or None)
@@ -74,7 +80,9 @@ def edit_comment(request, pk):
         'images')
 
     context = get_common_context(request, task, comments)
-    context['comment_form'] = CommentForm(request.POST or None, instance=comment)
+    context['comment_form'] = CommentForm(
+        request.POST or None, instance=comment
+    )
 
     context['image_form'] = CommentImageForm(request.POST or None,
                                              request.FILES or None)

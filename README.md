@@ -69,7 +69,21 @@
 git clone git@github.com:trsv-dev/simple_task_tracker.git -b develop
 ```
 В корне проекта найдите файл **.env.example**, переименуйте в **.env** и заполните своими данными.
-Как правило, для разработки там менять ничего не нужно. Чтобы заработала почта - скопируйте и вставьте в
+
+На продакшне раскомментируйте эту строку и замените 'your_domain.com' на свой домен:
+```
+CSRF_TRUSTED_ORIGINS=your_domain.com
+```
+Также замените '127.0.0.1:9000' на свой домен в этой строке:
+```
+BASE_URL=http://127.0.0.1:9000
+```
+И выставите Debug в False:
+```
+DEBUG=False
+```
+
+Чтобы заработала почта - скопируйте и вставьте в
 **.env** в раздел "Email settings" следующие данные (тестовый пустой ящик на Яндекс.Почте):
 <details>
   <summary>Конфиг почты</summary>
@@ -129,15 +143,21 @@ cd ..
 ```
 docker compose -f docker-compose.yml up -d
 ```
-Дождитесь окончания развертывания, далее выполните копирование статики:
+Создайте и примените миграции БД:
 ```
+docker compose -f docker-compose.yml exec backend python manage.py makemigrations
+docker compose -f docker-compose.yml exec backend python manage.py migrate
+```
+Дождитесь окончания развертывания, далее по очереди выполните комадны сбора и копирования статики:
+```
+docker compose -f docker-compose.yml exec backend python manage.py collectstatic
 docker compose -f docker-compose.yml exec backend cp -r /app/collected_static/. /app/static/
 ```
 И создайте суперпользователя командой:
 ```
 docker compose -f docker-compose.yml exec backend python manage.py createsuperuser
 ```
-Сайт доступен по http://127.0.0.1:8000, Flower доступен по http://127.0.0.1:5555 
+Сайт доступен по http://127.0.0.1:9000, Flower доступен по http://127.0.0.1:5555 
 с логином/паролем, заданным вами в .env (по умолчанию - _admin_ / _MySuperStrongPassword_).
 
 ## Запуск проекта в dev-режиме
@@ -165,8 +185,9 @@ cd backend/
 ```
 pip install -r requirements.txt
 ``` 
-Выполните миграции:
+Создайте и примените миграции БД:
 ```
+python manage.py makemigrations
 python manage.py migrate
 ```
 Создайте суперпользователя:
@@ -226,7 +247,7 @@ cd /backend
 ```
 python manage.py runserver
 ```
-Сайт доступен по адресу http://127.0.0.1:8000, админ-панель - http://127.0.0.1:8000/admin/
+Сайт доступен по адресу http://127.0.0.1:9000, админ-панель - http://127.0.0.1:9000/admin/
 
 Логиниться можно под данными суперпользователя.
 

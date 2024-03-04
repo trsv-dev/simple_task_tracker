@@ -19,9 +19,10 @@ services:
 
   backend:
     container_name: backend
-    build: ./backend/
+    image: ${DOCKER_HUB_LOGIN}/simple_task_tracker_backend
     command: |
       bash -c 'sleep 15 &&
+      cp deploy_settings.py ./task_tracker/settings.py &&
       gunicorn --bind 0:9000 task_tracker.wsgi'
     env_file:
       - .env
@@ -34,7 +35,7 @@ services:
 
   nginx:
     container_name: nginx
-    build: ./gateway/
+    image: ${DOCKER_HUB_LOGIN}/simple_task_tracker_gateway
     volumes:
       - static:/app/static/
       - media:/app/media/

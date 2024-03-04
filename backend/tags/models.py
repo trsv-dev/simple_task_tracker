@@ -16,9 +16,10 @@ class Tags(models.Model):
         max_length=100,
         unique=True,
         blank=False,
-        validators=(RegexValidator(
-            regex=r'^[-a-zA-Z0-9_]+$',
-            message='В слаге содержится недопустимый символ'
+        validators=(
+            RegexValidator(
+                regex=r'^[-a-zA-Z0-9_]+$',
+                message='В слаге содержится недопустимый символ'
             ),
         ),
         verbose_name='Слаг'

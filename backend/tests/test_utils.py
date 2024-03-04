@@ -9,6 +9,7 @@ from django.utils import timezone
 from task_tracker.settings import TEMPLATES_DIR
 from tracker.models import Task
 from tracker.utils import send_email_message
+
 # from tracker.views import get_task_link
 
 User = get_user_model()
