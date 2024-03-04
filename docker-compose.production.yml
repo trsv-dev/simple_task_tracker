@@ -22,6 +22,7 @@ services:
     image: ${DOCKER_HUB_LOGIN}/simple_task_tracker_backend
     command: |
       bash -c 'sleep 15 &&
+      cp deploy_settings.py ./task_tracker/settings.py &&
       gunicorn --bind 0:9000 task_tracker.wsgi'
     env_file:
       - .env
