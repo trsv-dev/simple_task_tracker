@@ -3,30 +3,43 @@
 {% include 'includes/header.html' %}
 {% load tracker_tags %}
 
-<head>
-    <title>Профиль пользователя {{ user_profile }}</title>
-</head>
+{% block title %}Профиль пользователя {{ user_profile }}{% endblock %}
 
 {% block content %}
 
     {% if user.is_authenticated %}
-          <div class="container mt-4">
-            <section class="user-profile text-center">
-                <p>Профиль пользователя <strong> {{ user_profile }} </strong></p>
-                <p>Имя:<strong> {{ user_profile.first_name }} </strong></p>
-                <p>Фамилия:<strong> {{ user_profile.last_name }} </strong></p>
-                <p>Почта:<strong> {{ user_profile.email }} </strong></p>
-                <p>Дата регистрации:<strong> {{ user_profile.date_joined }} </strong></p>
-                {% if user == user_profile %}
-                    <a class="btn btn-outline-danger my-4" href="{% url 'password_change' %}">Сменить пароль?</a>
-                {% endif %}
+        <div class="container mt-4">
+            <section class="user-profile row text-center">
+                <div class="col-md-4 text-left mb-4 mb-md-0">
+                    {% if user_profile.profile.avatar %}
+                        <img src="{{ user_profile.profile.avatar.url }}" alt="Аватар" class="avatar-img">
+                    {% else %}
+                        <img src="/static/placeholders/avatar-placeholder.png" alt="Аватара нет" class="avatar-img">
+                    {% endif %}
+                </div>
+                <div class="col-md-8" style="text-align: left;">
+                    <p><strong>Профиль пользователя </strong>{{ user_profile }}</p>
+                    <p><strong>Имя:</strong> {{ user_profile.first_name }}</p>
+                    <p><strong>Фамилия: </strong>{{ user_profile.last_name }}</p>
+                    <p><strong>Почта: </strong>{{ user_profile.email }}</p>
+                    <p><strong>Дата регистрации: </strong>{{ user_profile.date_joined }}</p>
+                    <p><strong>О себе: </strong>{{ user_profile.profile.bio }}</p>
+
+                    <div class="buttons text-left">
+                        {% if user == user_profile %}
+                            <a class="btn btn-outline-danger my-4" href="{% url 'password_change' %}">Сменить пароль?</a>
+                        {% endif %}
+                        {% if user == user_profile %}
+                            <a class="btn btn-outline-secondary my-4" href="{% url 'users:edit_profile' %}">Редактировать</a>
+                        {% endif %}
+                    </div>
+
+                </div>
             </section>
-          </div>
+        </div>
     {% else %}
         <div class="text-center">
             <p>Для просмотра профилей пользователей необходимо войти или зарегистрироваться</p>
         </div>
     {% endif %}
 {% endblock %}
-
-{% include 'includes/footer.html' %}

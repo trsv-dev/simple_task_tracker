@@ -1,0 +1,73 @@
+{% extends 'base.html' %}
+{% load static %}
+{% include 'includes/header.html' %}
+{% load tracker_tags %}
+
+{% block title %}Редактирование профиля пользователя {{ user.username }}{% endblock %}
+
+{% block content %}
+
+    <div class="container mt-4">
+        <section class="user-profile row text-center">
+{#                <div class="col-md-4 text-left">#}
+        <div class="col-md-4 text-left mb-4 mb-md-0">
+            {% if user.profile.avatar %}
+                <img src="{{ user.profile.avatar.url }}" alt="Аватар" class="avatar-img">
+            {% else %}
+                <img src="/static/placeholders/avatar-placeholder.png" alt="Аватара нет" class="avatar-img">
+            {% endif %}
+        </div>
+        <div class="col-md-8" style="text-align: left;">
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+
+                {% if form.errors and request.method == 'POST' %}
+                  <div class="alert alert-danger">
+                      {% for field, errors in form.errors.items %}
+                          {% for error in errors %}
+                              {{ error }}
+                          {% endfor %}
+                          <br>
+                      {% endfor %}
+                  </div>
+                {% endif %}
+
+                <!-- User Edit Form -->
+                <div class="form-group">
+                    <input type="text" id="{{ user_edit_form.first_name.id_for_label }}" class="form-control mb-4" placeholder="Имя" name="{{ user_edit_form.first_name.name }}" value="{{ user.first_name }}">
+                </div>
+
+                <div class="form-group">
+                    <input type="text" id="{{ user_edit_form.last_name.id_for_label }}" class="form-control mb-4" placeholder="Фамилия" name="{{ user_edit_form.last_name.name }}" value="{{ user.last_name }}">
+                </div>
+
+                <div class="form-group">
+                    <input type="text" id="{{ user_edit_form.username.id_for_label }}" class="form-control mb-4" placeholder="Имя пользователя" name="{{ user_edit_form.username.name }}" value="{{ user.username }}">
+                </div>
+
+                <div class="form-group">
+                    <input type="email" id="{{ user_edit_form.email.id_for_label }}" class="form-control mb-4" placeholder="Email" name="{{ user_edit_form.email.name }}" value="{{ user.email }}">
+                </div>
+
+                <!-- Profile Edit Form -->
+                <div class="form-group">
+                    <textarea id="{{ profile_edit_form.bio.id_for_label }}" class="form-control mb-4" placeholder="О себе" name="{{ profile_edit_form.bio.name }}" rows="5">{{ user.profile.bio }}</textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="{{ profile_edit_form.avatar.id_for_label }}">Аватар:</label>
+                    {{ profile_edit_form.avatar }}
+                </div>
+
+                <div class="buttons text-left">
+                    <button class="btn btn-outline-success my-4" type="submit">Сохранить изменения</button>
+                    <a class="btn btn-outline-danger my-4" href="{% url 'tracker:profile' user=user %}">Отмена</a>
+                </div>
+
+
+            </form>
+        </div>
+      </section>
+    </div>
+
+{% endblock %}

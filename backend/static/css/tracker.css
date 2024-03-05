@@ -55,3 +55,11 @@ a {
 .likes-badge {
     background-color: rgb(42, 157, 42); /* Светло-серый цвет фона */
   }
+
+/* Максимальный размер аватара и автоматический ресайз */
+.avatar-img {
+    max-width: 200px;
+    max-height: 200px;
+    width: auto;
+    height: auto;
+}

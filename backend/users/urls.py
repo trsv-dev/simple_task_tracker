@@ -7,11 +7,14 @@ from django.contrib.auth.views import (LoginView, LogoutView,
                                        PasswordChangeDoneView)
 from django.urls import path
 
-from users.views import RegisterView
+from users.views import RegisterView, edit_profile
 
 app_name = 'users'
 
 urlpatterns = [
+    path(
+        'edit_profile/', edit_profile, name='edit_profile'
+    ),
     path(
         'login/',
         LoginView.as_view(template_name='users/login.html'),

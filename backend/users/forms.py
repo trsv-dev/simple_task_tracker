@@ -1,6 +1,8 @@
 from django import forms
-from django.contrib.auth.forms import UserCreationForm
+from django.contrib.auth.forms import UserCreationForm, UserChangeForm
 from django.contrib.auth.models import User
+
+from users.models import Profile
 
 
 class CustomUserCreationForm(UserCreationForm):
@@ -23,3 +25,24 @@ class CustomUserCreationForm(UserCreationForm):
         'password1': 'Пароль',
         'password2': 'Подтверждение пароля',
     }
+
+
+class UserEditForm(UserChangeForm):
+    """Форма редактирования информации пользователя."""
+
+    class Meta:
+        model = User
+        fields = ['first_name', 'last_name', 'username', 'email']
+
+    def __init__(self, *args, **kwargs):
+        super(UserEditForm, self).__init__(*args, **kwargs)
+        # Убираем поле пароля
+        del self.fields['password']
+
+
+class ProfileEditForm(forms.ModelForm):
+    """Форма редактирования информации профиля."""
+
+    class Meta:
+        model = Profile
+        fields = ['bio', 'avatar']

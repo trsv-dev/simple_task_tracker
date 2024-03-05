@@ -1,14 +1,12 @@
 from datetime import timedelta
 
-from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator
 from django.db import models
 from django.utils import timezone
 
 from images.models import BaseImage
-
-User = get_user_model()
+from users.models import User
 
 PENDING = 'Ожидает выполнения'
 IN_PROGRESS = 'В процессе выполнения'
