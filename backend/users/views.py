@@ -1,8 +1,7 @@
-from django.shortcuts import get_object_or_404, redirect, render
+from django.shortcuts import redirect, render
 from django.urls import reverse_lazy
 from django.views.generic import CreateView
 
-from tracker.models import User
 from users.forms import CustomUserCreationForm, UserEditForm, ProfileEditForm
 from users.models import Profile
 
