@@ -3,42 +3,6 @@
 {% load mark_mentioned_users %}
 {% load thumbnail %}
 
-<style>
-  .nested-comments {
-    margin-top: 10px;
-    margin-left: 10px;
-  }
-
-  .comment {
-    margin-bottom: 10px;
-    position: relative;
-  }
-
-  .comment-reply {
-    margin-left: 10px;
-  }
-
-  .reply-line {
-    position: absolute;
-    left: -5px;
-    width: 1px;
-    height: 100%;
-    background-color: rgba(206, 212, 218, 0.36);
-  }
-
-  /* Добавляем новый класс для подсветки комментария */
-    .highlighted-comment {
-      background-color: #ffc;
-      /* Используйте цвет фона по вашему выбору */
-      padding: 5px;
-      border-radius: 5px;
-    }
-</style>
-
-{% if user.is_authenticated %}
-
-{% endif %}
-
 <div class="container">
   <div class="card">
     <div class="card-header">
@@ -52,13 +16,26 @@
 {#          <div class="comment {% if not node.is_root_node %}nested-comment{% endif %}">#}
           <div class="comment {% if not node.is_root_node %}nested-comment{% endif %} {% if node.pk == highlighted_comment_id %}highlighted-comment{% endif %}">
 
-
             <div class="reply-line"></div>
-            {% if node.author == node.task.author %}
-              <span class="badge rounded-pill author-badge"><strong>{{ node.author }} (автор)</strong></span> <span class="text-muted">{{ node.created }}</span><br>
+
+            {% if node.author.profile.avatar %}
+                  <img src="{{ node.author.profile.avatar.url }}" alt="Аватар" class="avatar-img-square">
             {% else %}
-              <span class="badge rounded-pill bg-light text-dark"><strong>{{ node.author }}</strong></span> <span class="text-muted">{{ node.created }}</span><br>
+                  <img src="/static/placeholders/avatar-placeholder.png" alt="Аватара нет" class="avatar-img-square">
             {% endif %}
+
+            {% if node.author == node.task.author %}
+                <a href="{% url 'tracker:profile' node.author.username %}">
+                    <span class="badge rounded-pill author-badge"><strong>{{ node.author }} (автор)</strong></span>
+                </a>
+                <span class="text-muted">{{ node.created }}</span><br>
+            {% else %}
+                <a href="{% url 'tracker:profile' node.author.username %}">
+                    <span class="badge rounded-pill bg-light text-dark"><strong>{{ node.author }}</strong></span>
+                </a>
+                <span class="text-muted">{{ node.created }}</span><br>
+            {% endif %}
+
             <div class="form-group">
                 {% if node.images.all %}
                     <br>
@@ -95,7 +72,8 @@
 
                     {% if user.is_authenticated and user != node.author %}
                         {% if users_likes_dict %}
-                                {% if node.text not in users_likes_dict.keys %}
+{#                                {% if node.text not in users_likes_dict.keys %}#}
+                                {% if node.pk not in users_likes_dict.keys %}
                                     <a href="{% url 'likes:add_like' pk=node.id %}" class="dropdown-item">👍 Лайк!</a>
                                 {% elif user.username in users_likes_dict.values %}
                                     <a href="{% url 'likes:delete_like' pk=node.id %}" class="dropdown-item">👎 Убрать лайк</a>

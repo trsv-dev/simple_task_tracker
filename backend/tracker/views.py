@@ -441,7 +441,7 @@ def task_detail(request, pk):
         .prefetch_related('tags__tag'), pk=pk)
 
     comments = task.comments.select_related('author').prefetch_related(
-        'images').annotate(likes_count=Count('likes'))
+        'images', 'author__profile').annotate(likes_count=Count('likes'))
 
     context = get_common_context(request, task, comments)
 
@@ -452,9 +452,16 @@ def task_detail(request, pk):
         users_likes = request.user.likes.select_related(
             'user').prefetch_related('comment')
 
+        # users_likes_dict = {}
+        # for likes in users_likes:
+        #     users_likes_dict[likes.comment.text] = likes.user.username
+
+        # Передаем в словарь pk лайкнутых пользователем сообщений,
+        # чтобы потом в шаблоне его "разобрать" и отметить значком "+1"
+        # сообщение, если оно было лайкнуто
         users_likes_dict = {}
         for likes in users_likes:
-            users_likes_dict[likes.comment.text] = likes.user.username
+            users_likes_dict[likes.comment.pk] = likes.user.username
 
         context['users_likes_dict'] = users_likes_dict
 

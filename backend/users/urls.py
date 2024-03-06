@@ -13,9 +13,6 @@ app_name = 'users'
 
 urlpatterns = [
     path(
-        'edit_profile/', edit_profile, name='edit_profile'
-    ),
-    path(
         'login/',
         LoginView.as_view(template_name='users/login.html'),
         name='login'
@@ -66,5 +63,8 @@ urlpatterns = [
             template_name='users/password_reset_complete.html',
         ),
         name='password_reset_complete'
+    ),
+    path(
+        'edit_profile/', edit_profile, name='edit_profile'
     ),
 ]

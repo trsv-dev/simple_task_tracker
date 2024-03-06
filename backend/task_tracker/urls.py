@@ -5,7 +5,7 @@ from django.urls import include, path
 from task_tracker import settings
 
 urlpatterns = [
-    path('profile/', include('users.urls', namespace='profile')),
+    # path('profile/', include('users.urls', namespace='profile')),
     path('', include('tracker.urls')),
     path('admin/', admin.site.urls),
     path('auth/', include('users.urls', namespace='auth')),

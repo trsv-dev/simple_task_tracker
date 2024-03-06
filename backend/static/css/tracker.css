@@ -1,3 +1,44 @@
+.nested-comments {
+   margin-top: 10px;
+   margin-left: 10px;
+}
+
+.comment {
+   margin-bottom: 10px;
+   position: relative;
+}
+
+.comment-reply {
+   margin-left: 10px;
+}
+
+.reply-line {
+   position: absolute;
+   left: -5px;
+   width: 1px;
+   height: 100%;
+   background-color: rgba(206, 212, 218, 0.36);
+}
+
+  /* Добавляем новый класс для подсветки комментария */
+.highlighted-comment {
+   background-color: #ffc;
+   /* Используйте цвет фона по вашему выбору */
+   padding: 5px;
+   border-radius: 5px;
+}
+
+.avatar-container {
+    display: inline-block;
+    margin-right: 10px;  /* Регулируйте отступ справа, если необходимо */
+}
+
+.avatar-img-square {
+    width: 40px;  /* Регулируйте размер квадратной аватарки по вашему усмотрению */
+    height: 40px;
+    border-radius: 50%;
+}
+
 .overlay {
     display: none;
     position: fixed;
