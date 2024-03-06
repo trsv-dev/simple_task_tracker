@@ -8,6 +8,7 @@ class LikesAdmin(admin.ModelAdmin):
     list_display = ('get_text', 'user', 'added_time')
     ordering = ('-added_time',)
     search_fields = ('comment__text', 'user__username')
+    list_per_page = 25
 
     def get_text(self, obj):
         """Обрезаем длинные комментарии."""

@@ -15,6 +15,7 @@ class CommentAdmin(admin.ModelAdmin):
                     'created')
     ordering = ('created',)
     search_fields = ('task__author__username', 'task__author__email', 'text')
+    list_per_page = 30
 
     inlines = (CommentImageInline,)
 

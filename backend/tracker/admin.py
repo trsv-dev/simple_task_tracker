@@ -74,6 +74,7 @@ class TaskAdmin(admin.ModelAdmin):
             # 'classes': ('errornote'),
         }),
     )
+    list_per_page = 20
 
     inlines = (TaskImageInline, )
 
