@@ -11,10 +11,11 @@ class Profile(models.Model):
 
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     bio = models.TextField(
-        default='--пусто--',
+        default='--------',
         null=True,
         blank=True,
-        verbose_name='Кратко о себе'
+        verbose_name='Кратко о себе',
+        help_text='Расскажите немного о себе'
     )
     avatar = models.ImageField(
         null=True,
@@ -22,6 +23,17 @@ class Profile(models.Model):
         upload_to='images/avatars',
         verbose_name='Аватар',
         help_text='Добавить аватар'
+    )
+    is_private = models.BooleanField(
+        null=True,
+        blank=True,
+        default=True,
+        verbose_name='Скрыть от неавторизованных пользователей',
+        help_text='Сделать профиль приватным?',
+        choices=(
+            (True, 'Да'),
+            (False, 'Нет')
+        )
     )
 
     class Meta:

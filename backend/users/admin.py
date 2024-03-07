@@ -8,7 +8,8 @@ from users.models import Profile
 class ProfileAdmin(admin.ModelAdmin):
     """Класс администрирования профилей."""
 
-    list_display = ('id', 'get_username', 'show_avatar', 'get_bio')
+    list_display = ('id', 'get_username', 'show_avatar',
+                    'get_bio', 'is_private')
     ordering = ('user_id__date_joined',)
     search_fields = ('user_id__username',)
     list_per_page = 25
