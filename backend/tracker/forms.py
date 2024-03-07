@@ -30,7 +30,7 @@ class TaskCreateForm(forms.ModelForm):
         model = Task
         fields = ('title', 'description', 'priority',
                   'status', 'deadline', 'deadline_reminder', 'assigned_to',
-                  'tags',)
+                  'tags', 'is_draft')
 
         labels = {
             'title': 'Название',
@@ -41,4 +41,11 @@ class TaskCreateForm(forms.ModelForm):
             'deadline_reminder': 'Когда напомнить о дедлайне',
             'assigned_to': 'Ответственный',
             'tags': 'Теги',
+            'is_draft': 'Опубликовано?'
+        }
+
+        widgets = {
+            'is_draft': forms.CheckboxInput(
+                attrs={'class': 'checkbox'}
+            )
         }

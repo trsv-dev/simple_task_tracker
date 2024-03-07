@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+{% load tracker_tags %}
+
+{% block title %}Черновики {{ username }}{% endblock %}
+
+{% block content %}
+  <div class="container mt-4">
+    <section class="user-profile text-center">
+        <p>Черновики пользователя <strong> {{ username }} </strong></p>
+        <p>Всего черновиков:<strong> {{ drafts_quantity }} </strong></p>
+    </section>
+
+          <!-- Верхняя пагинация -->
+    {% if page_obj.has_next or page_obj.has_previous%}
+      {% include 'includes/paginator.html' %}
+    {% endif %}
+
+    <section class="task-list">
+      {% if tasks_by_date %}
+          {% for date, tasks in tasks_by_date.items %}
+            <br><div class="text-center mb-2"><b>{{ date }}</b></div><br>
+
+              {% for task in tasks %}
+                    {% include 'includes/task_flat_card.html' %}
+              {% endfor %}
+        {% endfor %}
+      {% else %}
+        <div class="text-center">
+            Выполненных задач пока нет 🤔
+        </div>
+      {% endif %}
+    </section>
+
+    <!-- Нижняя пагинация -->
+    {% if page_obj.has_next or page_obj.has_previous %}
+      {% include 'includes/paginator.html' %}
+    {% endif %}
+  </div>
+
+{% endblock %}

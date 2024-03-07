@@ -53,7 +53,7 @@ class TaskAdmin(admin.ModelAdmin):
         'id', 'author', 'get_title', 'get_description', 'show_tags',
         'get_favorites_count', 'priority', 'status', 'previous_status',
         'assigned_to', 'created', 'deadline', 'deadline_reminder',
-        'is_notified', 'is_done', 'done_by', 'done_by_time')
+        'is_notified', 'is_done', 'done_by', 'done_by_time', 'is_draft')
 
     fieldsets = (
         ('Информация о задаче', {
@@ -61,6 +61,7 @@ class TaskAdmin(admin.ModelAdmin):
                 'author', 'title', 'description',
                 'priority', 'status', 'previous_status', 'assigned_to',
                 'created', 'deadline', 'deadline_reminder', 'is_notified',
+                'is_draft'
             ),
         }),
         ('Детали выполнения задачи', {

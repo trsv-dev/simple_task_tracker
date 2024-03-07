@@ -4,80 +4,91 @@
 
 {% block content %}
 
-<div class="container">
+{% if not task.is_draft or user == task.author %}
+    <div class="container">
 
-    {% include 'includes/pop_messages.html' %}
+        {% include 'includes/pop_messages.html' %}
 
-    <div class="card">
+        <div class="card">
 
-        {% include 'includes/task_title_colors.html' %}
+            {% include 'includes/task_title_colors.html' %}
 
-    <div class="card-body">
-{#      <p class="card-text">{% include 'tasks/detail.html' %}</p>#}
-      {% include 'tasks/detail.html' %}
-{#        <p>#}
-{#          <a class="btn btn-primary" data-toggle="collapse" href="#collapseExample1" role="button" aria-expanded="false" aria-controls="collapseExample1">#}
-{#            Действия#}
-{#          </a>#}
-{#        </p>#}
+        <div class="card-body">
 
-        <div class="collapse" id="collapseTaskActions">
-              {% if user.is_authenticated and user != task.author %}
-                  {% if not is_favorited %}
-                    <a href="{% url 'favorites:add_to_favorites' pk=task.id %}" class="btn btn-outline-danger btn-sm"> ❤️ В избранное</a>
+          {% include 'tasks/detail.html' %}
+
+            <div class="collapse" id="collapseTaskActions">
+                  {% if user.is_authenticated and user != task.author %}
+                      {% if not is_favorited %}
+                        <a href="{% url 'favorites:add_to_favorites' pk=task.id %}" class="btn btn-outline-danger btn-sm"> ❤️ В избранное</a>
+                      {% endif %}
+                      {% if is_favorited %}
+                        <a href="{% url 'favorites:delete_from_favorites' pk=task.id %}" class="btn btn-outline-danger btn-sm"> 💔 Из избранного</a>
+                      {% endif %}
                   {% endif %}
-                  {% if is_favorited %}
-                    <a href="{% url 'favorites:delete_from_favorites' pk=task.id %}" class="btn btn-outline-danger btn-sm"> 💔 Из избранного</a>
+                  {% if user.is_authenticated and task.is_done == False %}
+                    {% if user.is_staff or user == task.author or user == task.assigned_to %}
+                        {#    Кнопка удаления вынесена в отдельный блок чтобы явно указать метод POST, который требуется в @require_POST #}
+                        {% if user == task.author %}
+                            <form method="post" action="{% url 'tracker:delete' pk=task.id %}" style="display:inline;">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-outline-danger btn-sm">Удалить</button>
+                            </form>
+                            <a href="{% url 'tracker:edit' pk=task.id %}" class="btn btn-outline-primary btn-sm">Редактировать</a>
+                        {% endif %}
+                        {% if not task.is_draft %}
+                            {% if user == task.assigned_to %}
+                                <a href="{% url 'tracker:mark_as_done' pk=task.id %}" class="btn btn-outline-success btn-sm">Выполнено</a>
+                            {% endif %}
+                            {% if user == task.assigned_to and task.status == 'Ожидает выполнения' %}
+                                <a href="{% url 'tracker:change_task_status' pk=task.id %}" class="btn btn-outline-secondary btn-sm">Взять в работу</a>
+                            {% endif %}
+                            {% if user == task.assigned_to and task.status != 'Ожидает выполнения' %}
+                                <a href="{% url 'tracker:change_task_status' pk=task.id %}" class="btn btn-outline-secondary btn-sm">Вернуть в ожидающие</a>
+                            {% endif %}
+                        {% endif %}
+                    {% endif %}
+                  {% elif user == task.assigned_to %}
+                      <form method="post" action="{% url 'tracker:mark_as_undone' pk=task.id %}" style="display:inline;">
+                          {% csrf_token %}
+                          <button type="submit" class="btn btn-outline-dark btn-sm" style="margin-left: auto;">Отмена выполнения</button>
+                      </form>
                   {% endif %}
-              {% endif %}
-              {% if user.is_authenticated and task.is_done == False %}
-                {% if user.is_staff or user == task.author or user == task.assigned_to %}
-                    {#    Кнопка удаления вынесена в отдельный блок чтобы явно указать метод POST, который требуется в @require_POST #}
-                    {% if user == task.author %}
-                        <form method="post" action="{% url 'tracker:delete' pk=task.id %}" style="display:inline;">
-                            {% csrf_token %}
-                            <button type="submit" class="btn btn-outline-danger btn-sm">Удалить</button>
-                        </form>
-                        <a href="{% url 'tracker:edit' pk=task.id %}" class="btn btn-outline-primary btn-sm">Редактировать</a>
-                    {% endif %}
-                    {% if user == task.assigned_to %}
-                        <a href="{% url 'tracker:mark_as_done' pk=task.id %}" class="btn btn-outline-success btn-sm">Выполнено</a>
-                    {% endif %}
-                    {% if user == task.assigned_to and task.status == 'Ожидает выполнения' %}
-                        <a href="{% url 'tracker:change_task_status' pk=task.id %}" class="btn btn-outline-secondary btn-sm">Взять в работу</a>
-                    {% endif %}
-                    {% if user == task.assigned_to and task.status != 'Ожидает выполнения' %}
-                        <a href="{% url 'tracker:change_task_status' pk=task.id %}" class="btn btn-outline-secondary btn-sm">Вернуть в ожидающие</a>
-                    {% endif %}
+                {% if task.is_draft %}
+                    <a href="{% url 'tracker:drafts' user=user %}" class="btn btn-outline-dark btn-sm">Назад</a>
+                {% else %}
+                    <a href="{% url 'tracker:index'%}" class="btn btn-outline-dark btn-sm">Назад</a>
                 {% endif %}
-              {% elif user == task.assigned_to %}
-                  <form method="post" action="{% url 'tracker:mark_as_undone' pk=task.id %}" style="display:inline;">
-                      {% csrf_token %}
-                      <button type="submit" class="btn btn-outline-dark btn-sm" style="margin-left: auto;">Отмена выполнения</button>
-                  </form>
-              {% endif %}
-            <a href="{% url 'tracker:index'%}" class="btn btn-outline-dark btn-sm">Назад</a>
+            </div>
+        </div>
+      </div>
+    </div>
+
+
+    <div class="container">
+        <div class="card-body">
+             {% if comment_form.errors and request.method == 'POST' %}
+                <div class="alert alert-danger">
+                    {% for field, errors in comment_form.errors.items %}
+                        {% for error in errors %}
+                            {{ error }}
+                        {% endfor %}
+                        <br>
+                    {% endfor %}
+                </div>
+            {% endif %}
         </div>
     </div>
-  </div>
-</div>
 
+    {% if not task.is_draft %}
+        {% include 'comments/create_comment.html' %}
+    {% endif %}
 
-<div class="container">
-    <div class="card-body">
-         {% if comment_form.errors and request.method == 'POST' %}
-            <div class="alert alert-danger">
-                {% for field, errors in comment_form.errors.items %}
-                    {% for error in errors %}
-                        {{ error }}
-                    {% endfor %}
-                    <br>
-                {% endfor %}
-            </div>
-        {% endif %}
+{% elif task.is_draft and user != task.author %}
+    <div class="text-center">
+        <p>👮 Это черновик другого пользователя.</p>
+        <p>У вас нет доступа чужим к черновикам.</p>
     </div>
-</div>
+{% endif %}
 
-
-{% include 'comments/create_comment.html' %}
 {% endblock %}

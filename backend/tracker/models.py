@@ -109,6 +109,11 @@ class Task(models.Model):
         verbose_name='Выполнено',
         help_text='Отмечено ли задание как выполненное'
     )
+    is_draft = models.BooleanField(
+        default=None,
+        verbose_name='Черновик?',
+        help_text='Является ли задание черновиком'
+    )
     done_by = models.ForeignKey(
         User,
         null=True,
