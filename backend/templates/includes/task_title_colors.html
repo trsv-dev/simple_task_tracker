@@ -1,7 +1,19 @@
 {% if task.priority == 'Высокий' %}
-    <h6 class="card-header" style='background-color: #f8d4d4;'>{{ task.title }}</h6>
+    {% if task.is_draft %}
+        <h6 class="card-header" style='background-color: #f8d4d4;'><small class="text-muted">(Черновик)</small> {{ task.title }}</h6>
+    {% else %}
+        <h6 class="card-header" style='background-color: #f8d4d4;'>{{ task.title }}</h6>
+    {% endif %}
 {% elif task.priority == 'Низкий' %}
-    <h6 class="card-header" style='background-color: #c6e0c6;'>{{ task.title }}</h6>
+    {% if task.is_draft %}
+        <h6 class="card-header" style='background-color: #c6e0c6;'><small class="text-muted">(Черновик)</small> {{ task.title }}</h6>
+    {% else %}
+        <h6 class="card-header" style='background-color: #c6e0c6;'>{{ task.title }}</h6>
+    {% endif %}
 {% elif task.priority == 'Средний' %}
-    <h6 class="card-header" style='background-color: rgba(149,194,245,0.3);'>{{ task.title }}</h6>
+    {% if task.is_draft %}
+        <h6 class="card-header" style='background-color: rgba(149,194,245,0.3);'><small class="text-muted">(Черновик)</small> {{ task.title }}</h6>
+    {% else %}
+        <h6 class="card-header" style='background-color: rgba(149,194,245,0.3);'>{{ task.title }}</h6>
+    {% endif %}
 {% endif %}

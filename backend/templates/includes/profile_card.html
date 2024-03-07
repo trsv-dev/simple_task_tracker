@@ -6,6 +6,11 @@
             {% else %}
                 <img src="/static/placeholders/avatar-placeholder.png" alt="Аватара нет" class="avatar-img">
             {% endif %}
+            <br>
+            <br>
+            {% if user == user_profile %}
+                <a href="{% url 'tracker:drafts' user=user %}"><button type="button" class="btn btn-outline-secondary">📘 Черновики {{ user_profile }}</button></a>
+            {% endif %}
         </div>
         <div class="col-md-8" style="text-align: left;">
             <p><strong>Профиль пользователя </strong>{{ user_profile }}</p>

@@ -43,7 +43,7 @@ def get_favorites(request, user):
     username = get_object_or_404(User, username=user)
     user_favorites = Favorites.objects.filter(
         user=username
-    ).select_related('task__author')
+    ).select_related('task__author', 'task__assigned_to')
 
     dates = user_favorites.order_by(
         'added_time__date'

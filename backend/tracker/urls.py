@@ -55,4 +55,9 @@ urlpatterns = [
         views.task_search,
         name='task_search'
     ),
+    path(
+        'profile/<str:user>/drafts/',
+        views.drafts,
+        name='drafts'
+    )
 ]

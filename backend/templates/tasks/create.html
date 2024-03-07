@@ -132,6 +132,14 @@
             <input type="datetime-local" class="form-control" id="id_deadline_reminder" name="deadline_reminder" {% if task %}value="{{ task.deadline_reminder|date:'Y-m-d\TH:i' }}"{% elif form.deadline_reminder.value %}value="{{ form.deadline_reminder.value }}"{% endif %}>
         </div>
 
+        {% if not task or task.is_draft %}
+            <div class="form-group">
+                <label for="{{ form.is_draft.id_for_label }}">Сохранить как черновик? </label>
+                <input type="checkbox" id="{{ form.is_draft.id_for_label }}" name="{{ form.is_draft.name }}" {% if form.is_draft.value %}checked{% endif %}>
+                <p><small class="text-muted">(Если отмечено - задание сохранится в черновики без публикации)</small></p>
+            </div>
+        {% endif %}
+
         <div class="btn-group-justified">
             <button type="submit" class="btn btn-outline-success">
                 {% if task %}Сохранить{% else %}Создать{% endif %}
