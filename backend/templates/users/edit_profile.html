@@ -21,9 +21,16 @@
             <form method="post" enctype="multipart/form-data">
                 {% csrf_token %}
 
-                {% if form.errors and request.method == 'POST' %}
+                {% if user_edit_form.errors or profile_edit_form.errors %}
                   <div class="alert alert-danger">
-                      {% for field, errors in form.errors.items %}
+                      {% for field, errors in user_edit_form.errors.items %}
+                          {% for error in errors %}
+                              {{ error }}
+                          {% endfor %}
+                          <br>
+                      {% endfor %}
+
+                      {% for field, errors in profile_edit_form.errors.items %}
                           {% for error in errors %}
                               {{ error }}
                           {% endfor %}
@@ -55,10 +62,15 @@
                 </div>
 
                 <div class="form-group">
+                    <label for="{{ profile_edit_form.is_private.id_for_label }}">Приватный профиль? </label>
+                    <input type="checkbox" id="{{ profile_edit_form.is_private.id_for_label }}" name="{{ profile_edit_form.is_private.name }}" {% if profile_edit_form.is_private.value %}checked{% endif %}>
+                    <p><small class="text-muted">(Если отмечено - отображается только для авторизованных пользователей)</small></p>
+                </div>
+
+                <div class="form-group">
                     <label for="{{ profile_edit_form.avatar.id_for_label }}">Аватар:</label>
                     {{ profile_edit_form.avatar }}
                 </div>
-
                 <div class="buttons text-left">
                     <button class="btn btn-outline-success my-4" type="submit">Сохранить изменения</button>
                     <a class="btn btn-outline-danger my-4" href="{% url 'tracker:profile' user=user %}">Отмена</a>

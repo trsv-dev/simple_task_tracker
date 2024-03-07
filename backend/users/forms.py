@@ -45,4 +45,10 @@ class ProfileEditForm(forms.ModelForm):
 
     class Meta:
         model = Profile
-        fields = ['bio', 'avatar']
+        fields = ['bio', 'avatar', 'is_private']
+
+        widgets = {
+            'is_private': forms.CheckboxInput(
+                attrs={'class':'checkboxInvoice'}
+            )
+        }
