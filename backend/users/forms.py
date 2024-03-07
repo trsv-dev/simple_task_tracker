@@ -49,6 +49,6 @@ class ProfileEditForm(forms.ModelForm):
 
         widgets = {
             'is_private': forms.CheckboxInput(
-                attrs={'class':'checkboxInvoice'}
+                attrs={'class': 'checkbox'}
             )
         }
