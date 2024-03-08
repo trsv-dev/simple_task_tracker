@@ -18,7 +18,8 @@
           {% include 'tasks/detail.html' %}
 
             <div class="collapse" id="collapseTaskActions">
-                  {% if user.is_authenticated and user != task.author %}
+{#                  {% if user.is_authenticated and user != task.author %}#}
+                  {% if user.is_authenticated %}
                       {% if not is_favorited %}
                         <a href="{% url 'favorites:add_to_favorites' pk=task.id %}" class="btn btn-outline-danger btn-sm"> ❤️ В избранное</a>
                       {% endif %}
@@ -87,7 +88,7 @@
 {% elif task.is_draft and user != task.author %}
     <div class="text-center">
         <p>👮 Это черновик другого пользователя.</p>
-        <p>У вас нет доступа чужим к черновикам.</p>
+        <p>У вас нет доступа к чужим черновикам.</p>
     </div>
 {% endif %}
 
