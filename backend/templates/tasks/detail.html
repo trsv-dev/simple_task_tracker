@@ -20,8 +20,9 @@
     {% endthumbnail %}
 {% endfor %}
 
-
-<p><b>Описание:</b> {{ task.description|markdown }}</p>
+{#{% autoescape on %}#}
+    <p><b>Описание:</b> {{ task.description|markdown }}</p>
+{#{% endautoescape %}#}
 
 {% if task.tags %}
         {% for task_tag in task.tags.all %}
