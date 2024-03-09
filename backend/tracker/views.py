@@ -623,6 +623,13 @@ def edit_task(request, pk):
         new_deadline_reminder = form.cleaned_data.get('deadline_reminder')
         tags = form.cleaned_data.get('tags', [])
 
+        # Если оригинальное задание было черновиком и с него сняли
+        # отметку черновика - отправляем письмо о новом задании
+        # ответственному пользователю.
+        if original_task.is_draft and not task.is_draft:
+            universal_mail_sender(request, task, task.assigned_to.email,
+                                  templates['create_task_template'])
+
         if is_title_description_priority_status_changed(request,
                                                         original_task, form):
 
