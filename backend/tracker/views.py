@@ -774,8 +774,8 @@ def task_search(request):
         return render(request, 'tasks/task_search.html', context)
 
     search_results = Task.objects.filter(
-        Q(title__icontains=search_query) |
-        Q(description__icontains=search_query)
+        Q(title__icontains=search_query, is_draft=False) |
+        Q(description__icontains=search_query, is_draft=False)
     ).order_by('title').select_related('author')
 
     page_obj = get_page_obj(
