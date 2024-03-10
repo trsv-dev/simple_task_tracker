@@ -122,7 +122,7 @@ def is_deadline_deadline_reminder_user_changed(request, original_task,
             )):
         task.deadline = new_deadline
         assigned_to_email = new_assigned_to.email
-        if not task.is_draft:
+        if not original_task.is_draft:
             universal_mail_sender(request, task, assigned_to_email,
                                   templates['new_deadline_template'], )
 
@@ -140,7 +140,7 @@ def is_deadline_deadline_reminder_user_changed(request, original_task,
         # form.save(commit=False) - просто берем его почту.
         assigned_to_email = task.assigned_to.email
 
-        if not task.is_draft:
+        if not original_task.is_draft:
             universal_mail_sender(
                 request,
                 task,
@@ -629,6 +629,8 @@ def edit_task(request, pk):
         if original_task.is_draft and not task.is_draft:
             universal_mail_sender(request, task, task.assigned_to.email,
                                   templates['create_task_template'])
+
+            messages.warning(request, 'Черновик переведен в статус задачи!')
 
         if is_title_description_priority_status_changed(request,
                                                         original_task, form):

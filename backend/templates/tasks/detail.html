@@ -21,7 +21,9 @@
 {% endfor %}
 
 {#{% autoescape on %}#}
-    <p><b>Описание:</b> {{ task.description|markdown }}</p>
+    <div class="description">
+        <p><b>Описание:</b> {{ task.description|markdown }}</p>
+    </div>
 {#{% endautoescape %}#}
 
 {% if task.tags %}

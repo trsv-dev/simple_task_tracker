@@ -53,7 +53,9 @@
                 {% endif %}
             </div>
 
-            <p>{{ node.text|markdown|mentioned_users_replace:usernames_profiles_links|safe }}</p>
+            <div class="comments">
+              <p>{{ node.text|markdown|mentioned_users_replace:usernames_profiles_links|safe }}</p>
+            </div>
 
             {% if node.likes_count %}
                 <h6><span class="badge bg-success" title="Количество лайков">

@@ -112,3 +112,25 @@ a {
     width: auto;
     height: auto;
 }
+
+.description img {
+    width: 100%;
+    height: auto;
+    max-width: 80vw;
+    max-height: 80vh;
+    object-fit: contain;
+    object-position: center center;
+    display: block;
+    margin: 0 auto;
+}
+
+.comments img {
+    width: 100%;
+    height: auto;
+    max-width: 80vw;
+    max-height: 80vh;
+    object-fit: contain;
+    object-position: center center;
+    display: block;
+    margin: 0 auto;
+}
