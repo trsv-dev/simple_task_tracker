@@ -142,3 +142,25 @@ a {
         max-height: 80vh;
     }
 }
+
+/* Стили логотипа хедера для больших экранов (ширина больше 991px) */
+@media (min-width: 992px) {
+    .navbar-brand-large {
+        display: block;
+    }
+
+    .navbar-brand-small {
+        display: none;
+    }
+}
+
+/* Стили логотипа хедера для маленьких экранов (ширина меньше 991px) */
+@media (max-width: 991px) {
+    .navbar-brand-large {
+        display: none;
+    }
+
+    .navbar-brand-small {
+        display: block;
+    }
+}
