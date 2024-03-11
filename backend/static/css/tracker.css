@@ -1,3 +1,44 @@
+.nested-comments {
+   margin-top: 10px;
+   margin-left: 10px;
+}
+
+.comment {
+   margin-bottom: 10px;
+   position: relative;
+}
+
+.comment-reply {
+   margin-left: 10px;
+}
+
+.reply-line {
+   position: absolute;
+   left: -5px;
+   width: 1px;
+   height: 100%;
+   background-color: rgba(206, 212, 218, 0.36);
+}
+
+  /* Добавляем новый класс для подсветки комментария */
+.highlighted-comment {
+   background-color: #ffc;
+   /* Используйте цвет фона по вашему выбору */
+   padding: 5px;
+   border-radius: 5px;
+}
+
+.avatar-container {
+    display: inline-block;
+    margin-right: 10px;  /* Регулируйте отступ справа, если необходимо */
+}
+
+.avatar-img-square {
+    width: 40px;  /* Регулируйте размер квадратной аватарки по вашему усмотрению */
+    height: 40px;
+    border-radius: 50%;
+}
+
 .overlay {
     display: none;
     position: fixed;
@@ -55,3 +96,71 @@ a {
 .likes-badge {
     background-color: rgb(42, 157, 42); /* Светло-серый цвет фона */
   }
+
+/* Максимальный размер аватара и автоматический ресайз */
+.avatar-img {
+    max-width: 200px;
+    max-height: 200px;
+    width: auto;
+    height: auto;
+}
+
+/* Максимальный размер картинок задачи и автоматический ресайз */
+.task-img {
+    max-width: 200px;
+    max-height: 200px;
+    width: auto;
+    height: auto;
+}
+
+/* Общие стили, которые применяются для всех устройств */
+.description img,
+.comments img {
+    height: auto;
+    object-fit: contain;
+    object-position: center center;
+    display: block;
+    margin: 0 auto;
+}
+
+/* Стили изображений в тексте для мобильных устройств (ширина экрана до 767px) */
+@media only screen and (max-width: 992px) {
+    .description img,
+    .comments img {
+        width: 100%; /* Занимает всю ширину экрана */
+        max-width: none; /* Убирает максимальную ширину */
+        max-height: none; /* Убирает максимальную высоту */
+    }
+}
+
+/* Стили изображений в тексте для десктопных устройств (ширина экрана 768px и выше) */
+@media only screen and (min-width: 993px) {
+    .description img,
+    .comments img {
+        width: 60%; /* Занимает 60% ширины экрана */
+        max-width: 80vw;
+        max-height: 80vh;
+    }
+}
+
+/* Стили логотипа хедера для больших экранов (ширина больше 991px) */
+@media (min-width: 992px) {
+    .navbar-brand-large {
+        display: block;
+    }
+
+    .navbar-brand-small {
+        display: none;
+    }
+}
+
+/* Стили логотипа хедера для маленьких экранов (ширина меньше 991px) */
+@media (max-width: 991px) {
+    .navbar-brand-large {
+        display: none;
+    }
+
+    .navbar-brand-small {
+        display: block;
+    }
+}

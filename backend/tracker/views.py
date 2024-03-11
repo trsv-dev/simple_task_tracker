@@ -80,6 +80,10 @@ def check_deadline_or_deadline_reminder(new_deadline, new_deadline_reminder):
             new_deadline_reminder < new_deadline)
 
 
+def is_draft(task):
+    pass
+
+
 def is_title_description_priority_status_changed(request, original_task, form):
     """
     Проверяем что изменения есть только в заголовке, описании,
@@ -118,8 +122,9 @@ def is_deadline_deadline_reminder_user_changed(request, original_task,
             )):
         task.deadline = new_deadline
         assigned_to_email = new_assigned_to.email
-        universal_mail_sender(request, task, assigned_to_email,
-                              templates['new_deadline_template'], )
+        if not original_task.is_draft:
+            universal_mail_sender(request, task, assigned_to_email,
+                                  templates['new_deadline_template'], )
 
         task.is_notified = False
 
@@ -135,15 +140,16 @@ def is_deadline_deadline_reminder_user_changed(request, original_task,
         # form.save(commit=False) - просто берем его почту.
         assigned_to_email = task.assigned_to.email
 
-        universal_mail_sender(
-            request,
-            task,
-            assigned_to_email,
-            templates['reassigned_task_template'],
-            priority=0,
-            queue='fast_queue',
-            previous_assigned_to_username=original_task.assigned_to.username
-        )
+        if not original_task.is_draft:
+            universal_mail_sender(
+                request,
+                task,
+                assigned_to_email,
+                templates['reassigned_task_template'],
+                priority=0,
+                queue='fast_queue',
+                previous_assigned_to_username=original_task.assigned_to.username
+            )
 
 
 @transaction.atomic
@@ -205,14 +211,15 @@ def index(request):
 
     catch_message(request)
 
-    tasks = Task.objects.select_related('author').all()
+    tasks = Task.objects.select_related('author', 'assigned_to').all()
 
     # pending = tasks.filter(status='Ожидает выполнения')
     # in_progress = tasks.filter(status='В процессе выполнения')
 
     # Уменьшаем на 1 кол-во запросов к БД
     tasks = tasks.filter(
-        status__in=['Ожидает выполнения', 'В процессе выполнения', 'Выполнено']
+        status__in=['Ожидает выполнения', 'В процессе выполнения',
+                    'Выполнено'], is_draft=False
     )
     pending = [task for task in tasks if task.status == 'Ожидает выполнения']
     in_progress = [
@@ -257,8 +264,8 @@ def current_tasks(request, user):
     profile_user = get_object_or_404(User, username=user)
 
     tasks = Task.objects.filter(
-        assigned_to=profile_user, done_by=None
-    ).order_by('deadline').select_related('author')
+        assigned_to=profile_user, done_by=None, is_draft=False
+    ).order_by('deadline').select_related('author', 'assigned_to')
 
     page_obj = get_page_obj(request, tasks, settings.TASKS_IN_PAGE)
 
@@ -281,8 +288,8 @@ def user_archive(request, user):
     profile_user = get_object_or_404(User, username=user)
 
     archived_tasks = Task.objects.filter(
-        assigned_to=profile_user, done_by=profile_user
-    ).order_by('-done_by_time__date').select_related('author')
+        assigned_to=profile_user, done_by=profile_user, is_draft=False
+    ).order_by('-done_by_time__date').select_related('author', 'assigned_to')
 
     dates = archived_tasks.values('done_by_time__date').distinct()
 
@@ -318,9 +325,9 @@ def delegated_tasks(request, user):
 
     username = get_object_or_404(User, username=user)
     delegated_tasks = Task.objects.filter(
-        author=username).select_related('author')
+        author=username, is_draft=False).select_related('author', 'assigned_to')
     undone_delegated_tasks = delegated_tasks.filter(
-        author=username, is_done=False).select_related('author')
+        author=username, is_done=False).select_related('author', 'assigned_to')
 
     dates = delegated_tasks.select_related(
         'author').values('created__date').order_by('-created__date').distinct()
@@ -362,8 +369,8 @@ def get_undone_delegated_tasks(request, user):
     username = get_object_or_404(User, username=user)
 
     undone_delegated_tasks = Task.objects.filter(
-        author=username, is_done=False
-    ).select_related('author')
+        author=username, is_done=False, is_draft=False
+    ).select_related('author', 'assigned_to')
 
     order_by = request.GET.get('order_by', 'created')
 
@@ -392,7 +399,8 @@ def full_archive_by_dates(request):
     if not request.user.is_authenticated:
         return redirect('users:login')
 
-    full_archive = Task.objects.filter(is_done=True).select_related('author')
+    full_archive = Task.objects.filter(
+        is_done=True, is_draft=False).select_related('author', 'assigned_to')
 
     dates = full_archive.values('done_by_time__date').order_by(
         '-done_by_time__date'
@@ -431,6 +439,44 @@ def full_archive_by_dates(request):
     return render(request, 'tasks/full_archive.html', context)
 
 
+def drafts(request, user):
+    """Черновики пользователя (неопубликованные задачи)."""
+
+    user = get_object_or_404(User, username=user)
+
+    if not user.is_authenticated:
+        return redirect('users:login')
+
+    drafts = Task.objects.filter(
+        author=user, is_draft=True).select_related('author', 'assigned_to')
+
+    dates = drafts.select_related(
+        'author').values('created__date').order_by('-created__date').distinct()
+
+    items_per_page = settings.DAYS_IN_CALENDAR_PAGE
+    page_number = int(request.GET.get('page', 1))
+    current_dates = get_current_dates(dates, page_number, items_per_page)
+
+    tasks_by_date = get_tasks_by_date(
+        drafts, current_dates,
+        'created__date', 'created'
+    )
+
+    # Создаем объект Paginator для навигации по страницам
+    page_obj = get_page_obj(
+        request, dates, settings.DAYS_IN_CALENDAR_PAGE
+    )
+
+    context = {
+        'username': user,
+        'drafts_quantity': len(drafts),
+        'tasks_by_date': tasks_by_date,
+        'page_obj': page_obj,
+    }
+
+    return render(request, 'tasks/drafts.html', context)
+
+
 def task_detail(request, pk):
     """Отображение деталей задачи."""
 
@@ -441,7 +487,7 @@ def task_detail(request, pk):
         .prefetch_related('tags__tag'), pk=pk)
 
     comments = task.comments.select_related('author').prefetch_related(
-        'images').annotate(likes_count=Count('likes'))
+        'images', 'author__profile').annotate(likes_count=Count('likes'))
 
     context = get_common_context(request, task, comments)
 
@@ -452,9 +498,16 @@ def task_detail(request, pk):
         users_likes = request.user.likes.select_related(
             'user').prefetch_related('comment')
 
+        # users_likes_dict = {}
+        # for likes in users_likes:
+        #     users_likes_dict[likes.comment.text] = likes.user.username
+
+        # Передаем в словарь pk лайкнутых пользователем сообщений,
+        # чтобы потом в шаблоне его "разобрать" и отметить значком "+1"
+        # сообщение, если оно было лайкнуто
         users_likes_dict = {}
         for likes in users_likes:
-            users_likes_dict[likes.comment.text] = likes.user.username
+            users_likes_dict[likes.comment.pk] = likes.user.username
 
         context['users_likes_dict'] = users_likes_dict
 
@@ -515,8 +568,9 @@ def create_task(request):
 
         assigned_to_email = task.assigned_to.email
 
-        universal_mail_sender(request, task, assigned_to_email,
-                              templates['create_task_template'])
+        if not task.is_draft:
+            universal_mail_sender(request, task, assigned_to_email,
+                                  templates['create_task_template'])
 
         url = settings.BASE_URL + reverse('tracker:detail', args=[task.pk])
         messages.success(
@@ -568,6 +622,15 @@ def edit_task(request, pk):
         new_deadline = form.cleaned_data.get('deadline')
         new_deadline_reminder = form.cleaned_data.get('deadline_reminder')
         tags = form.cleaned_data.get('tags', [])
+
+        # Если оригинальное задание было черновиком и с него сняли
+        # отметку черновика - отправляем письмо о новом задании
+        # ответственному пользователю.
+        if original_task.is_draft and not task.is_draft:
+            universal_mail_sender(request, task, task.assigned_to.email,
+                                  templates['create_task_template'])
+
+            messages.warning(request, 'Черновик переведен в статус задачи!')
 
         if is_title_description_priority_status_changed(request,
                                                         original_task, form):
@@ -632,8 +695,9 @@ def delete_task(request, pk):
     # Вместо экземпляра task передаем "слепок" saved_task_data, идентичный
     # экземпляру task.
 
-    universal_mail_sender(request, saved_task_data, assigned_to_email,
-                          templates['delete_task_template'])
+    if not saved_task_data.is_draft:
+        universal_mail_sender(request, saved_task_data, assigned_to_email,
+                              templates['delete_task_template'])
 
     messages.info(request, f'Задача "{saved_task_data.title}" была удалена!')
 
@@ -655,8 +719,9 @@ def mark_as_done(request, pk):
     # Отменяем проверку даты и времени напоминания о дедлайне в модели.
     task.save(skip_deadline_reminder_check=True)
 
-    universal_mail_sender(request, task, email,
-                          templates['task_is_done_mail'])
+    if not task.is_draft:
+        universal_mail_sender(request, task, email,
+                              templates['task_is_done_mail'])
 
     return redirect('tracker:index')
 
@@ -675,8 +740,9 @@ def mark_as_undone(request, pk):
         # Отменяем проверку даты и времени напоминания о дедлайне в модели.
         task.save(skip_deadline_reminder_check=True)
 
-        universal_mail_sender(request, task, email,
-                              templates['task_is_undone_mail'])
+        if not task.is_draft:
+            universal_mail_sender(request, task, email,
+                                  templates['task_is_undone_mail'])
 
         return redirect('tracker:index')
 
@@ -717,8 +783,8 @@ def task_search(request):
         return render(request, 'tasks/task_search.html', context)
 
     search_results = Task.objects.filter(
-        Q(title__icontains=search_query) |
-        Q(description__icontains=search_query)
+        Q(title__icontains=search_query, is_draft=False) |
+        Q(description__icontains=search_query, is_draft=False)
     ).order_by('title').select_related('author')
 
     page_obj = get_page_obj(

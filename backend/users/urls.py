@@ -7,7 +7,7 @@ from django.contrib.auth.views import (LoginView, LogoutView,
                                        PasswordChangeDoneView)
 from django.urls import path
 
-from users.views import RegisterView
+from users.views import RegisterView, edit_profile
 
 app_name = 'users'
 
@@ -63,5 +63,8 @@ urlpatterns = [
             template_name='users/password_reset_complete.html',
         ),
         name='password_reset_complete'
+    ),
+    path(
+        'edit_profile/', edit_profile, name='edit_profile'
     ),
 ]

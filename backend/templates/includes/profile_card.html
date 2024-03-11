@@ -1,0 +1,37 @@
+<div class="container mt-4">
+    <section class="user-profile row text-center">
+        <div class="col-md-4 text-left mb-4 mb-md-0">
+            {% if user_profile.profile.avatar %}
+                <img src="{{ user_profile.profile.avatar.url }}" alt="Аватар" class="avatar-img">
+            {% else %}
+                <img src="/static/placeholders/avatar-placeholder.png" alt="Аватара нет" class="avatar-img">
+            {% endif %}
+            <br>
+            <br>
+            {% if user == user_profile %}
+                <a href="{% url 'tracker:drafts' user=user %}"><button type="button" class="btn btn-outline-secondary">📘 Черновики {{ user_profile }}</button></a>
+            {% endif %}
+        </div>
+        <div class="col-md-8" style="text-align: left;">
+            <p><strong>Профиль пользователя </strong>{{ user_profile }}</p>
+            <p><strong>Имя:</strong> {{ user_profile.first_name }}</p>
+            <p><strong>Фамилия: </strong>{{ user_profile.last_name }}</p>
+            <p><strong>Почта: </strong>{{ user_profile.email }}</p>
+            <p><strong>Дата регистрации: </strong>{{ user_profile.date_joined }}</p>
+            <p><strong>О себе: </strong>{{ user_profile.profile.bio }}</p>
+            <p><strong>Приватный профиль?:</strong>
+                {% if user_profile.profile.is_private %}Да{% else %}Нет{% endif %}
+            </p>
+
+            <div class="buttons text-left">
+                {% if user == user_profile %}
+                    <a class="btn btn-outline-danger my-4" href="{% url 'password_change' %}">Сменить пароль?</a>
+                {% endif %}
+                {% if user == user_profile %}
+                    <a class="btn btn-outline-secondary my-4" href="{% url 'users:edit_profile' %}">Редактировать</a>
+                {% endif %}
+            </div>
+
+        </div>
+    </section>
+</div>

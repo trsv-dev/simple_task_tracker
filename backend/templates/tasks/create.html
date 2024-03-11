@@ -1,12 +1,14 @@
 {% load static %}
 {% load thumbnail %}
 
+
 <!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 {#    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">#}
+    <link rel="shortcut icon" type="image/png" href="{% static 'icons/favicon.png' %}" sizes="16x16 32x32" >
     <link rel="stylesheet" href="{% static 'css/bootstrap_4.5.2.min.css' %}">
     <link rel="stylesheet" href="{% static 'css/tracker.css' %}">
     <title>{% if task %}Редактировать{% else %}Создать{% endif %} задачу</title>
@@ -131,6 +133,14 @@
             {% endif %}
             <input type="datetime-local" class="form-control" id="id_deadline_reminder" name="deadline_reminder" {% if task %}value="{{ task.deadline_reminder|date:'Y-m-d\TH:i' }}"{% elif form.deadline_reminder.value %}value="{{ form.deadline_reminder.value }}"{% endif %}>
         </div>
+
+        {% if not task or task.is_draft %}
+            <div class="form-group">
+                <label for="{{ form.is_draft.id_for_label }}">Сохранить как черновик? </label>
+                <input type="checkbox" id="{{ form.is_draft.id_for_label }}" name="{{ form.is_draft.name }}" {% if form.is_draft.value %}checked{% endif %}>
+                <p><small class="text-muted">(Если отмечено - задание сохранится в черновики без публикации)</small></p>
+            </div>
+        {% endif %}
 
         <div class="btn-group-justified">
             <button type="submit" class="btn btn-outline-success">

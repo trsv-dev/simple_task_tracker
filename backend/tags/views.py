@@ -11,8 +11,10 @@ def filter_by_tag(request, tag_name):
     tag = get_object_or_404(Tags, name=tag_name)
 
     tasks_by_tag = TaskTag.objects.filter(
-        tag_id=tag.id).order_by(
-        'task__created').prefetch_related('task__author')
+        tag_id=tag.id,
+        task__is_draft=False
+    ).order_by('task__created').select_related(
+        'task__assigned_to').prefetch_related('task__author')
 
     tasks = [task_by_tag.task for task_by_tag in tasks_by_tag]
 

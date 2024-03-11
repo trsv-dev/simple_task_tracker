@@ -1,19 +1,22 @@
 {% load static %}
 {% include 'includes/header.html' %}
 
-<head>
-    <link rel="stylesheet" href="{% static 'css/default.min.css' %}">
-    <link rel="stylesheet" href="{% static 'css/tracker.css' %}">
-    <link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}">
-    <script src="{% static 'js/highlight.min.js' %}"></script>
+<!DOCTYPE html>
+<html lang="ru">
+    <head>
+        <link rel="stylesheet" href="{% static 'css/default.min.css' %}">
+        <link rel="stylesheet" href="{% static 'css/tracker.css' %}">
+        <link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}">
+        <script src="{% static 'js/highlight.min.js' %}"></script>
 
-    <title>{% block title %}Трекер задач{% endblock %}</title>
-</head>
+        <title>{% block title %}Трекер задач{% endblock %}</title>
+    </head>
 
-<body>
-    {% block content %}
-        {% include 'tasks/main.html' %}
-    {% endblock %}
+    <body>
+        {% block content %}
+            {% include 'tasks/main.html' %}
+        {% endblock %}
 
-    {% include 'includes/footer.html' %}
-</body>
+        {% include 'includes/footer.html' %}
+    </body>
+</html>

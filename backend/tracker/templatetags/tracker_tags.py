@@ -1,6 +1,8 @@
+import bleach
+import markdown
+from bleach_allowlist import markdown_tags, markdown_attrs
 from django import template
 from django.utils.safestring import mark_safe
-import markdown
 
 register = template.Library()
 
@@ -10,4 +12,5 @@ def markdown_format(text):
     """Позволяет использовать Markdown синтаксис."""
 
     md = markdown.Markdown(extensions=['extra'])
-    return mark_safe(md.convert(text))
+    return mark_safe(bleach.clean(md.convert(text),
+                                  markdown_tags, markdown_attrs))

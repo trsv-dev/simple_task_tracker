@@ -8,3 +8,4 @@ class FavoritesAdmin(admin.ModelAdmin):
     list_display = ('task', 'user', 'added_time')
     ordering = ('-added_time',)
     search_fields = ('task__title', 'user__username')
+    list_per_page = 50
