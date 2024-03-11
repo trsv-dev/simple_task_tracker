@@ -1,12 +1,14 @@
 {% load static %}
 {% load thumbnail %}
 
+
 <!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 {#    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">#}
+    <link rel="shortcut icon" type="image/png" href="{% static 'icons/favicon.png' %}" sizes="16x16 32x32" >
     <link rel="stylesheet" href="{% static 'css/bootstrap_4.5.2.min.css' %}">
     <link rel="stylesheet" href="{% static 'css/tracker.css' %}">
     <title>{% if task %}Редактировать{% else %}Создать{% endif %} задачу</title>

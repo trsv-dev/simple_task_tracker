@@ -76,5 +76,24 @@
 </script>
 
 <script>
+  document.addEventListener("DOMContentLoaded", function() {
+    var imageTags = document.querySelectorAll('.description img');
+
+    imageTags.forEach(function(imgTag) {
+      var originalImageLink = document.createElement('a');
+      originalImageLink.href = imgTag.src;
+      originalImageLink.innerHTML = 'Оригинал';
+      originalImageLink.style.display = 'block';  // Устанавливаем элементу стиль block
+
+      var paragraph = document.createElement('p');
+      paragraph.style.textAlign = 'center';  // Центрируем текст
+      paragraph.appendChild(originalImageLink);
+
+      imgTag.parentNode.insertBefore(paragraph, imgTag.nextSibling);
+    });
+  });
+</script>
+
+<script>
     hljs.highlightAll();
 </script>

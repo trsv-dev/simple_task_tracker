@@ -221,3 +221,23 @@
         document.getElementById('overlay_comment_' + imageCommentID).style.display = 'none';
     }
 </script>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function() {
+    var commentImageTags = document.querySelectorAll('.comments img');
+
+    commentImageTags.forEach(function(imgTag) {
+      var originalImageLink = document.createElement('a');
+      originalImageLink.href = imgTag.src;
+      originalImageLink.innerHTML = 'Оригинал';
+      originalImageLink.style.display = 'block';  // Устанавливаем элементу стиль block
+
+      var paragraph = document.createElement('p');
+      paragraph.style.textAlign = 'center';  // Центрируем текст
+      paragraph.appendChild(originalImageLink);
+
+      imgTag.parentNode.insertBefore(paragraph, imgTag.nextSibling);
+    });
+  });
+</script>
+

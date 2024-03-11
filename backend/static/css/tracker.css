@@ -113,24 +113,32 @@ a {
     height: auto;
 }
 
-.description img {
-    width: 100%;
+/* Общие стили, которые применяются для всех устройств */
+.description img,
+.comments img {
     height: auto;
-    max-width: 80vw;
-    max-height: 80vh;
     object-fit: contain;
     object-position: center center;
     display: block;
     margin: 0 auto;
 }
 
-.comments img {
-    width: 100%;
-    height: auto;
-    max-width: 80vw;
-    max-height: 80vh;
-    object-fit: contain;
-    object-position: center center;
-    display: block;
-    margin: 0 auto;
+/* Стили изображений в тексте для мобильных устройств (ширина экрана до 767px) */
+@media only screen and (max-width: 992px) {
+    .description img,
+    .comments img {
+        width: 100%; /* Занимает всю ширину экрана */
+        max-width: none; /* Убирает максимальную ширину */
+        max-height: none; /* Убирает максимальную высоту */
+    }
+}
+
+/* Стили изображений в тексте для десктопных устройств (ширина экрана 768px и выше) */
+@media only screen and (min-width: 993px) {
+    .description img,
+    .comments img {
+        width: 60%; /* Занимает 60% ширины экрана */
+        max-width: 80vw;
+        max-height: 80vh;
+    }
 }
