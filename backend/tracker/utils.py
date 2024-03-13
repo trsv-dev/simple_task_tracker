@@ -81,6 +81,7 @@ def send_email_about_closer_deadline(priority=9, queue='slow_queue'):
 
     tasks_with_closer_deadlines = Task.objects.filter(
         deadline_reminder__lte=timezone.now() + timedelta(minutes=1),
+        is_draft=False,
         is_done=False,
         is_notified=False
     )

@@ -80,10 +80,6 @@ def check_deadline_or_deadline_reminder(new_deadline, new_deadline_reminder):
             new_deadline_reminder < new_deadline)
 
 
-def is_draft(task):
-    pass
-
-
 def is_title_description_priority_status_changed(request, original_task, form):
     """
     Проверяем что изменения есть только в заголовке, описании,
