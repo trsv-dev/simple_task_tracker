@@ -14,24 +14,6 @@ django.setup()
 # И уже потом импортируем недостающие модули из Django
 from users.models import Profile
 
-# Подключаем логирование
-
-# Раскомментировать при разработке
-# logging.basicConfig(
-#     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-#     level=logging.INFO
-# )
-
-
-# Раскомментить на продакшне для сохранения лога в файл
-# Подключаем логирование в файл
-logging.basicConfig(
-    format='%(asctime)s - %(levelname)s - %(message)s',
-    level=logging.INFO,
-    filename='bot_data/bot.log',
-    filemode='w'
-)
-
 
 # В функции start изменяем её так, чтобы она искала пользователя по
 # telegram_username
@@ -79,6 +61,23 @@ async def default_answer(update, context):
 
 def main():
     """Основная логика работы бота."""
+
+    # Подключаем логирование
+
+    # Раскомментировать при разработке
+    # logging.basicConfig(
+    #     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    #     level=logging.INFO
+    # )
+
+    # Раскомментить на продакшне для сохранения лога в файл
+    # Подключаем логирование в файл
+    logging.basicConfig(
+        format='%(asctime)s - %(levelname)s - %(message)s',
+        level=logging.INFO,
+        filename='bot_data/bot.log',
+        filemode='w'
+    )
 
     if not settings.TELEGRAM_TOKEN:
         logging.critical('Отсутствуют необходимые переменные окружения')
