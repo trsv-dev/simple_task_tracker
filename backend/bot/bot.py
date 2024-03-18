@@ -8,7 +8,6 @@ from django.conf import settings
 from telegram.ext import (CommandHandler, ApplicationBuilder,
                           MessageHandler, filters)
 
-
 # Инициализируем Django
 django.setup()
 
@@ -32,6 +31,7 @@ logging.basicConfig(
     filename='test_bot.log',
     filemode='w'
 )
+
 
 # В функции start изменяем её так, чтобы она искала пользователя по
 # telegram_username
@@ -81,10 +81,10 @@ def main():
     """Основная логика работы бота."""
 
     if not settings.TELEGRAM_TOKEN:
-       logging.critical('Отсутствуют необходимые переменные окружения')
-       sys.exit(1)
+        logging.critical('Отсутствуют необходимые переменные окружения')
+        sys.exit(1)
     logging.info(
-       'Переменные бота присутствуют'
+        'Переменные бота присутствуют'
     )
     logging.info('Запуск бота')
 

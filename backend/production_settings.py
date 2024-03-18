@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     'favorites.apps.FavoritesConfig',
     'tags.apps.TagsConfig',
     'likes.apps.LikesConfig',
+    'bot.apps.BotConfig',
 ]
 
 MIDDLEWARE = [
@@ -178,6 +179,8 @@ CELERY_BROKER_TRANSPORT_OPTIONS = {
     'priority_steps': list(range(10)),
     'queue_order_strategy': 'priority',
 }
+
+TELEGRAM_TOKEN = os.getenv('TELEGRAM_TOKEN')
 
 # For testing purposes, the deadline is checked every minute.
 ###############################################################################
