@@ -28,7 +28,7 @@ from users.models import Profile
 logging.basicConfig(
     format='%(asctime)s - %(levelname)s - %(message)s',
     level=logging.INFO,
-    filename='test_bot.log',
+    filename='bot/bot.log',
     filemode='w'
 )
 
