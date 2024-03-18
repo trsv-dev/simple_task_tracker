@@ -35,6 +35,20 @@ class Profile(models.Model):
             (False, 'Нет')
         )
     )
+    telegram_username = models.CharField(
+        max_length=250,
+        null=True,
+        blank=True,
+        default='Не задано',
+        verbose_name='Имя пользователя в Telegram',
+        help_text='Укажите имя пользователя в Telegram'
+    )
+    telegram_chat_id = models.IntegerField(
+        null=True,
+        blank=True,
+        verbose_name='Chat_id беседы',
+        help_text='Укажите chat_id беседы с ботом'
+    )
 
     class Meta:
         verbose_name = 'Профиль'

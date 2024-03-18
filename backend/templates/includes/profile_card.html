@@ -17,6 +17,7 @@
             <p><strong>Имя:</strong> {{ user_profile.first_name }}</p>
             <p><strong>Фамилия: </strong>{{ user_profile.last_name }}</p>
             <p><strong>Почта: </strong>{{ user_profile.email }}</p>
+            <p><strong>Имя пользователя в Telegram: </strong>{{ user_profile.profile.telegram_username }}</p>
             <p><strong>Дата регистрации: </strong>{{ user_profile.date_joined }}</p>
             <p><strong>О себе: </strong>{{ user_profile.profile.bio }}</p>
             <p><strong>Приватный профиль?:</strong>

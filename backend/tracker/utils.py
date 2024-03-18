@@ -1,3 +1,4 @@
+import asyncio
 import re
 import socket
 from datetime import timedelta
@@ -5,6 +6,7 @@ from smtplib import SMTPException
 from urllib.parse import unquote_plus
 
 from celery import shared_task
+from django.conf import settings
 from django.contrib import messages
 from django.core.mail import send_mail
 from django.core.paginator import Paginator
@@ -13,6 +15,7 @@ from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils import timezone
 
+from bot.sending_messages import send_telegram_notification
 from comments.forms import CommentForm
 from task_tracker.settings import EMAIL_HOST_USER, TEMPLATES_DIR
 from tracker.models import Task, User
@@ -113,6 +116,14 @@ def send_email_about_closer_deadline(priority=9, queue='slow_queue'):
                 queue=queue
             )
             task.is_notified = True
+
+            user = get_object_or_404(
+                User, username=serialized_data.get('assigned_to')
+            )
+            chat_id = user.profile.telegram_chat_id
+
+            if chat_id and settings.TELEGRAM_TOKEN:
+                asyncio.run(send_telegram_notification(context=serialized_data))
 
             # На случай, если письмо "задержалось" из-за каких-либо причин
             # и deadline_reminder уже неактуален, установим

@@ -22,7 +22,8 @@ services:
     build: ./backend/
     command: |
       bash -c 'sleep 15 &&
-      gunicorn --bind 0:9000 task_tracker.wsgi'
+      gunicorn --bind 0:9000 task_tracker.wsgi &&
+      python manage.py bot start'
     env_file:
       - .env
     volumes:

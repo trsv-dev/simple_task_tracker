@@ -45,7 +45,7 @@ class ProfileEditForm(forms.ModelForm):
 
     class Meta:
         model = Profile
-        fields = ['bio', 'avatar', 'is_private']
+        fields = ['bio', 'telegram_username', 'avatar', 'is_private']
 
         widgets = {
             'is_private': forms.CheckboxInput(

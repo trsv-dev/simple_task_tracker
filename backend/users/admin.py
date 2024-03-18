@@ -9,9 +9,10 @@ class ProfileAdmin(admin.ModelAdmin):
     """Класс администрирования профилей."""
 
     list_display = ('id', 'get_username', 'show_avatar',
-                    'get_bio', 'is_private')
+                    'get_bio', 'telegram_username', 'telegram_chat_id',
+                    'is_private')
     ordering = ('user_id__date_joined',)
-    search_fields = ('user_id__username',)
+    search_fields = ('user_id__username', 'telegram_username')
     list_per_page = 25
 
     def get_username(self, obj):

@@ -41,34 +41,42 @@
 
                 <!-- User Edit Form -->
                 <div class="form-group">
-                    <input type="text" id="{{ user_edit_form.first_name.id_for_label }}" class="form-control mb-4" placeholder="Имя" name="{{ user_edit_form.first_name.name }}" value="{{ user.first_name }}">
+                    <strong>Имя:</strong> <input type="text" id="{{ user_edit_form.first_name.id_for_label }}" class="form-control mb-4" placeholder="Имя" name="{{ user_edit_form.first_name.name }}" value="{{ user.first_name }}">
                 </div>
 
                 <div class="form-group">
-                    <input type="text" id="{{ user_edit_form.last_name.id_for_label }}" class="form-control mb-4" placeholder="Фамилия" name="{{ user_edit_form.last_name.name }}" value="{{ user.last_name }}">
+                    <strong>Фамилия:</strong> <input type="text" id="{{ user_edit_form.last_name.id_for_label }}" class="form-control mb-4" placeholder="Фамилия" name="{{ user_edit_form.last_name.name }}" value="{{ user.last_name }}">
                 </div>
 
                 <div class="form-group">
-                    <input type="text" id="{{ user_edit_form.username.id_for_label }}" class="form-control mb-4" placeholder="Имя пользователя" name="{{ user_edit_form.username.name }}" value="{{ user.username }}">
+                    <strong>Имя пользователя:</strong> <input type="text" id="{{ user_edit_form.username.id_for_label }}" class="form-control mb-4" placeholder="Имя пользователя" name="{{ user_edit_form.username.name }}" value="{{ user.username }}">
                 </div>
 
                 <div class="form-group">
-                    <input type="email" id="{{ user_edit_form.email.id_for_label }}" class="form-control mb-4" placeholder="Email" name="{{ user_edit_form.email.name }}" value="{{ user.email }}">
+                    <strong>Email:</strong> <input type="email" id="{{ user_edit_form.email.id_for_label }}" class="form-control mb-4" placeholder="Email" name="{{ user_edit_form.email.name }}" value="{{ user.email }}">
                 </div>
 
                 <!-- Profile Edit Form -->
                 <div class="form-group">
-                    <textarea id="{{ profile_edit_form.bio.id_for_label }}" class="form-control mb-4" placeholder="О себе" name="{{ profile_edit_form.bio.name }}" rows="5">{{ user.profile.bio }}</textarea>
+                    <strong>Имя пользователя в Telegram:</strong>
+                    <p><small class="text-muted">(Если указано, то будут приходить полезные уведомления от трекера)</small></p>
+                    <input type="text" id="{{ profile_edit_form.telegram_username.id_for_label }}" class="form-control mb-4" placeholder="Имя пользователя в Telegram" name="{{ profile_edit_form.telegram_username.name }}" value="{{ user.profile.telegram_username }}">
+
+                </div>
+
+
+                <div class="form-group">
+                    <strong>О себе:</strong><textarea id="{{ profile_edit_form.bio.id_for_label }}" class="form-control mb-4" placeholder="О себе" name="{{ profile_edit_form.bio.name }}" rows="5">{{ user.profile.bio }}</textarea>
                 </div>
 
                 <div class="form-group">
-                    <label for="{{ profile_edit_form.is_private.id_for_label }}">Приватный профиль? </label>
+                    <label for="{{ profile_edit_form.is_private.id_for_label }}"><strong>Приватный профиль?</strong></label>
                     <input type="checkbox" id="{{ profile_edit_form.is_private.id_for_label }}" name="{{ profile_edit_form.is_private.name }}" {% if profile_edit_form.is_private.value %}checked{% endif %}>
                     <p><small class="text-muted">(Если отмечено - отображается только для авторизованных пользователей)</small></p>
                 </div>
 
                 <div class="form-group">
-                    <label for="{{ profile_edit_form.avatar.id_for_label }}">Аватар:</label>
+                    <label for="{{ profile_edit_form.avatar.id_for_label }}"><strong>Аватар:</strong></label>
                     {{ profile_edit_form.avatar }}
                 </div>
                 <div class="buttons text-left">
