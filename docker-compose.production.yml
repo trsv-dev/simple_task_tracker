@@ -23,8 +23,8 @@ services:
     command: |
       bash -c 'sleep 15 &&
       cp deploy_settings.py ./task_tracker/settings.py &&
-      gunicorn --bind 0:9000 task_tracker.wsgi &&
-      python manage.py bot start'
+      python manage.py bot start &&
+      gunicorn --bind 0:9000 task_tracker.wsgi'
     env_file:
       - .env
     volumes:
