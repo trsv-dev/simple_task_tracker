@@ -17,9 +17,17 @@
             <p><strong>Имя:</strong> {{ user_profile.first_name }}</p>
             <p><strong>Фамилия: </strong>{{ user_profile.last_name }}</p>
             <p><strong>Почта: </strong>{{ user_profile.email }}</p>
-            <p><strong>Имя пользователя в Telegram: </strong>{{ user_profile.profile.telegram_username }}</p>
+            {% if not user_profile.profile.telegram_username %}
+                <p><strong>Имя пользователя в Telegram: </strong>Не задано</p>
+            {% else %}
+                <p><strong>Имя пользователя в Telegram: </strong><a href="https://t.me/{{ user_profile.profile.telegram_username }}">@{{ user_profile.profile.telegram_username }}</a></p>
+            {% endif %}
             <p><strong>Дата регистрации: </strong>{{ user_profile.date_joined }}</p>
-            <p><strong>О себе: </strong>{{ user_profile.profile.bio }}</p>
+            {% if not user_profile.profile.bio %}
+                <p><strong>О себе: </strong>Не заполнено</p>
+            {% else %}
+                <p><strong>О себе: </strong>{{ user_profile.profile.bio }}</p>
+            {% endif %}
             <p><strong>Приватный профиль?:</strong>
                 {% if user_profile.profile.is_private %}Да{% else %}Нет{% endif %}
             </p>

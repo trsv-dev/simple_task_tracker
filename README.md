@@ -65,6 +65,25 @@
 или
 ```<image src="https://picture.jpg">```. Изображение будет масштабироваться вместе с шаблоном и
 отображаться со ссылкой на оригинал внизу.
+- Добавлен Telegram-бот для отправки уведомлений пользователям (пока в режиме тестирования работает только отправка уведомлений о дедлайнах)
+- Управлять ботом можно командами:
+
+
+  _Локально в среде разработки:_
+```
+python manage.py bot start
+python manage.py bot stop
+```
+  _На продакшне:_
+```
+docker compose -f docker-compose.production.yml exec -d backend python manage.py bot start
+docker compose -f docker-compose.production.yml exec -d backend python manage.py bot stop
+```
+  _В локальных контейнерах:_
+```
+docker compose -f docker-compose.yml exec -d backend python manage.py bot start
+docker compose -f docker-compose.yml exec -d backend python manage.py bot stop
+```
 
 ## Планы
 
@@ -74,6 +93,7 @@
 - ~~Аватарки пользователей у сообщений,~~
 - ~~Приватные профили, отображаемые только авторизованным пользователям,~~
 - ~~Черновики задач,~~
+- ~~Бот для уведомлений,~~
 - Оптимизация
 - ...
 

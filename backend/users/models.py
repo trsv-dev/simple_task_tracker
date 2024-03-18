@@ -1,6 +1,8 @@
+from profile import Profile
+
 from django.contrib.auth import get_user_model
 from django.db import models
-from django.db.models.signals import post_save
+from django.db.models.signals import post_save, pre_save
 from django.dispatch import receiver
 
 User = get_user_model()
@@ -11,7 +13,7 @@ class Profile(models.Model):
 
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     bio = models.TextField(
-        default='--------',
+        default='Не заполнено',
         null=True,
         blank=True,
         verbose_name='Кратко о себе',
@@ -46,6 +48,7 @@ class Profile(models.Model):
     telegram_chat_id = models.IntegerField(
         null=True,
         blank=True,
+        default='Не задано',
         verbose_name='Chat_id беседы',
         help_text='Укажите chat_id беседы с ботом'
     )

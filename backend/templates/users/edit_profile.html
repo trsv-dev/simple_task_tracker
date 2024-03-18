@@ -60,13 +60,13 @@
                 <div class="form-group">
                     <strong>Имя пользователя в Telegram:</strong>
                     <p><small class="text-muted">(Если указано, то будут приходить полезные уведомления от трекера)</small></p>
-                    <input type="text" id="{{ profile_edit_form.telegram_username.id_for_label }}" class="form-control mb-4" placeholder="Имя пользователя в Telegram" name="{{ profile_edit_form.telegram_username.name }}" value="{{ user.profile.telegram_username }}">
+                    <input type="text" id="{{ profile_edit_form.telegram_username.id_for_label }}" class="form-control mb-4" placeholder="Имя пользователя в Telegram" name="{{ profile_edit_form.telegram_username.name }}" value="{{ user.profile.telegram_username|default_if_none:'' }}">
 
                 </div>
 
 
                 <div class="form-group">
-                    <strong>О себе:</strong><textarea id="{{ profile_edit_form.bio.id_for_label }}" class="form-control mb-4" placeholder="О себе" name="{{ profile_edit_form.bio.name }}" rows="5">{{ user.profile.bio }}</textarea>
+                    <strong>О себе:</strong><textarea id="{{ profile_edit_form.bio.id_for_label }}" class="form-control mb-4" placeholder="О себе" name="{{ profile_edit_form.bio.name }}" rows="5">{{ user.profile.bio|default_if_none:'' }}</textarea>
                 </div>
 
                 <div class="form-group">
