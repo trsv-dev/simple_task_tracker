@@ -28,7 +28,7 @@ class Command(BaseCommand):
 
         if action == 'stop':
             # Отправляем сигнал завершения процесса
-            with open('bot/bot.pid', 'r') as f:
+            with open('bot/bot_data/bot.pid', 'r') as f:
                 pid = int(f.read())
 
             os.kill(pid, 9)

@@ -73,6 +73,7 @@ TEMPLATES = [
 
                 'tracker.context_processors.year.year',
                 'tracker.context_processors.excluded_urls.excluded_urls',
+                'tracker.context_processors.telegram_token.telegram_token',
             ],
         },
     },
