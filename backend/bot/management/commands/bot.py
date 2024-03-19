@@ -21,7 +21,7 @@ class Command(BaseCommand):
         action = options['action']
 
         if action == 'start':
-            with open('bot_data/bot.pid', 'w') as f:
+            with open('bot/bot_data/bot.pid', 'w') as f:
                 f.write(str(os.getpid()))
 
             main()

@@ -75,7 +75,7 @@ def main():
     logging.basicConfig(
         format='%(asctime)s - %(levelname)s - %(message)s',
         level=logging.INFO,
-        filename='bot_data/bot.log',
+        filename='bot/bot_data/bot.log',
         filemode='w'
     )
 
