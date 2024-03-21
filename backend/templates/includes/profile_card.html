@@ -22,6 +22,9 @@
             {% else %}
                 <p><strong>Имя пользователя в Telegram: </strong><a href="https://t.me/{{ user_profile.profile.telegram_username }}">@{{ user_profile.profile.telegram_username }}</a></p>
             {% endif %}
+            {% if user.profile.telegram_username %}
+                <p><strong>Получать уведомления в Telegram?: </strong>{% if user_profile.profile.notify_in_telegram %}Да{% else %}Нет{% endif %}</p>
+            {% endif %}
             <p><strong>Дата регистрации: </strong>{{ user_profile.date_joined }}</p>
             {% if not user_profile.profile.bio %}
                 <p><strong>О себе: </strong>Не заполнено</p>

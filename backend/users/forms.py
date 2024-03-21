@@ -45,10 +45,14 @@ class ProfileEditForm(forms.ModelForm):
 
     class Meta:
         model = Profile
-        fields = ['bio', 'telegram_username', 'avatar', 'is_private']
+        fields = ['bio', 'telegram_username', 'avatar', 'is_private',
+                  'telegram_username', 'notify_in_telegram']
 
         widgets = {
             'is_private': forms.CheckboxInput(
                 attrs={'class': 'checkbox'}
-            )
+            ),
+            'notify_in_telegram': forms.CheckboxInput(
+                attrs={'class': 'checkbox'}
+            ),
         }

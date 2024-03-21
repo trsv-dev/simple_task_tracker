@@ -59,10 +59,18 @@
                 <!-- Profile Edit Form -->
                 <div class="form-group">
                     <strong>Имя пользователя в Telegram:</strong>
-                    <p><small class="text-muted">(Если указано, то будут приходить полезные уведомления от трекера)</small></p>
+{#                    <p><small class="text-muted">(Если указано, то будут приходить полезные уведомления от трекера)</small></p>#}
                     <input type="text" id="{{ profile_edit_form.telegram_username.id_for_label }}" class="form-control mb-4" placeholder="Имя пользователя в Telegram" name="{{ profile_edit_form.telegram_username.name }}" value="{{ user.profile.telegram_username|default_if_none:'' }}">
 
                 </div>
+
+                {% if user.profile.telegram_username %}
+                    <div class="form-group">
+                        <label for="{{ profile_edit_form.notify_in_telegram.id_for_label }}"><strong>Получать уведомления в Telegram?</strong></label>
+                        <input type="checkbox" id="{{ profile_edit_form.notify_in_telegram.id_for_label }}" name="{{ profile_edit_form.notify_in_telegram.name }}" {% if profile_edit_form.notify_in_telegram.value %}checked{% endif %}>
+                        <p><small class="text-muted">(Если отмечено, то будут приходить полезные уведомления от трекера)</small></p>
+                    </div>
+                {% endif %}
 
 
                 <div class="form-group">

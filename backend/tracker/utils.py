@@ -41,6 +41,26 @@ templates = {
 }
 
 
+def get_chat_id(user):
+    """Возвращает chat_id пользователя для отправки сообщения в Telegram."""
+
+    user = get_object_or_404(User, username=user.username)
+
+    return user.profile.telegram_chat_id if (
+        user.profile.notify_in_telegram) else False
+
+
+def send_to_telegram(task, user, message_type: str):
+    """Отправка сообщения о событии в Telegram."""
+
+    chat_id = get_chat_id(user)
+    if chat_id and settings.TELEGRAM_TOKEN:
+        asyncio.run(
+            send_telegram_notification(task=task,
+                                       chat_id=chat_id,
+                                       message_type=message_type))
+
+
 @shared_task(
     bind=True, autoretry_for=(socket.gaierror, SMTPException),
     retry_backoff=True, retry_kwargs={'max_retries': 30}
@@ -117,13 +137,7 @@ def send_email_about_closer_deadline(priority=9, queue='slow_queue'):
             )
             task.is_notified = True
 
-            user = get_object_or_404(
-                User, username=serialized_data.get('assigned_to')
-            )
-            chat_id = user.profile.telegram_chat_id
-
-            if chat_id and settings.TELEGRAM_TOKEN:
-                asyncio.run(send_telegram_notification(context=serialized_data))
+            send_to_telegram(task, task.assigned_to, 'deadline')
 
             # На случай, если письмо "задержалось" из-за каких-либо причин
             # и deadline_reminder уже неактуален, установим

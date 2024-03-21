@@ -41,16 +41,25 @@ class Profile(models.Model):
         max_length=250,
         null=True,
         blank=True,
-        default='Не задано',
         verbose_name='Имя пользователя в Telegram',
         help_text='Укажите имя пользователя в Telegram'
     )
-    telegram_chat_id = models.IntegerField(
+    telegram_chat_id = models.BigIntegerField(
         null=True,
         blank=True,
-        default='Не задано',
         verbose_name='Chat_id беседы',
         help_text='Укажите chat_id беседы с ботом'
+    )
+    notify_in_telegram = models.BooleanField(
+        null=True,
+        blank=True,
+        default=True,
+        verbose_name='Уведомлять в Telegram?',
+        help_text='Будут ли приходить уведомления о событиях в трекере',
+        choices=(
+            (True, 'Да'),
+            (False, 'Нет')
+        )
     )
 
     class Meta:

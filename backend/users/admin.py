@@ -10,7 +10,7 @@ class ProfileAdmin(admin.ModelAdmin):
 
     list_display = ('id', 'get_username', 'show_avatar',
                     'get_bio', 'telegram_username', 'telegram_chat_id',
-                    'is_private')
+                    'notify_in_telegram', 'is_private')
     ordering = ('user_id__date_joined',)
     search_fields = ('user_id__username', 'telegram_username')
     list_per_page = 25
