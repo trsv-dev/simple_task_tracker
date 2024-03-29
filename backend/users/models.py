@@ -1,3 +1,5 @@
+from profile import Profile
+
 from django.contrib.auth import get_user_model
 from django.db import models
 from django.db.models.signals import post_save
@@ -11,7 +13,7 @@ class Profile(models.Model):
 
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     bio = models.TextField(
-        default='--------',
+        default='Не заполнено',
         null=True,
         blank=True,
         verbose_name='Кратко о себе',
@@ -30,6 +32,30 @@ class Profile(models.Model):
         default=True,
         verbose_name='Скрыть от неавторизованных пользователей',
         help_text='Сделать профиль приватным?',
+        choices=(
+            (True, 'Да'),
+            (False, 'Нет')
+        )
+    )
+    telegram_username = models.CharField(
+        max_length=250,
+        null=True,
+        blank=True,
+        verbose_name='Имя пользователя в Telegram',
+        help_text='Укажите имя пользователя в Telegram'
+    )
+    telegram_chat_id = models.BigIntegerField(
+        null=True,
+        blank=True,
+        verbose_name='Chat_id беседы',
+        help_text='Укажите chat_id беседы с ботом'
+    )
+    notify_in_telegram = models.BooleanField(
+        null=True,
+        blank=True,
+        default=True,
+        verbose_name='Уведомлять в Telegram?',
+        help_text='Будут ли приходить уведомления о событиях в трекере',
         choices=(
             (True, 'Да'),
             (False, 'Нет')

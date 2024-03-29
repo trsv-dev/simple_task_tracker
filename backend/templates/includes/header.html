@@ -18,9 +18,6 @@
 
     <div class="container mt-5">
         <h1 class="text-center">
-    {#        <a href="{% url 'tracker:index' %}" style="text-decoration: none; color: inherit;">#}
-    {#            <h1 style="text-align: center;">🤖 Трекер задач</h1>#}
-    {#        </a>#}
             <a class="navbar-brand navbar-brand-large" href="{% url 'tracker:index' %}" style="text-decoration: none; color: inherit;">
                 <h1 style="text-align: center;">🤖 Трекер задач</h1>
             </a>
@@ -41,11 +38,12 @@
                                   <a class="nav-item nav-link active" href="{% url 'admin:index' %}">🔧 Админ-панель</a>
                                 {% endif %}
                                 {% if user.is_authenticated %}
+                                  {% if telegram_token %}<a class="nav-item nav-link active" href="https://t.me/simple_task_tracker_testbot">🗞️ Бот</a>{% endif %}
                                   <a class="nav-item nav-link active" href="{% url 'tracker:create' %}">✏️ Создать задачу</a>
                                   <a class="nav-item nav-link active" href="{% url 'tracker:current_tasks' user=user%}">🔥 Текущие</a>
                                   <a class="nav-item nav-link active" href="{% url 'tracker:user_archive' user=user%}">✅ Выполненные</a>
                                   <a class="nav-item nav-link active" href="{% url 'tracker:delegated_tasks' user=user%}">📣 Поставленные</a>
-                                  <a class="nav-item nav-link active" href="{% url 'tracker:full_archive'%}">📚 Архив задач</a>
+                                  <a class="nav-item nav-link active" href="{% url 'tracker:full_archive'%}">📚 Архив</a>
                                   <a class="nav-item nav-link active" href="{% url 'favorites:favorites' user=user %}">🫶 Избранное</a>
                                   <a class="nav-item nav-link active" href="{% url 'tracker:profile' user=user%}">🤓 Профиль</a>
                                   <a class="nav-item nav-link active" href="{% url 'users:logout' %}">🔌 Выйти ({{ user.username }})</a>

@@ -1,3 +1,4 @@
+import asyncio
 import re
 import socket
 from datetime import timedelta
@@ -5,6 +6,7 @@ from smtplib import SMTPException
 from urllib.parse import unquote_plus
 
 from celery import shared_task
+from django.conf import settings
 from django.contrib import messages
 from django.core.mail import send_mail
 from django.core.paginator import Paginator
@@ -13,6 +15,7 @@ from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils import timezone
 
+from bot.sending_messages import send_telegram_notification
 from comments.forms import CommentForm
 from task_tracker.settings import EMAIL_HOST_USER, TEMPLATES_DIR
 from tracker.models import Task, User
@@ -36,6 +39,26 @@ templates = {
     'task_is_undone_mail':
         f'{TEMPLATES_DIR}/email_templates/task_is_undone_mail.html'
 }
+
+
+def get_chat_id(user):
+    """Возвращает chat_id пользователя для отправки сообщения в Telegram."""
+
+    user = get_object_or_404(User, username=user.username)
+
+    return user.profile.telegram_chat_id if (
+        user.profile.notify_in_telegram) else False
+
+
+def send_to_telegram(task, user, message_type: str):
+    """Отправка сообщения о событии в Telegram."""
+
+    chat_id = get_chat_id(user)
+    if chat_id and settings.TELEGRAM_TOKEN:
+        asyncio.run(
+            send_telegram_notification(task=task,
+                                       chat_id=chat_id,
+                                       message_type=message_type))
 
 
 @shared_task(
@@ -81,6 +104,7 @@ def send_email_about_closer_deadline(priority=9, queue='slow_queue'):
 
     tasks_with_closer_deadlines = Task.objects.filter(
         deadline_reminder__lte=timezone.now() + timedelta(minutes=1),
+        is_draft=False,
         is_done=False,
         is_notified=False
     )
@@ -112,6 +136,8 @@ def send_email_about_closer_deadline(priority=9, queue='slow_queue'):
                 queue=queue
             )
             task.is_notified = True
+
+            send_to_telegram(task, task.assigned_to, 'deadline')
 
             # На случай, если письмо "задержалось" из-за каких-либо причин
             # и deadline_reminder уже неактуален, установим

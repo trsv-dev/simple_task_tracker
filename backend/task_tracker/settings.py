@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     'favorites.apps.FavoritesConfig',
     'tags.apps.TagsConfig',
     'likes.apps.LikesConfig',
+    'bot.apps.BotConfig',
 ]
 
 MIDDLEWARE = [
@@ -52,6 +53,8 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'debug_toolbar.middleware.DebugToolbarMiddleware',
+    # Uncomment if you need to close project from unregistered users
+    # 'task_tracker.middlewares.AuthMiddleware',
 ]
 
 ROOT_URLCONF = 'task_tracker.urls'
@@ -72,6 +75,7 @@ TEMPLATES = [
 
                 'tracker.context_processors.year.year',
                 'tracker.context_processors.excluded_urls.excluded_urls',
+                'tracker.context_processors.telegram_token.telegram_token',
             ],
         },
     },
@@ -175,6 +179,8 @@ CELERY_BROKER_TRANSPORT_OPTIONS = {
     'priority_steps': list(range(10)),
     'queue_order_strategy': 'priority',
 }
+
+TELEGRAM_TOKEN = os.getenv('TELEGRAM_TOKEN')
 
 # For testing purposes, the deadline is checked every minute.
 ###############################################################################

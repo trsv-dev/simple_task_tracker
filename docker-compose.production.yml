@@ -7,6 +7,7 @@ volumes:
   redis_data:
   workers_data:
   flower_data:
+  telegram_bot_data:
 
 services:
   postgres:
@@ -21,14 +22,16 @@ services:
     container_name: backend
     image: ${DOCKER_HUB_LOGIN}/simple_task_tracker_backend
     command: |
-      bash -c 'sleep 15 &&
-      cp deploy_settings.py ./task_tracker/settings.py &&
+      bash -c '
+      sleep 15 &&
+      (python manage.py bot start & ) &&
       gunicorn --bind 0:9000 task_tracker.wsgi'
     env_file:
       - .env
     volumes:
       - static:/app/static/
       - media:/app/media/
+      - telegram_bot_data:/app/bot/bot_data
     depends_on:
       - postgres
       - redis
@@ -68,7 +71,7 @@ services:
 
   celery_worker_slow_queue:
     container_name: celery_worker_slow_queue
-    build: ./backend/
+    image: ${DOCKER_HUB_LOGIN}/simple_task_tracker_backend
     env_file:
       - .env
     hostname: celery_worker_slow_queue
@@ -84,7 +87,7 @@ services:
 
   celery_worker_fast_queue:
     container_name: celery_worker_fast_queue
-    build: ./backend/
+    image: ${DOCKER_HUB_LOGIN}/simple_task_tracker_backend
     env_file:
       - .env
     hostname: celery_worker_fast_queue
@@ -100,7 +103,7 @@ services:
 
   celery_beat_worker:
     container_name: celery_beat_worker
-    build: ./backend/
+    image: ${DOCKER_HUB_LOGIN}/simple_task_tracker_backend
     env_file:
       - .env
     hostname: celery_beat_worker

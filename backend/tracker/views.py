@@ -20,7 +20,7 @@ from tracker.forms import TaskCreateForm
 from tracker.models import Task
 from tracker.utils import (templates, universal_mail_sender,
                            get_common_context, catch_message,
-                           get_page_obj)
+                           get_page_obj, send_to_telegram)
 
 
 def check_rights_to_task(username, task):
@@ -80,10 +80,6 @@ def check_deadline_or_deadline_reminder(new_deadline, new_deadline_reminder):
             new_deadline_reminder < new_deadline)
 
 
-def is_draft(task):
-    pass
-
-
 def is_title_description_priority_status_changed(request, original_task, form):
     """
     Проверяем что изменения есть только в заголовке, описании,
@@ -125,6 +121,7 @@ def is_deadline_deadline_reminder_user_changed(request, original_task,
         if not original_task.is_draft:
             universal_mail_sender(request, task, assigned_to_email,
                                   templates['new_deadline_template'], )
+            send_to_telegram(task, task.assigned_to, 'new_deadline')
 
         task.is_notified = False
 
@@ -150,6 +147,8 @@ def is_deadline_deadline_reminder_user_changed(request, original_task,
                 queue='fast_queue',
                 previous_assigned_to_username=original_task.assigned_to.username
             )
+
+            send_to_telegram(task, task.assigned_to, 'task_reassigned')
 
 
 @transaction.atomic
@@ -572,6 +571,8 @@ def create_task(request):
             universal_mail_sender(request, task, assigned_to_email,
                                   templates['create_task_template'])
 
+            send_to_telegram(task, task.assigned_to, 'create_task')
+
         url = settings.BASE_URL + reverse('tracker:detail', args=[task.pk])
         messages.success(
             request, f'<a href="{url}">Задача</a> успешно создана!'
@@ -699,6 +700,8 @@ def delete_task(request, pk):
         universal_mail_sender(request, saved_task_data, assigned_to_email,
                               templates['delete_task_template'])
 
+        send_to_telegram(saved_task_data, task.assigned_to, 'delete_task')
+
     messages.info(request, f'Задача "{saved_task_data.title}" была удалена!')
 
     return redirect('tracker:index')
@@ -722,6 +725,7 @@ def mark_as_done(request, pk):
     if not task.is_draft:
         universal_mail_sender(request, task, email,
                               templates['task_is_done_mail'])
+        send_to_telegram(task, task.author, 'done_task')
 
     return redirect('tracker:index')
 
@@ -743,6 +747,7 @@ def mark_as_undone(request, pk):
         if not task.is_draft:
             universal_mail_sender(request, task, email,
                                   templates['task_is_undone_mail'])
+            send_to_telegram(task, task.author, 'undone_task')
 
         return redirect('tracker:index')
 
