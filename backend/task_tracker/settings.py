@@ -53,6 +53,8 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'debug_toolbar.middleware.DebugToolbarMiddleware',
+    # Uncomment if you need to close project from unregistered users
+    # 'task_tracker.middlewares.AuthMiddleware',
 ]
 
 ROOT_URLCONF = 'task_tracker.urls'
