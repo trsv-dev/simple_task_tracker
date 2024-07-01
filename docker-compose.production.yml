@@ -68,6 +68,7 @@ services:
       - ${FLOWER_PORT}:5555
     volumes:
       - flower_data:/data
+    restart: always
 
   celery_worker_slow_queue:
     container_name: celery_worker_slow_queue
