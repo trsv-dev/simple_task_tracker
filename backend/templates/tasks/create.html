@@ -114,7 +114,7 @@
             <select class="form-control" id="id_assigned_to" name="assigned_to">
                 {% for user in all_users %}
                     <option value="{{ user.id }}" {% if task and task.assigned_to and user.id == task.assigned_to.id %}selected{% elif not task and user.id == request.user.id %}selected{% elif form.assigned_to.value|stringformat:"s" == user.id|stringformat:"s" %}selected{% endif %}>
-                        {{ user.username }}
+                        {{ user.username }} ({{ user.first_name }} {{ user.last_name }})
                     </option>
                 {% endfor %}
             </select>

@@ -10,7 +10,20 @@
 Это пэт-проект, главной целью которого является возможность 
 попробовать в деле интересующие технологии, такие как Docker, Celery, Celery Beat, Redis.
 
+## Стек технологий:
+* celery==5.3.4
+* Django==4.2.5
+* flower==2.0.1
+* redis==5.0.3
+* django-celery-beat==2.5.0
+* pillow==10.2.0
+* Markdown==3.5.1
+
+
 ## Возможности
+
+<details>
+<summary>Описание возможностей</summary>
 
 - На главной странице проекта можно назначать задания пользователям;
 - Задачи может создавать только зарегистрированный пользователь;
@@ -66,7 +79,7 @@
 ```<image src="https://picture.jpg">```. Изображение будет масштабироваться вместе с шаблоном и
 отображаться со ссылкой на оригинал внизу.
 - Возможность запретить просмотр задач трекера незарегистрированным 
-пользователем и запретить регистрацию. Для этого нудно раскомментировать в settings.py
+пользователем и запретить регистрацию. Для этого нужно раскомментировать в settings.py
 строку:
 ```
 'task_tracker.middlewares.AuthMiddleware'
@@ -95,6 +108,7 @@ docker compose -f docker-compose.production.yml exec -d backend python manage.py
 docker compose -f docker-compose.yml exec -d backend python manage.py bot start
 docker compose -f docker-compose.yml exec -d backend python manage.py bot stop
 ```
+</details>
 
 ## Планы
 
@@ -108,9 +122,14 @@ docker compose -f docker-compose.yml exec -d backend python manage.py bot stop
 - Оптимизация
 - ...
 
+## Запуск проекта
+<details>
+<summary>Запуск проекта в контейнерах Docker</summary>
 
-## Запуск проекта в контейнерах Docker (подразумевается, что Docker уже установлен):
+Подразумевается, что Docker уже установлен.
+
 Клонируйте репозиторий с **develop веткой** к себе на машину:
+
 ```
 git clone git@github.com:trsv-dev/simple_task_tracker.git -b develop
 ```
@@ -206,7 +225,11 @@ docker compose -f docker-compose.yml exec backend python manage.py createsuperus
 Сайт доступен по http://127.0.0.1:9000, Flower доступен по http://127.0.0.1:5555 
 с логином/паролем, заданным вами в .env (по умолчанию - _admin_ / _MySuperStrongPassword_).
 
-## Запуск проекта в dev-режиме
+</details>
+
+<details>
+<summary>Запуск проекта в dev-режиме</summary>
+
 Клонируйте репозиторий с **develop веткой** к себе на машину:
 ```
 git clone git@github.com:trsv-dev/simple_task_tracker.git -b develop
@@ -323,3 +346,4 @@ celery -A task_tracker.celery flower
 ```
 
 Процесс развертывания готового проекта в дальнейшем будет сведен до одной команды.
+</details>
