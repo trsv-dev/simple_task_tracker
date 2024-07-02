@@ -33,7 +33,6 @@
                       </button>
                       <div class="collapse navbar-collapse justify-content-center" id="navbarNavAltMarkup">
                         <div class="navbar-nav">
-        {#                    {% if request.resolver_match.url_name != 'login' and request.resolver_match.url_name != 'register' and request.resolver_match.url_name != 'password_reset' %}#}
                                 {% if user.is_staff or user.is_admin %}
                                   <a class="nav-item nav-link active" href="{% url 'admin:index' %}">🔧 Админ-панель</a>
                                 {% endif %}
@@ -52,7 +51,6 @@
                                     <a class="nav-item nav-link active"> 🧐 </a>
                                     <a class="nav-item nav-link active" href="{% url 'users:register' %}">Зарегистрироваться</a>
                                 {% endif %}
-        {#                    {% endif %}#}
                         </div>
                       </div>
                     </nav>
@@ -63,7 +61,6 @@
 
             <br>
 
-    {#        {% if request.resolver_match.url_name not in excluded_urls and tasks %}#}
             {% if request.resolver_match.url_name not in excluded_urls and user.is_authenticated %}
                 <form action="{% url 'tracker:task_search' %}" method="get" class="form-inline">
                     {% csrf_token %}
@@ -71,6 +68,6 @@
                 </form>
             {% endif %}
             </div>
-    {#        <br>#}
+
     </div>
 {% endblock %}

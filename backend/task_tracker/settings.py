@@ -34,6 +34,7 @@ INSTALLED_APPS = [
     'sorl.thumbnail',
     'debug_toolbar',
 
+    'core.apps.CoreConfig',
     'tracker.apps.TrackerConfig',
     'users.apps.UsersConfig',
     'images.apps.ImagesConfig',
