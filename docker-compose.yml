@@ -10,7 +10,7 @@ volumes:
 
 services:
   postgres:
-    container_name: postgres
+    container_name: tracker_postgres
     image: postgres:16-alpine
     env_file:
       - .env
@@ -18,7 +18,7 @@ services:
       - pg_data:/var/lib/postgresql/data
 
   backend:
-    container_name: backend
+    container_name: tracker_backend
     build: ./backend/
     command: |
       bash -c 'sleep 15 &&
@@ -34,7 +34,7 @@ services:
       - redis
 
   nginx:
-    container_name: nginx
+    container_name: tracker_nginx
     build: ./gateway/
     volumes:
       - static:/app/static/
@@ -45,7 +45,7 @@ services:
       - backend
 
   redis:
-    container_name: redis
+    container_name: tracker_redis
     image: redis:7.2-alpine
     env_file:
       - .env
@@ -53,7 +53,7 @@ services:
       - redis_data:/data
 
   flower:
-    container_name: flower
+    container_name: tracker_flower
     image: mher/flower:2.0.0
     env_file:
       - .env
@@ -62,13 +62,13 @@ services:
       - FLOWER_PORT=${FLOWER_PORT}
       - FLOWER_BASIC_AUTH=${FLOWER_USER}:${FLOWER_PASSWORD}
     ports:
-      - ${FLOWER_PORT}:5555
+      - ${FLOWER_PORT}:6666
     volumes:
       - flower_data:/data
     restart: always
 
   celery_worker_slow_queue:
-    container_name: celery_worker_slow_queue
+    container_name: tracker_celery_worker_slow_queue
     build: ./backend/
     env_file:
       - .env
@@ -84,7 +84,7 @@ services:
       - postgres
 
   celery_worker_fast_queue:
-    container_name: celery_worker_fast_queue
+    container_name: tracker_celery_worker_fast_queue
     build: ./backend/
     env_file:
       - .env
@@ -100,7 +100,7 @@ services:
       - postgres
 
   celery_beat_worker:
-    container_name: celery_beat_worker
+    container_name: tracker_celery_beat_worker
     build: ./backend/
     env_file:
       - .env
