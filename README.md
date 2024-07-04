@@ -10,6 +10,10 @@
 Это пэт-проект, главной целью которого является возможность 
 попробовать в деле интересующие технологии, такие как Docker, Celery, Celery Beat, Redis.
 
+Демо: https://tracker.trsv-dev.ru/ (trsv / 1234509876t)
+
+Flower: https://tracker.trsv-dev.ru:5556 (admin / MySuperStrongPassword)
+
 ## Стек технологий:
 * celery==5.3.4
 * Django==4.2.5
@@ -222,7 +226,7 @@ docker compose -f docker-compose.yml exec backend cp -r /app/collected_static/. 
 ```
 docker compose -f docker-compose.yml exec backend python manage.py createsuperuser
 ```
-Сайт доступен по http://127.0.0.1:9000, Flower доступен по http://127.0.0.1:5555 
+Сайт доступен по http://127.0.0.1:9000, Flower доступен по http://127.0.0.1:5556 
 с логином/паролем, заданным вами в .env (по умолчанию - _admin_ / _MySuperStrongPassword_).
 
 </details>
