@@ -62,7 +62,7 @@ services:
       - FLOWER_PORT=${FLOWER_PORT}
       - FLOWER_BASIC_AUTH=${FLOWER_USER}:${FLOWER_PASSWORD}
     ports:
-      - ${FLOWER_PORT}:6666
+      - ${FLOWER_PORT}:5556
     volumes:
       - flower_data:/data
     restart: always
