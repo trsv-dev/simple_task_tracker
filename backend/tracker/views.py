@@ -1,6 +1,7 @@
 from copy import deepcopy
 from datetime import datetime, timedelta
 
+import redis
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
@@ -20,7 +21,11 @@ from tracker.forms import TaskCreateForm
 from tracker.models import Task
 from tracker.utils import (templates, universal_mail_sender,
                            get_common_context, catch_message,
-                           get_page_obj, send_to_telegram)
+                           get_page_obj, send_to_telegram, get_session_id)
+
+REDIS = redis.Redis(host=settings.REDIS_HOST,
+                    port=settings.REDIS_PORT,
+                    db=settings.REDIS_DB)
 
 
 def check_rights_to_task(username, task):
@@ -493,13 +498,28 @@ def task_detail(request, pk):
     context['in_favorites'] = Favorites.objects.filter(task=task).values(
         'user').count()
 
+    session_id = get_session_id(request)
+
+    # Название для множества в Redis, в котором лежат идентификаторы сессий
+    viewed_keys = f'task:{task.id}:viewed_sessions'
+    # Название счетчика посещений
+    total_views_key = f'task:{task.id}:views'
+
+    # Если в множестве viewed_keys нет session_id
+    if not REDIS.sismember(viewed_keys, session_id):
+        # то добавляем session_id в множество
+        REDIS.sadd(viewed_keys, session_id)
+        # и увеличиваем счетчик на 1
+        total_views = REDIS.incr(total_views_key, amount=1)
+    else:
+        # Если session_id уже в множестве, то просто выводим результат
+        total_views = REDIS.get(total_views_key)
+
+    context['total_views'] = total_views.decode('utf-8')
+
     if request.user.is_authenticated:
         users_likes = request.user.likes.select_related(
             'user').prefetch_related('comment')
-
-        # users_likes_dict = {}
-        # for likes in users_likes:
-        #     users_likes_dict[likes.comment.text] = likes.user.username
 
         # Передаем в словарь pk лайкнутых пользователем сообщений,
         # чтобы потом в шаблоне его "разобрать" и отметить значком "+1"
@@ -803,3 +823,15 @@ def task_search(request):
     }
 
     return render(request, 'tasks/task_search.html', context)
+
+
+# def detail_total_views(request, pk):
+#     task = get_object_or_404(Task, pk=pk)
+#     total_views = r.incr(f'task:{task.id}:views')
+#
+#     return render(request,
+#                   'tasks/detail.html',
+#                   {
+#                       'task': task,
+#                       'total_views': total_views
+#                   })

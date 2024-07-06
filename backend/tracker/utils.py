@@ -41,6 +41,19 @@ templates = {
 }
 
 
+def get_session_id(request):
+    """
+    Возвращает id сессии для авторизованных пользователей.
+    Создает сессию и возвращает id сессии для анонимных пользователей.
+    """
+
+    if not request.session.session_key:
+        request.session.create()
+
+    session_id = request.session.session_key
+    return session_id
+
+
 def get_chat_id(user):
     """Возвращает chat_id пользователя для отправки сообщения в Telegram."""
 

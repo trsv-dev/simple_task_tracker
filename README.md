@@ -72,6 +72,7 @@ Flower: https://tracker.trsv-dev.ru:5556 (admin / MySuperStrongPassword)
 - Профили пользователей с возможностью редактирования информации о пользователе и смены аватара,
 - Аватарки пользователей рядом с юзернеймом. Отображаются в обсуждениях под задачами,
 - Нажатие на никнейм автора комментария редиректит на его профиль,
+- Отображение количества просмотров деталей задачи (на основе session_id пользователей, хранение в Redis),
 - Возможность менять "видимость" своего профиля для неавторизованных пользователей, используя опцию "Приватный профиль",
 - Создание черновиков задач, изменение в которых не будет никак затрагивать других пользователей 
 (например, отправку писем о назначении ответственного в черновике или письма об изменении времени наступления дедлайна, удалении и т.д.).
@@ -171,11 +172,13 @@ EMAIL_BACKEND='django.core.mail.backends.smtp.EmailBackend'
 ```
 </details>
 
-Так же обратите внимание на секцию **#Celery settings**. Если вы запускаете контейнеры, то 
-вам нужно раскомментировать две конфигурационные строки. Ваш конфиг должен быть таким:
+Так же обратите внимание на секцию **#Celery settings** и **#Redis settings**. 
+Если вы запускаете контейнеры, то вам нужно раскомментировать две 
+конфигурационные строки в #Celery settings и одну в #Redis settings. 
+Ваш конфиг должен быть таким:
 
 <details>
-    <summary>Конфиг Celery</summary>
+    <summary>Конфиг Celery и Redis</summary>
 
 ```
 #Celery settings:
@@ -193,7 +196,16 @@ CELERY_RESULT_BACKEND='redis://redis:6379/0'
 
 CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP=True
 ```
-
+```
+#Redis settings:
+###############################################################################
+#### Comment it if you use Docker:
+#REDIS_HOST = '127.0.0.1'
+#### Comment it if you in local development mode:
+REDIS_HOST = 'redis'
+REDIS_PORT = 6379
+REDIS_DB = 1
+```
 </details>
 
 
@@ -287,11 +299,13 @@ EMAIL_BACKEND='django.core.mail.backends.smtp.EmailBackend'
 ```
 </details>
 
-Так же обратите внимание на секцию **#Celery settings**. Если вы разрабатываете локально, то 
-вам нужно раскомментировать две конфигурационные строки. Ваш конфиг должен быть таким:
+Так же обратите внимание на секцию **#Celery settings** и **#Redis settings**. 
+Если вы разрабатываете локально, то вам нужно раскомментировать две 
+конфигурационные строки в #Celery settings и 
+одну в #Redis settings. Ваш конфиг должен быть таким:
 
 <details>
-    <summary>Конфиг Celery</summary>
+    <summary>Конфиг Celery и Redis</summary>
 
 ```
 #Celery settings:
@@ -309,7 +323,16 @@ CELERY_RESULT_BACKEND='redis://127.0.0.1:6379/0'
 
 CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP=True
 ```
-
+```
+#Redis settings:
+###############################################################################
+#### Comment it if you use Docker:
+REDIS_HOST = '127.0.0.1'
+#### Comment it if you in local development mode:
+#REDIS_HOST = 'redis'
+REDIS_PORT = 6379
+REDIS_DB = 1
+```
 </details>
 
 Переходим в папку **_backend_**:

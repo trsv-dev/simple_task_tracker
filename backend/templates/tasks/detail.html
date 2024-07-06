@@ -36,6 +36,12 @@
         {% endfor %}
 {% endif %}
 
+{% if total_views %}
+    <span class="badge rounded-pill bg-info text-dark" title="Количество просмотров страницы">
+        👀 {{ total_views }}
+    </span>
+{% endif %}
+
 {% if in_favorites %}
     <span class="badge rounded-pill bg-warning text-dark" title="Количество человек, которые добавили задачу в избранное">
         ★ {{ in_favorites }}
