@@ -21,7 +21,7 @@ services:
     command: |
       bash -c 'sleep 15 &&
       (python manage.py bot start & ) &&
-      gunicorn --bind 0:9000 task_tracker.wsgi --workers 6 --threads 2'
+      gunicorn --bind 0:9000 task_tracker.wsgi --workers 4 --threads 2'
     env_file:
       - .env
     volumes:
