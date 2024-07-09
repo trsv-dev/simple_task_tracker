@@ -498,24 +498,24 @@ def task_detail(request, pk):
     context['in_favorites'] = Favorites.objects.filter(task=task).values(
         'user').count()
 
-    session_id = get_session_id(request)
-
-    # Название для множества в Redis, в котором лежат идентификаторы сессий
-    viewed_keys = f'task:{task.id}:viewed_sessions'
-    # Название счетчика посещений
-    total_views_key = f'task:{task.id}:views'
-
-    # Если в множестве viewed_keys нет session_id
-    if not REDIS.sismember(viewed_keys, session_id):
-        # то добавляем session_id в множество
-        REDIS.sadd(viewed_keys, session_id)
-        # и увеличиваем счетчик на 1
-        total_views = REDIS.incr(total_views_key, amount=1)
-    else:
-        # Если session_id уже в множестве, то просто выводим результат
-        total_views = REDIS.get(total_views_key)
-
-    context['total_views'] = total_views.decode('utf-8')
+    # session_id = get_session_id(request)
+    #
+    # # Название для множества в Redis, в котором лежат идентификаторы сессий
+    # viewed_keys = f'task:{task.id}:viewed_sessions'
+    # # Название счетчика посещений
+    # total_views_key = f'task:{task.id}:views'
+    #
+    # # Если в множестве viewed_keys нет session_id
+    # if not REDIS.sismember(viewed_keys, session_id):
+    #     # то добавляем session_id в множество
+    #     REDIS.sadd(viewed_keys, session_id)
+    #     # и увеличиваем счетчик на 1
+    #     total_views = REDIS.incr(total_views_key, amount=1)
+    # else:
+    #     # Если session_id уже в множестве, то просто выводим результат
+    #     total_views = REDIS.get(total_views_key)
+    #
+    # context['total_views'] = total_views.decode('utf-8')
 
     if request.user.is_authenticated:
         users_likes = request.user.likes.select_related(
