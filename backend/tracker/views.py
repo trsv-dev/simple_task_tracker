@@ -515,7 +515,7 @@ def task_detail(request, pk):
         # Если session_id уже в множестве, то просто выводим результат
         total_views = REDIS.get(total_views_key)
 
-    context['total_views'] = total_views.decode('utf-8')
+    context['total_views'] = int(total_views)
 
     if request.user.is_authenticated:
         users_likes = request.user.likes.select_related(
