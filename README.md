@@ -12,7 +12,7 @@
 
 Демо: https://tracker.trsv-dev.ru/ (trsv / 1234509876t)
 
-Flower: https://tracker.trsv-dev.ru:5556 (admin / MySuperStrongPassword)
+Flower: http://tracker.trsv-dev.ru:5556 (admin / MySuperStrongPassword)
 
 ## Стек технологий:
 * celery==5.3.4
