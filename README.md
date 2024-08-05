@@ -5,6 +5,21 @@
 
 ![img_1.png](img_1.png)
 
+<details>
+
+<summary>
+Дополнительные изображения
+</summary>
+
+
+### Мобильная версия
+
+![img_2.png](img_2.png)
+
+
+
+</details>
+
 ## Описание
 
 Это пэт-проект, главной целью которого является возможность 
@@ -140,9 +155,9 @@ git clone git@github.com:trsv-dev/simple_task_tracker.git -b develop
 ```
 В корне проекта найдите файл **.env.example**, переименуйте в **.env** и заполните своими данными.
 
-На продакшне раскомментируйте эту строку и замените 'your_domain.com' на свой домен:
+На продакшне раскомментируйте эту строку и замените 'http(s)://your_domain.com' на свой домен:
 ```
-CSRF_TRUSTED_ORIGINS=your_domain.com
+CSRF_TRUSTED_ORIGINS=http(s)://your_domain.com
 ```
 Также замените '127.0.0.1:9000' на свой домен в этой строке:
 ```
@@ -208,6 +223,13 @@ REDIS_DB = 1
 ```
 </details>
 
+Чтобы заработал Telegram-бот - создайте своего бота через @BotFather и пропишите в .env полученный
+токен:
+```
+#Telegram bot settings:
+###############################################################################
+TELEGRAM_TOKEN=0123456789:AaBbCcDd1234EeFfGgHh5678910IiJjKk11
+```
 
 Перейдите в папку **task_tracker**:
 ```
@@ -237,6 +259,11 @@ docker compose -f docker-compose.yml exec backend cp -r /app/collected_static/. 
 И создайте суперпользователя командой:
 ```
 docker compose -f docker-compose.yml exec backend python manage.py createsuperuser
+```
+Команды управления ботом:
+```
+docker compose -f docker-compose.yml exec -d backend python manage.py bot start
+docker compose -f docker-compose.yml exec -d backend python manage.py bot stop
 ```
 Сайт доступен по http://127.0.0.1:9000, Flower доступен по http://127.0.0.1:5556 
 с логином/паролем, заданным вами в .env (по умолчанию - _admin_ / _MySuperStrongPassword_).
@@ -335,6 +362,13 @@ REDIS_DB = 1
 ```
 </details>
 
+Чтобы заработал Telegram-бот - создайте своего бота через @BotFather и пропишите в .env полученный
+токен:
+```
+#Telegram bot settings:
+###############################################################################
+TELEGRAM_TOKEN=0123456789:AaBbCcDd1234EeFfGgHh5678910IiJjKk11
+```
 Переходим в папку **_backend_**:
 ```
 cd /backend
@@ -371,6 +405,10 @@ celery -A task_tracker beat -l info
 ```
 celery -A task_tracker.celery flower
 ```
+Команды управления ботом:
+```
+python manage.py bot start
+python manage.py bot stop
+```
 
-Процесс развертывания готового проекта в дальнейшем будет сведен до одной команды.
 </details>
